@@ -1,0 +1,16 @@
+steps:
+    Clone:
+        type: git-clone
+    Push:
+        type: docker-push
+        image_name: "{{MIC_PIPELINE_NAME}}"
+        tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
+        registry: ecr
+    Deploy:
+        type: deploy
+        target: kubernetes
+        cluster: "{{CLUSTER_ID}}"
+        service: "{{MIC_PIPELINE_NAME}}"
+        namespace: "{{CLUSTER_ID}}"
+        branch_filter: "{{MIC_BRANCH_FILTER}}"
+        tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
