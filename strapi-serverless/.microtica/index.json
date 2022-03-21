@@ -1,0 +1,27 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Strapi App",
+    "Parameters": {
+        "ImageUrl": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "ImageUrlParameter": {
+            "Type": "AWS::SSM::Parameter",
+            "Properties": {
+                "Type": "String",
+                "Value": {
+                    "Ref": "ImageUrl"
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "ImageUrl": {
+            "Value": {
+                "Ref": "ImageUrl"
+            }
+        }
+    }
+}
