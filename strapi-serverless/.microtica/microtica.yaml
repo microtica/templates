@@ -8,7 +8,7 @@ steps:
     type: git-clone
     stage: clone
 
-  PackageComponent:
+  Package:
     title: Package component
     stage: build
     image: aws/codebuild/standard:4.0
