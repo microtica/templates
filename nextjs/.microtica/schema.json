@@ -6,8 +6,14 @@
     "properties": {
         "inputs": {
             "type": "object",
-            "properties": {},
-            "required": []
+            "properties": {
+                "MIC_DOMAIN_NAME": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "MIC_DOMAIN_NAME"
+            ]
         }
     },
     "additionalProperties": false
