@@ -4,7 +4,7 @@ steps:
 
     PushContainerImage:
         type: docker-push
-        image_name: "{{SERVICE_NAME}}"
+        image_name: "{{MIC_PIPELINE_NAME}}"
         dockerfile: ./.microtica/Dockerfile
         tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
 
