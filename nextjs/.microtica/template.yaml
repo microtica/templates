@@ -1,0 +1,15 @@
+name: Next.js
+description: Next.js gives you the best developer experience with all the features you need for production - hybrid static & server rendering, TypeScript support, smart bundling, route pre-fetching, and more. No config needed.
+logo: https://seeklogo.com/images/N/next-js-logo-8FCFF51DD2-seeklogo.com.png
+repo: https://github.com/microtica/templates/tree/master/nextjs
+
+destinations:
+  - shared
+
+service:
+  nextjs:
+    source: git
+    containerPort: 3000
+    autoScaling:
+      minReplicas: 1
+      maxReplicas: 1

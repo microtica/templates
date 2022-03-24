@@ -1,6 +1,6 @@
-FROM node:14.16.0-slim
+FROM public.ecr.aws/docker/library/node:14.19.0-slim
 
-WORKDIR /strapi
+WORKDIR /app
 
 COPY ./package.json ./
 COPY ./yarn.lock ./
@@ -13,6 +13,6 @@ ENV NODE_ENV production
 
 RUN yarn build
 
-EXPOSE 1337
+EXPOSE 3000
 
-CMD ["yarn", "develop"]
+CMD ["yarn", "start"]

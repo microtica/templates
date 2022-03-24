@@ -9,7 +9,7 @@
             "properties": {
                 "MIC_DOMAIN_NAME": {
                     "type": "string",
-                    "description": "The domain name on which to expose the service. (e.g. strapi-demo.microtica.rocks"
+                    "description": "The domain name on which to expose the service. (e.g. strapi-demo.microtica.app"
                 }
             },
             "required": [
