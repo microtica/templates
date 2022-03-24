@@ -10,8 +10,8 @@ steps:
     DeployApplication:
         type: deploy
         target: kubernetes
-        cluster: "{{MIC_CLUSTER_ID}}"
+        cluster: "{{CLUSTER_ID}}"
         service: "{{MIC_PIPELINE_NAME}}"
-        namespace: "{{MIC_CLUSTER_NAMESPACE}}"
+        namespace: "{{CLUSTER_NAMESPACE}}"
         branch_filter: "{{MIC_BRANCH_FILTER}}"
         tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
