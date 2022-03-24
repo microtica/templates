@@ -13,5 +13,6 @@ steps:
         cluster: "{{CLUSTER_ID}}"
         service: "{{MIC_PIPELINE_NAME}}"
         namespace: "{{CLUSTER_NAMESPACE}}"
+        dockerfile: ./.microtica/Dockerfile
         branch_filter: "{{MIC_BRANCH_FILTER}}"
         tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
