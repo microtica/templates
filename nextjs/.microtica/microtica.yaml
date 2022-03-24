@@ -4,7 +4,7 @@ steps:
 
     PushContainerImage:
         type: docker-push
-        image_name: "{{MIC_PIPELINE_NAME}}"
+        image_name: "{{SERVICE_NAME}}"
         dockerfile: ./.microtica/Dockerfile
         tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
 
@@ -12,7 +12,7 @@ steps:
         type: deploy
         target: kubernetes
         cluster: "{{CLUSTER_ID}}"
-        service: "{{MIC_PIPELINE_NAME}}"
+        service: "{{SERVICE_NAME}}"
         namespace: "{{CLUSTER_NAMESPACE}}"
         branch_filter: "{{MIC_BRANCH_FILTER}}"
         tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
