@@ -37,5 +37,6 @@ steps:
     stage: deploy
     env_id: "{{ENV_ID}}"
     partial:
+        create_missing_resources: true
         resource_version_overrides:
           StrapiApp: "{{MIC_PIPELINE_EXECUTION_ID}}"
