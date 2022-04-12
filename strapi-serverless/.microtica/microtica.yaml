@@ -28,6 +28,7 @@ steps:
     stage: build
     title: Build and Push Docker Image
     image_name: microtica/strapi-app
+    registry: "{{CONTAINER_REGISTRY_ID}}"
     tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
     dockerfile: ./.microtica/Dockerfile
 
