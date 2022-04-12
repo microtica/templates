@@ -3,19 +3,10 @@ description: Next.js gives you the best developer experience with all the featur
 logo: https://seeklogo.com/images/N/next-js-logo-8FCFF51DD2-seeklogo.com.png
 repo: https://github.com/microtica/templates/tree/master/nextjs
 
-inputs:
-  properties:
-    DOMAIN_NAME:
-      type: string
-      description: Domain on which the Next.js application will be accesible
-
 service:
   nextjs:
     source: git
     containerPort: 3000
-    configuration:
-      - key: MIC_DOMAIN_NAME
-        value: "{{DOMAIN_NAME}}"
     autoScaling:
       minReplicas: 1
       maxReplicas: 1
