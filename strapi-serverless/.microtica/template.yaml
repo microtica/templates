@@ -1,0 +1,102 @@
+name: Strapi Serverless
+description: Strapi is an open source Headless CMS built with NodeJS. Using Strapi you can design and publish your content consumed by your apps via API.
+logo: https://dev-to-uploads.s3.amazonaws.com/uploads/organization/profile_image/763/988af53b-5d7e-435a-98eb-dd4aff5299d2.png
+repo: https://github.com/microtica/templates/tree/master/strapi-serverless
+
+inputs:
+  properties:
+    CPU:
+      type: number
+      enum:
+        - 256
+        - 512
+        - 1024
+        - 2048
+        - 4096
+      default: 256
+      description: The number of CPU units reserved for the Strapi app
+    Memory:
+      type: number
+      enum:
+        - 512
+        - 1024
+        - 2048
+        - 3072
+        - 4096
+      default: 512
+      description: The amount (in MiB) of memory reserved for the Strapi app
+    DesiredReplicas:
+      type: number
+      default: 1
+      minimum: 0
+      maximum: 10
+      description: The number of Strapi applications running at the same time. The workload will be balanced between the apps.
+    DatabaseClient:
+      type: string
+      enum:
+        - sqlite
+        - postgres
+        - mysql
+      default: sqlite
+  required:
+    - CPU
+    - Memory
+    - DesiredReplicas
+    - DatabaseClient
+
+infrastructure:
+  resources:
+    VPC:
+      type: microtica-aws-vpc:latest
+      properties:
+        - key: natInstanceType
+          value: t2.micro
+    StrapiServerless:
+      type: microtica-aws-strapi-serverless:latest
+      properties:
+        - key: VpcId
+          reference: VPC.vpcId
+        - key: PrivateSubnet1Id
+          reference: VPC.privateSubnet1
+        - key: PrivateSubnet2Id
+          reference: VPC.privateSubnet2
+        - key: CPU
+          value: "{{CPU}}"
+        - key: Memory
+          value: "{{Memory}}"
+        - key: DesiredReplicas
+          value: "{{DesiredReplicas}}"
+        - key: DatabaseClient
+          value: "{{DatabaseClient}}"
+        - key: ImageUrl
+          reference: "StrapiApp.ImageUrl"
+    ContainerRunner:
+      type: microtica-aws-fargate:latest
+      properties:
+        - key: VpcId
+          reference: VPC.vpcId
+        - key: PrivateSubnet1Id
+          reference: VPC.privateSubnet1
+        - key: PrivateSubnet2Id
+          reference: VPC.privateSubnet2
+        - key: PublicSubnet1Id
+          reference: VPC.publicSubnet1
+        - key: PublicSubnet2Id
+          reference: VPC.publicSubnet2
+        - key: CustomTaskDefinitionArn
+          reference: StrapiServerless.TaskDefinitionArn
+        - key: ContainerPort
+          reference: StrapiServerless.ContainerPort
+        - key: DesiredReplicas
+          reference: StrapiServerless.DesiredReplicas
+        - key: CPU
+          value: "{{CPU}}"
+        - key: Memory
+          value: "{{Memory}}"
+        - key: StickySession
+          value: "false"
+    StrapiApp:
+      source: git
+      properties:
+        - key: ImageUrl
+          value: "{{CONTAINER_REGISTRY_URL}}/microtica/strapi-app"
