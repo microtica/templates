@@ -1,6 +1,6 @@
 name: ReactJS
 description: A JavaScript library for building user interfaces.
-logo: https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Angular_full_color_logo.svg/240px-Angular_full_color_logo.svg.png
+logo: https://reactjs.org/logo-og.png
 repo: https://github.com/microtica/templates/tree/master/reactjs
 
 service:

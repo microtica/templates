@@ -1,7 +1,7 @@
-name: ReactJS
-description: A JavaScript library for building user interfaces.
+name: AngularJS
+description: AngularJS is a framework for developing single page web applications.
 logo: https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Angular_full_color_logo.svg/240px-Angular_full_color_logo.svg.png
-repo: https://github.com/microtica/templates/tree/master/reactjs
+repo: https://github.com/microtica/templates/tree/master/angularjs
 
 service:
   reactjs:

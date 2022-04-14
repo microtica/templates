@@ -1,8 +1,8 @@
-name: ReactJS
-description: A JavaScript library for building user interfaces.
-logo: https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Angular_full_color_logo.svg/240px-Angular_full_color_logo.svg.png
-repo: https://github.com/microtica/templates/tree/master/reactjs
-
+name: Vue.js
+description: An approachable, performant and versatile framework for building web user interfaces.
+logo: https://brandlogos.net/wp-content/uploads/2022/01/vue.js-logo-brandlogo.net_.png
+repo: https://github.com/microtica/templates/tree/master/vuejs
+            
 service:
   reactjs:
     source: git
