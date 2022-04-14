@@ -1,0 +1,16 @@
+name: NuxtJS
+description: An open source framework for Vue.js making web development simple and powerful.
+logo: https://pbs.twimg.com/profile_images/1438501794754142212/_SXc-Z_h.jpg
+repo: https://github.com/microtica/templates/tree/master/nuxtjs
+
+service:
+  nuxtjs:
+    source: git
+    containerPort: 3000
+    autoScaling:
+      minReplicas: 1
+      maxReplicas: 1
+      cpu: 1
+      maxCpu: 10
+      memory: 64
+      maxMemory: 128
