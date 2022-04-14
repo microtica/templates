@@ -6,15 +6,8 @@
     "properties": {
         "inputs": {
             "type": "object",
-            "properties": {
-                "MIC_DOMAIN_NAME": {
-                    "type": "string",
-                    "description": "The domain name on which to expose the service. (e.g. strapi-demo.microtica.app"
-                }
-            },
-            "required": [
-                "MIC_DOMAIN_NAME"
-            ]
+            "properties": {},
+            "required": []
         }
     },
     "additionalProperties": false
