@@ -1,0 +1,81 @@
+name: AWS Fargate
+description: Provides on-demand, right-sized compute capacity for containers.
+logo: https://miro.medium.com/max/393/1*BCgeXMygZAH_xXzKG8vvQQ.png
+repo: https://github.com/microtica/templates/tree/master/aws-fargate
+
+inputs:
+  properties:
+    CPU:
+      type: number
+      enum:
+        - 256
+        - 512
+        - 1024
+        - 2048
+        - 4096
+      default: 256
+      description: The number of CPU units reserved for the container app.
+    Memory:
+      type: number
+      enum:
+        - 512
+        - 1024
+        - 2048
+        - 3072
+        - 4096
+      default: 512
+      description: The amount (in MiB) of memory reserved for the container app.
+    DesiredReplicas:
+      type: number
+      default: 1
+      minimum: 0
+      maximum: 10
+      description: The number of container applications running at the same time. The workload will be balanced between the apps.
+    ContainerPort:
+      type: number
+      default: 80
+      description: The port on which the application is listending for requests. 
+    ImageUrl:
+      type: string
+      placeholder: nginx:latest
+      description: Public container image to run on Fargate (format <image name>:<version>)
+
+  required:
+    - CPU
+    - Memory
+    - DesiredReplicas
+    - ContainerPort
+    - ImageUrl
+
+infrastructure:
+  resources:
+    VPC:
+      type: microtica-aws-vpc:latest
+      properties:
+        - key: natInstanceType
+          value: t2.micro
+    Fargate:
+      type: microtica-aws-fargate:latest
+      properties:
+        - key: VpcId
+          reference: VPC.vpcId
+        - key: PrivateSubnet1Id
+          reference: VPC.privateSubnet1
+        - key: PrivateSubnet2Id
+          reference: VPC.privateSubnet2
+        - key: PublicSubnet1Id
+          reference: VPC.publicSubnet1
+        - key: PublicSubnet2Id
+          reference: VPC.publicSubnet2
+        - key: ContainerPort
+          value: "{{ContainerPort}}"
+        - key: DesiredReplicas
+          value: "{{DesiredReplicas}}"
+        - key: CPU
+          value: "{{CPU}}"
+        - key: Memory
+          value: "{{Memory}}"
+        - key: StickySession
+          value: "false"
+        - key: ImageUrl
+          value: "{{ImageUrl}}"

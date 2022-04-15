@@ -4,7 +4,7 @@ logo: https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Angular_full_col
 repo: https://github.com/microtica/templates/tree/master/angularjs
 
 service:
-  reactjs:
+  angularjs:
     source: git
     containerPort: 80
     autoScaling:
