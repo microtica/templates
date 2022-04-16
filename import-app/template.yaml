@@ -1,0 +1,30 @@
+name: Import an existing app
+description: Import an existing app from your Git repository and deploy it on your Kubernetes cluster.
+logo: https://upload.wikimedia.org/wikipedia/commons/3/3f/Git_icon.svg
+repo: https://github.com/microtica/templates/tree/master/blank-app
+
+inputs:
+  properties:
+    APP_NAME:
+      type: string
+      description: The name of the application. The name will be shown in the portal.
+      maxLength: 23
+    PORT:
+      type: number
+      default: 80
+      description: The port on which the application is listening for requests.
+  required:
+    - APP_NAME
+    - PORT
+
+service:
+  "{{APP_NAME}}":
+    source: git
+    containerPort: "{{PORT}}"
+    autoScaling:
+      minReplicas: 1
+      maxReplicas: 1
+      cpu: 1
+      maxCpu: 10
+      memory: 32
+      maxMemory: 64
