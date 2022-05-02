@@ -9,6 +9,7 @@ inputs:
       type: string
       placeholder: MyWebsite
       description: Use this parameter to distinguish multiple websites in Microtica portal.
+
     DomainName:
       type: string
       placeholder: example.com
@@ -37,4 +38,4 @@ infrastructure:
         - key: CertificateArn
           value: "{{CertificateArn}}"
         - key: BackendEndpoint
-        - value: "{{BackendUrl}}"
+          value: "{{BackendUrl}}"
