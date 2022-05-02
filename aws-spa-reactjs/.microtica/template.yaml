@@ -36,3 +36,5 @@ infrastructure:
           value: "{{DomainName}}"
         - key: CertificateArn
           value: "{{CertificateArn}}"
+        - key: BackendEndpoint
+        - value: "{{BackendUrl}}"
