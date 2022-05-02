@@ -1,0 +1,37 @@
+stages:
+  - clone
+  - build
+  - deploy
+
+steps:
+  Clone:
+    title: Clone my component from Git
+    stage: clone
+    type: git-clone
+
+  Package:
+    title: Package component
+    stage: build
+    image: aws/codebuild/standard:5.0
+    commands:
+      - npm run package
+      - cd .microtica
+      - npm install
+      - npm run build
+      - npm prune --production
+      - cd functions/deployment && npm run package
+    artifacts:
+      files:
+        package_zip: ./.microtica/
+        schema_json: ./.microtica/schema.json
+
+  DeployComponent:
+    title: Trigger a deployment for an environment resource
+    type: deploy
+    target: environment
+    stage: deploy
+    env_id: "{{ENV_ID}}"
+    partial:
+        create_missing_resources: true
+        resource_version_overrides:
+          Website: "{{MIC_PIPELINE_EXECUTION_ID}}"

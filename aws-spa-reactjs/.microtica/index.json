@@ -1,0 +1,479 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Transform": "AWS::Serverless-2016-10-31",
+    "Description": "Microtica SPA component",
+    "Parameters": {
+        "DomainName": {
+            "Type": "String",
+            "Description": "The full domain name e.g. site.com"
+        },
+        "CertificateArn": {
+            "Type": "String",
+            "Description": "Public SSL certificate ARN"
+        },
+        "DeploymentFunctionBucket": {
+            "Type": "String",
+            "Description": "Name of the S3 bucket where the source for this component is stored"
+        },
+        "DeploymentFunctionLocation": {
+            "Type": "String",
+            "Description": "Path to the S3 where the source for this component is stored"
+        },
+        "SourceBucket": {
+            "Type": "String",
+            "Description": "Name of the S3 bucket where the source for this component is stored"
+        },
+        "SourceLocation": {
+            "Type": "String",
+            "Description": "Path to the S3 where the source for this component is stored"
+        },
+        "componentVersion": {
+            "Type": "String",
+            "Description": "A component version"
+        },
+        "BackendEndpoint": {
+            "Type": "String",
+            "Description": "Backend endpoint",
+            "Default": ""
+        }
+    },
+    "Resources": {
+        "WebsiteBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "AccessControl": "PublicRead",
+                "WebsiteConfiguration": {
+                    "IndexDocument": "index.html",
+                    "ErrorDocument": "index.html"
+                }
+            }
+        },
+        "WebsiteBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+                "Bucket": {
+                    "Ref": "WebsiteBucket"
+                },
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Sid": "PublicReadForGetBucketObjects",
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Action": "s3:GetObject",
+                            "Resource": {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "arn:aws:s3:::",
+                                        {
+                                            "Ref": "WebsiteBucket"
+                                        },
+                                        "/*"
+                                    ]
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "DeploymentLambda": {
+            "Type": "AWS::Serverless::Function",
+            "Properties": {
+                "Handler": "dst/index.handler",
+                "Runtime": "nodejs14.x",
+                "Timeout": 30,
+                "CodeUri": {
+                    "Bucket": {
+                        "Ref": "DeploymentFunctionBucket"
+                    },
+                    "Key": {
+                        "Ref": "DeploymentFunctionLocation"
+                    }
+                },
+                "DeadLetterQueue": {
+                    "Type": "SQS",
+                    "TargetArn": {
+                        "Fn::GetAtt": "LambdaDLQ.Arn"
+                    }
+                },
+                "Policies": [
+                    "AWSLambdaVPCAccessExecutionRole",
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": {
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:GetObject"
+                            ],
+                            "Resource": {
+                                "Fn::Sub": "arn:aws:s3:::${SourceBucket}/*"
+                            }
+                        }
+                    },
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": {
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:PutObject"
+                            ],
+                            "Resource": {
+                                "Fn::Sub": "arn:aws:s3:::${WebsiteBucket}/*"
+                            }
+                        }
+                    },
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": {
+                            "Effect": "Allow",
+                            "Action": [
+                                "cloudfront:CreateInvalidation"
+                            ],
+                            "Resource": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        "DeploymentCustom": {
+            "Type": "AWS::CloudFormation::CustomResource",
+            "Properties": {
+                "ServiceToken": {
+                    "Fn::GetAtt": "DeploymentLambda.Arn"
+                },
+                "ComponentVersion": {
+                    "Ref": "componentVersion"
+                },
+                "SourceBucket": {
+                    "Ref": "SourceBucket"
+                },
+                "SourceLocation": {
+                    "Ref": "SourceLocation"
+                },
+                "DestinationBucket": {
+                    "Ref": "WebsiteBucket"
+                },
+                "CdnId": {
+                    "Ref": "WebsiteCloudfront"
+                },
+                "BackendEndpoint": {
+                    "Ref": "BackendEndpoint"
+                }
+            }
+        },
+        "WebsiteCloudfront": {
+            "Type": "AWS::CloudFront::Distribution",
+            "DependsOn": [
+                "WebsiteBucket"
+            ],
+            "Properties": {
+                "DistributionConfig": {
+                    "Comment": "Cloudfront Distribution pointing to S3 bucket",
+                    "Origins": [
+                        {
+                            "DomainName": {
+                                "Fn::Select": [
+                                    2,
+                                    {
+                                        "Fn::Split": [
+                                            "/",
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "WebsiteBucket",
+                                                    "WebsiteURL"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "Id": "S3Origin",
+                            "CustomOriginConfig": {
+                                "HTTPPort": "80",
+                                "HTTPSPort": "443",
+                                "OriginProtocolPolicy": "http-only"
+                            }
+                        }
+                    ],
+                    "Enabled": true,
+                    "HttpVersion": "http2",
+                    "DefaultRootObject": "index.html",
+                    "Aliases": [
+                        {
+                            "Ref": "DomainName"
+                        }
+                    ],
+                    "DefaultCacheBehavior": {
+                        "AllowedMethods": [
+                            "GET",
+                            "HEAD"
+                        ],
+                        "Compress": true,
+                        "TargetOriginId": "S3Origin",
+                        "ForwardedValues": {
+                            "QueryString": false,
+                            "Cookies": {
+                                "Forward": "none"
+                            }
+                        },
+                        "ViewerProtocolPolicy": "redirect-to-https"
+                    },
+                    "PriceClass": "PriceClass_All",
+                    "ViewerCertificate": {
+                        "AcmCertificateArn": {
+                            "Ref": "CertificateArn"
+                        },
+                        "SslSupportMethod": "sni-only"
+                    }
+                }
+            }
+        },
+        "LambdaDLQ": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {}
+        },
+        "LambdaDLQPolicy": {
+            "Type": "AWS::SQS::QueuePolicy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Action": [
+                                "sqs:SendMessage"
+                            ],
+                            "Resource": "*"
+                        }
+                    ]
+                },
+                "Queues": [
+                    {
+                        "Ref": "LambdaDLQ"
+                    }
+                ]
+            }
+        },
+        "LambdaDLQCleaner": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "ZipFile": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "const response = require(\"cfn-response\");\n\nfunction handler(event, context) {\n    try {\n        const originalEvent = JSON.parse(event.Records[0].body);\n        const responseBody = {\n            message: \"Custom resource lambda failed to to process the event\",\n            originalEvent,\n        };\n        response.send(originalEvent, context, response.FAILED, responseBody);\n    } catch (e) {\n        console.error(e);\n    }\n}\n\nexports.handler = handler;"
+                            ]
+                        ]
+                    }
+                },
+                "Role": {
+                    "Fn::GetAtt": "DLQLambdaExecutionRole.Arn"
+                },
+                "Handler": "index.handler",
+                "Runtime": "nodejs14.x",
+                "Timeout": 30
+            }
+        },
+        "LambdaDLQCleanerSourceMapping": {
+            "Type": "AWS::Lambda::EventSourceMapping",
+            "Properties": {
+                "EventSourceArn": {
+                    "Fn::GetAtt": "LambdaDLQ.Arn"
+                },
+                "FunctionName": {
+                    "Ref": "LambdaDLQCleaner"
+                }
+            }
+        },
+        "DLQLambdaExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+                ],
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "LambdaExecutionPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "sqs:SendMessage",
+                                        "sqs:ReceiveMessage",
+                                        "sqs:DeleteMessage",
+                                        "sqs:GetQueueAttributes"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "WebsiteBucketCleaner": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "ZipFile": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "const response = require('cfn-response');\n",
+                                "const { S3 } = require('aws-sdk');\n",
+                                "exports.handler = function (event, context) {\n",
+                                "    const bucket = event.ResourceProperties.s3Bucket;\n",
+                                "    if (event.RequestType === 'Delete') {\n",
+                                "        purgeOutputBucket(bucket).then(() => {\n",
+                                "            response.send(event, context, response.SUCCESS, {});\n",
+                                "        }).catch((err) => {\n",
+                                "            console.log('ERR', err);\n",
+                                "            response.send(event, context, response.FAILED, { err });\n",
+                                "        });\n",
+                                "    } else {\n",
+                                "        response.send(event, context, response.SUCCESS, {});\n",
+                                "    }\n",
+                                "};\n",
+                                "async function purgeOutputBucket(bucket) {\n",
+                                "    let objects = null;\n",
+                                "    try {\n",
+                                "        objects = await new S3().listObjects({\n",
+                                "            Bucket: bucket\n",
+                                "        }).promise();\n",
+                                "    } catch (e) {\n",
+                                "        if (e.code !== 'NoSuchBucket') {\n",
+                                "            throw e;\n",
+                                "        }\n",
+                                "    }\n",
+                                "    if (objects) {\n",
+                                "        if (objects.Contents.length === 0) {\n",
+                                "            return;\n",
+                                "        }\n",
+                                "        const keys = objects.Contents.map(c => ({ Key: c.Key }));\n",
+                                "        const deleteRequest = {\n",
+                                "            Bucket: bucket,\n",
+                                "            Delete: {\n",
+                                "                Objects: keys\n",
+                                "            }\n",
+                                "        };\n",
+                                "        await new S3().deleteObjects(deleteRequest).promise();\n",
+                                "        if (objects.IsTruncated) {\n",
+                                "            await purgeOutputBucket(bucket);\n",
+                                "        }\n",
+                                "    }\n",
+                                "}"
+                            ]
+                        ]
+                    }
+                },
+                "Role": {
+                    "Fn::GetAtt": [
+                        "WebsiteBucketCleanerRole",
+                        "Arn"
+                    ]
+                },
+                "Handler": "index.handler",
+                "Runtime": "nodejs14.x",
+                "Timeout": 30
+            }
+        },
+        "WebsiteBucketCleanerCustom": {
+            "Type": "AWS::CloudFormation::CustomResource",
+            "Properties": {
+                "ServiceToken": {
+                    "Fn::GetAtt": [
+                        "WebsiteBucketCleaner",
+                        "Arn"
+                    ]
+                },
+                "s3Bucket": {
+                    "Ref": "WebsiteBucket"
+                }
+            }
+        },
+        "WebsiteBucketCleanerRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "ExecutionPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:DeleteObject",
+                                        "s3:ListBucket"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${WebsiteBucket}"
+                                        },
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${WebsiteBucket}/*"
+                                        }
+                                    ],
+                                    "Effect": "Allow"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "AccessUrl": {
+            "Value": {
+                "Fn::Sub": "https://${DomainName}"
+            },
+            "Description": "The domain name on which the website is accessible."
+        },
+        "CNAME": {
+            "Value": {
+                "Fn::GetAtt": "WebsiteCloudfront.DomainName"
+            },
+            "Description": "CNAME record"
+        }
+    }
+}

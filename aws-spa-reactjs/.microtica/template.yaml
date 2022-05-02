@@ -1,0 +1,38 @@
+name: SPA on CloudFront
+description: An empty ReactJS application hosted on S3 and exposed through Amazon CloudFront on your own domain.
+logo: https://banner2.cleanpng.com/20180714/ggq/kisspng-amazon-com-amazon-web-services-amazon-cloudfront-c-amazon-5b49ac77210185.8189655715315549351352.jpg
+repo: https://github.com/microtica/templates/tree/master/aws-spa-reactjs
+
+inputs:
+  properties:
+    WebsiteName: 
+      type: string
+      placeholder: MyWebsite
+      description: Use this parameter to distinguish multiple websites in Microtica portal.
+    DomainName:
+      type: string
+      placeholder: example.com
+      description: Domain name of the website
+    CertificateArn:
+      type: string
+      placeholder: arn:aws:acm:us-east-1:<account_id>:certificate/<uuid> (in US East region)
+      description: Certificate matching the domain name. The certificate should be created in US East (N. Virginia region)
+    BackendUrl:
+      type: string
+      placeholder: https://mybackend.com
+      description: This parameter will be available in the /env.js file and can be used in the application to access backend services.
+
+  required:
+    - WebsiteName
+    - DomainName
+    - CertificateArn
+
+infrastructure:
+  resources:
+    {{WebsiteName}}:
+      source: git
+      properties:
+        - key: DomainName
+          value: "{{DomainName}}"
+        - key: CertificateArn
+          value: "{{CertificateArn}}"

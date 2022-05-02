@@ -1,0 +1,36 @@
+{
+    "name": "@microtica/spa-deployment",
+    "version": "0.0.1",
+    "description": "Microtica SPA deployment",
+    "main": "index.js",
+    "scripts": {
+        "build": "tsc -p src/tsconfig.json",
+        "test": "node dst/test",
+        "pretest": "npm run build",
+        "prepackage": "rm -rf package.zip && npm i && npm run build && npm prune --production",
+        "package": "zip -r package.zip dst node_modules package.json",
+        "postpackage": "echo File size: $(ls -lah package.zip | awk '{print $5}')",
+        "mocha": "./node_modules/.bin/nyc --reporter=lcov --reporter=text-summary node_modules/.bin/mocha --timeout 5000 --recursive test",
+        "lint": "tslint -p src/tsconfig.json -c node_modules/@microtica/tslint-config/tslint.json --fix"
+    },
+    "author": "Microtica",
+    "license": "ISC",
+    "dependencies": {
+        "mime-types": "^2.1.24",
+        "unzipper": "^0.10.1"
+    },
+    "devDependencies": {
+        "@microtica/tslint-config": "^0.1.0",
+        "@types/aws-lambda": "^8.10.27",
+        "@types/aws-sdk": "^2.7.0",
+        "@types/mime-types": "^2.1.0",
+        "@types/mock-require": "^2.0.0",
+        "@types/node": "^10.14.10",
+        "@types/unzipper": "^0.9.2",
+        "@types/yamljs": "^0.2.30",
+        "aws-sdk": "^2.466.0",
+        "mock-require": "^3.0.3",
+        "tslint": "^5.7.0",
+        "typescript": "^3.2.2"
+    }
+}

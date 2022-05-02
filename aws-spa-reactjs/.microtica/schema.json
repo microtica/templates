@@ -1,0 +1,27 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "schema://microtica/spa.json",
+    "title": "Component Schema",
+    "type": "object",
+    "properties": {
+        "inputs": {
+            "type": "object",
+            "properties": {
+                "CertificateArn": {
+                    "type": "string"
+                },
+                "DomainName": {
+                    "type": "string"
+                },
+                "BackendEndpoint": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "DomainName",
+                "CertificateArn"
+            ]
+        }
+    },
+    "additionalProperties": false
+}
