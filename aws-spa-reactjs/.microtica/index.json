@@ -83,7 +83,7 @@
             "Properties": {
                 "Handler": "dst/index.handler",
                 "Runtime": "nodejs14.x",
-                "Timeout": 30,
+                "Timeout": 200,
                 "CodeUri": {
                     "Bucket": {
                         "Ref": "DeploymentFunctionBucket"

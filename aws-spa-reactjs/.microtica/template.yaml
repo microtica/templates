@@ -12,8 +12,8 @@ inputs:
 
     DomainName:
       type: string
-      placeholder: example.com
-      description: Domain name of the website
+      placeholder: www.example.com
+      description: FQDN of the website
     CertificateArn:
       type: string
       placeholder: arn:aws:acm:us-east-1:<account_id>:certificate/<uuid> (in US East region)
