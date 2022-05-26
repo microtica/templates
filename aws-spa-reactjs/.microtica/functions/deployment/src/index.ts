@@ -52,7 +52,7 @@ async function uploadFiles(event: CloudFormationCustomResourceEvent): Promise<vo
         DestinationBucket
     } = event.ResourceProperties;
 
-    return new Promise((resolve: () => void, reject: (err: Error) => void) => {
+    return new Promise((resolve, reject) => {
         const sourceStream = s3.getObject({
             Bucket: SourceBucket,
             Key: SourceLocation
@@ -75,7 +75,7 @@ async function uploadFiles(event: CloudFormationCustomResourceEvent): Promise<vo
                     filesCount--;
                     entry.autodrain();
                     if (!filesCount) {
-                        resolve();
+                        resolve(null);
                     }
                     console.info("Uploaded:", entry.path);
                 }).catch((err: Error) => {
@@ -157,7 +157,7 @@ function commitStatus(event: CloudFormationCustomResourceEvent, status: string, 
             console.log("STATUS: ", response.statusCode);
             console.log("HEADERS: ", JSON.stringify(response.headers));
             // Tell AWS Lambda that the function execution is done
-            resolve();
+            resolve(null);
         });
 
         request.on("error", error => {
