@@ -13,7 +13,8 @@
                 },
                 "TLS_KEY": {
                     "type": "string",
-                    "description": "Cerificate private key body Base64 encoded. Use `cat tls.key | base64` to encode the certificate."
+                    "description": "Cerificate private key body Base64 encoded. Use `cat tls.key | base64` to encode the certificate.",
+                    "sensitive": true
                 }
             },
             "required": [

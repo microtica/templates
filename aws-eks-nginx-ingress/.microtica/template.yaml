@@ -1,5 +1,5 @@
 name: Amazon EKS NGINX Ingress
-description: NGINX ingress service for Amazon EKS cluster
+description: NGINX ingress service for Amazon EKS cluster.
 logo: https://1000logos.net/wp-content/uploads/2020/08/Nginx-Symbol.jpg
 repo: https://github.com/microtica/templates/tree/master/aws-eks-nginx-ingress
 
@@ -13,6 +13,7 @@ inputs:
       type: string
       placeholder: Base64 encoded cerificate private key
       description: Base64 encoded cerificate private key. Use `cat tls.key | base64` to encode the certificate.
+      sensitive: true
 
   required:
     - TLS_CERT
