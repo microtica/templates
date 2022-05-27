@@ -1,11 +1,11 @@
-name: AWS EKS Nginx Ingress
-description: Nginx ingress service for Amazon EKS cluster
-logo: https://logodownload.org/wp-content/uploads/2018/03/nginx-logo-5.png
+name: Amazon EKS NGINX Ingress
+description: NGINX ingress service for Amazon EKS cluster
+logo: https://1000logos.net/wp-content/uploads/2020/08/Nginx-Symbol.jpg
 repo: https://github.com/microtica/templates/tree/master/aws-eks-nginx-ingress
 
 inputs:
   properties:
-    TLS_CERT: 
+    TLS_CERT:
       type: string
       placeholder: Base64 encoded cerificate body
       description: Base64 encoded cerificate body. Use `cat tls.crt | base64` to encode the certificate.
@@ -19,7 +19,7 @@ inputs:
     - TLS_KEY
 
 service:
-  nextjs:
+  nginx-ingress:
     source: git
     containerPort: 80
     configuration:
@@ -27,3 +27,10 @@ service:
         value: "{{TLS_CERT}}"
       - key: TLS_KEY
         value: "{{TLS_KEY}}"
+    autoScaling:
+      minReplicas: 1
+      maxReplicas: 1
+      cpu: 1
+      maxCpu: 5
+      memory: 256
+      maxMemory: 512
