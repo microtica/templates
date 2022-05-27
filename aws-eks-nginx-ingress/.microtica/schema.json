@@ -1,0 +1,26 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "schema://microtica/eks-nginx-ingress.json",
+    "title": "EKS Nginx ingress service schema",
+    "type": "object",
+    "properties": {
+        "inputs": {
+            "type": "object",
+            "properties": {
+                "TLS_CERT": {
+                    "type": "string",
+                    "description": "Cerificate body Base64 encoded. Use `cat tls.crt | base64` to encode the certificate."
+                },
+                "TLS_KEY": {
+                    "type": "string",
+                    "description": "Cerificate private key body Base64 encoded. Use `cat tls.key | base64` to encode the certificate."
+                }
+            },
+            "required": [
+                "TLS_CERT",
+                "TLS_KEY"
+            ]
+        }
+    },
+    "additionalProperties": false
+}
