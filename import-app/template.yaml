@@ -9,8 +9,8 @@ inputs:
       type: string
       description: The name of the application. The name will be shown in the portal.
       maxLength: 23
-      pattern: ^[a-zA-Z0-9\\-]*$
-      patternErrorMessage: "The app name can contain only letters, numbers and hyphens"
+      pattern: ^[a-zA-Z0-9]*$
+      patternErrorMessage: "The app name can contain only letters and numbers"
     PORT:
       type: number
       default: 80
