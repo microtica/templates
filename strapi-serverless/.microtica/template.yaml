@@ -38,28 +38,32 @@ inputs:
         - postgres
         - mysql
       default: sqlite
+    AppName:
+      type: string
+      description: Unique name for your application
   required:
     - CPU
     - Memory
     - DesiredReplicas
     - DatabaseClient
+    - AppName
 
 infrastructure:
   resources:
-    VPC:
+    VPC{{AppName}}:
       type: microtica-aws-vpc:latest
       properties:
         - key: natInstanceType
           value: t2.micro
-    StrapiServerless:
+    StrapiServerless{{AppName}}:
       type: microtica-aws-strapi-serverless:latest
       properties:
         - key: VpcId
-          reference: VPC.vpcId
+          reference: VPC{{AppName}}.vpcId
         - key: PrivateSubnet1Id
-          reference: VPC.privateSubnet1
+          reference: VPC{{AppName}}.privateSubnet1
         - key: PrivateSubnet2Id
-          reference: VPC.privateSubnet2
+          reference: VPC{{AppName}}.privateSubnet2
         - key: CPU
           value: "{{CPU}}"
         - key: Memory
@@ -69,33 +73,33 @@ infrastructure:
         - key: DatabaseClient
           value: "{{DatabaseClient}}"
         - key: ImageUrl
-          reference: "StrapiApp.ImageUrl"
-    ContainerRunner:
+          reference: "StrapiApp{{AppName}}.ImageUrl"
+    ContainerRunner{{AppName}}:
       type: microtica-aws-fargate:latest
       properties:
         - key: VpcId
-          reference: VPC.vpcId
+          reference: VPC{{AppName}}.vpcId
         - key: PrivateSubnet1Id
-          reference: VPC.privateSubnet1
+          reference: VPC{{AppName}}.privateSubnet1
         - key: PrivateSubnet2Id
-          reference: VPC.privateSubnet2
+          reference: VPC{{AppName}}.privateSubnet2
         - key: PublicSubnet1Id
-          reference: VPC.publicSubnet1
+          reference: VPC{{AppName}}.publicSubnet1
         - key: PublicSubnet2Id
-          reference: VPC.publicSubnet2
+          reference: VPC{{AppName}}.publicSubnet2
         - key: CustomTaskDefinitionArn
-          reference: StrapiServerless.TaskDefinitionArn
+          reference: StrapiServerless{{AppName}}.TaskDefinitionArn
         - key: ContainerPort
-          reference: StrapiServerless.ContainerPort
+          reference: StrapiServerless{{AppName}}.ContainerPort
         - key: DesiredReplicas
-          reference: StrapiServerless.DesiredReplicas
+          reference: StrapiServerless{{AppName}}.DesiredReplicas
         - key: CPU
           value: "{{CPU}}"
         - key: Memory
           value: "{{Memory}}"
         - key: StickySession
           value: "false"
-    StrapiApp:
+    StrapiApp{{AppName}}:
       source: git
       properties:
         - key: ImageUrl

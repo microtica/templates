@@ -25,32 +25,36 @@ inputs:
       default: 1
       minimum: 1
       miximum: 20
+    AppName:
+      type: string
+      description: Unique name for your cluster
   required:
     - NODE_INSTANCE_TYPE
     - MIN_NODES
     - MAX_NODES
+    - AppName
 
 infrastructure:
   resources:
-    VPC:
+    VPC{{AppName}}:
       type: microtica-aws-vpc:latest
       properties:
         - key: natInstanceType
           value: t2.micro
-    KubernetesCluster:
+    KubernetesCluster{{AppName}}:
       type: microtica-aws-eks:latest
       properties:
         - key: keyName
-          reference: VPC.keyName
+          reference: VPC{{AppName}}.keyName
         - key: vpcId
-          reference: VPC.vpcId
+          reference: VPC{{AppName}}.vpcId
         - key: privateSubnet1Id
-          reference: VPC.privateSubnet1
+          reference: VPC{{AppName}}.privateSubnet1
         - key: privateSubnet2Id
-          reference: VPC.privateSubnet2
+          reference: VPC{{AppName}}.privateSubnet2
         - key: publicSubnet1Id
-          reference: VPC.publicSubnet1
+          reference: VPC{{AppName}}.publicSubnet1
         - key: publicSubnet2Id
-          reference: VPC.publicSubnet2
+          reference: VPC{{AppName}}.publicSubnet2
         - key: nodeInstanceType
           value: "{{NODE_INSTANCE_TYPE}}"
