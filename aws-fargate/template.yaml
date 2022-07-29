@@ -43,7 +43,9 @@ inputs:
       type: string
       placeholder: MyFargateApp
       description: Unique name for your application
-
+      maxLength: 20
+      pattern: ^[A-Za-z]*$
+      patternErrorMessage: "The app name can only contain letters."
   required:
     - CPU
     - Memory

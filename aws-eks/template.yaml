@@ -28,6 +28,9 @@ inputs:
     AppName:
       type: string
       description: Unique name for your cluster
+      maxLength: 20
+      pattern: ^[A-Za-z]*$
+      patternErrorMessage: "The app name can only contain letters."
   required:
     - NODE_INSTANCE_TYPE
     - MIN_NODES
