@@ -5,24 +5,24 @@ repo: https://github.com/microtica/templates/tree/master/import-app
 
 inputs:
   properties:
-    APP_NAME:
+    AppName:
       type: string
       description: The name of the application. The name will be shown in the portal.
       maxLength: 23
       pattern: ^[a-z]*$
       patternErrorMessage: "The app name can contain only lowercase letters."
-    PORT:
+    Port:
       type: number
       default: 80
       description: The port on which the application is listening for requests.
   required:
-    - APP_NAME
-    - PORT
+    - AppName
+    - Port
 
 service:
-  "{{APP_NAME}}":
+  "{{AppName}}":
     source: git
-    containerPort: "{{PORT}}"
+    containerPort: "{{Port}}"
     autoScaling:
       minReplicas: 1
       maxReplicas: 1
