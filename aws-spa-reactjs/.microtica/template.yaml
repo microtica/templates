@@ -5,11 +5,10 @@ repo: https://github.com/microtica/templates/tree/master/aws-spa-reactjs
 
 inputs:
   properties:
-    WebsiteName: 
+    AppName: 
       type: string
       placeholder: MyWebsite
       description: Use this parameter to distinguish multiple websites in Microtica portal.
-
     DomainName:
       type: string
       placeholder: www.example.com
@@ -24,13 +23,13 @@ inputs:
       description: This parameter will be available in the /env.js file and can be used in the application to access backend services.
 
   required:
-    - WebsiteName
+    - AppName
     - DomainName
     - CertificateArn
 
 infrastructure:
   resources:
-    {{WebsiteName}}:
+    {{AppName}}:
       source: git
       properties:
         - key: DomainName
