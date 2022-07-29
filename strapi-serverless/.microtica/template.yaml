@@ -42,7 +42,7 @@ inputs:
       type: string
       description: Unique name for your application
       maxLength: 20
-      pattern: ^[A-Za-z]*$
+      pattern: ^[A-Z][A-Za-z]*$
       patternErrorMessage: "The app name can only contain letters."
   required:
     - CPU
