@@ -45,7 +45,7 @@ inputs:
       description: Unique name for your application
       maxLength: 20
       pattern: ^[A-Z][A-Za-z]*$
-      patternErrorMessage: "The app name can only contain letters."
+      patternErrorMessage: "The app name can only contain letters and must start with an uppercase."
   required:
     - CPU
     - Memory
