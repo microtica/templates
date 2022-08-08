@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:14.19.0-slim
+FROM public.ecr.aws/docker/library/node:16.16.0-slim
 
 WORKDIR /strapi
 

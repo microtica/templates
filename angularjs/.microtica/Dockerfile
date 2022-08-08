@@ -1,5 +1,5 @@
 # Stage 1; build and compile the frontend
-FROM public.ecr.aws/docker/library/node:14.19.0-slim as build-stage
+FROM public.ecr.aws/docker/library/node:16.16.0-slim as build-stage
 
 WORKDIR /app
 
