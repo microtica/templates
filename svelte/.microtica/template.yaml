@@ -1,0 +1,16 @@
+name: Svelte
+description: Svelte is a tool for building fast web applications.
+logo: https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Svelte_Logo.svg/1200px-Svelte_Logo.svg.png
+repo: https://github.com/microtica/templates/tree/master/svelte
+
+service:
+  svelte:
+    source: git
+    containerPort: 80
+    autoScaling:
+      minReplicas: 1
+      maxReplicas: 1
+      cpu: 1
+      maxCpu: 5
+      memory: 32
+      maxMemory: 64
