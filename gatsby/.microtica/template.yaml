@@ -11,7 +11,9 @@ inputs:
       maxLength: 23
       pattern: ^[a-zA-Z0-9]*$
       patternErrorMessage: "The app name can contain only letters and numbers"
-
+  required:
+  - AppName
+  
 service:
   "{{AppName}}":
     source: git
