@@ -3,8 +3,17 @@ description: Gatsby enables developers to build fast, secure, and powerful websi
 logo: https://cdn.icon-icons.com/icons2/2389/PNG/512/gatsby_logo_icon_145262.png
 repo: https://github.com/microtica/templates/tree/master/gatsby
 
+inputs:
+  properties:
+    AppName:
+      type: string
+      description: The name of the application. The name will be shown in the portal.
+      maxLength: 23
+      pattern: ^[a-zA-Z0-9]*$
+      patternErrorMessage: "The app name can contain only letters and numbers"
+
 service:
-  gatsby:
+  "{{AppName}}":
     source: git
     containerPort: 9000
     autoScaling:
