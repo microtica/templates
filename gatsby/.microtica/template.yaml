@@ -1,0 +1,16 @@
+name: Gatsby
+description: Gatsby enables developers to build fast, secure, and powerful websites using a React-based framework and innovative data layer that makes integrating different content, APIs, and services into one web experience incredibly simple.
+logo: https://cdn.icon-icons.com/icons2/2389/PNG/512/gatsby_logo_icon_145262.png
+repo: https://github.com/microtica/templates/tree/master/gatsby
+
+service:
+  gatsby:
+    source: git
+    containerPort: 9000
+    autoScaling:
+      minReplicas: 1
+      maxReplicas: 1
+      cpu: 1
+      maxCpu: 20
+      memory: 128
+      maxMemory: 256
