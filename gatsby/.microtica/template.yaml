@@ -1,6 +1,6 @@
 name: Gatsby
 description: Gatsby enables developers to build fast, secure, and powerful websites using a React-based framework and innovative data layer that makes integrating different content, APIs, and services into one web experience incredibly simple.
-logo: https://cdn.icon-icons.com/icons2/2389/PNG/512/gatsby_logo_icon_145262.png
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/gatsby.png
 repo: https://github.com/microtica/templates/tree/master/gatsby
 
 inputs:
