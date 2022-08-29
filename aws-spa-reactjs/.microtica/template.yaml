@@ -1,6 +1,6 @@
 name: SPA on CloudFront
 description: An empty ReactJS application hosted on S3 and exposed through Amazon CloudFront on your own domain.
-logo: https://banner2.cleanpng.com/20180714/ggq/kisspng-amazon-com-amazon-web-services-amazon-cloudfront-c-amazon-5b49ac77210185.8189655715315549351352.jpg
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/cloudfront.jpg
 repo: https://github.com/microtica/templates/tree/master/aws-spa-reactjs
 
 inputs:

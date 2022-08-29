@@ -1,6 +1,6 @@
 name: Amazon EKS NGINX Ingress
 description: NGINX ingress service for Amazon EKS cluster.
-logo: https://1000logos.net/wp-content/uploads/2020/08/Nginx-Symbol.jpg
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/nginx.jpeg
 repo: https://github.com/microtica/templates/tree/master/aws-eks-nginx-ingress
 
 inputs:

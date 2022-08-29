@@ -1,6 +1,6 @@
 name: Strapi Serverless
 description: Strapi is an open source Headless CMS built with NodeJS. Using Strapi you can design and publish your content consumed by your apps via API.
-logo: https://dev-to-uploads.s3.amazonaws.com/uploads/organization/profile_image/763/988af53b-5d7e-435a-98eb-dd4aff5299d2.png
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/strapi.png
 repo: https://github.com/microtica/templates/tree/master/strapi-serverless
 
 inputs:

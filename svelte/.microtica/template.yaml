@@ -1,6 +1,6 @@
 name: Svelte
 description: Svelte is a tool for building fast web applications.
-logo: https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Svelte_Logo.svg/1200px-Svelte_Logo.svg.png
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/svelte.png
 repo: https://github.com/microtica/templates/tree/master/svelte
 
 inputs:

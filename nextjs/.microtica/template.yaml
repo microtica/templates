@@ -1,6 +1,6 @@
 name: Next.js
 description: Next.js gives you the best developer experience with all the features you need for production - hybrid static & server rendering, TypeScript support, smart bundling, route pre-fetching, and more. No config needed.
-logo: https://seeklogo.com/images/N/next-js-logo-8FCFF51DD2-seeklogo.com.png
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/nextjs.png
 repo: https://github.com/microtica/templates/tree/master/nextjs
 
 service:

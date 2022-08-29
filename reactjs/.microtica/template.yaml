@@ -1,6 +1,6 @@
 name: ReactJS
 description: A JavaScript library for building user interfaces.
-logo: https://reactjs.org/logo-og.png
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/reactjs.png
 repo: https://github.com/microtica/templates/tree/master/reactjs
 
 service:

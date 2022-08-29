@@ -1,6 +1,6 @@
 name: Amazon EKS
 description: A managed container service to run and scale Kubernetes applications in the cloud.
-logo: https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Kubernetes_logo_without_workmark.svg/1200px-Kubernetes_logo_without_workmark.svg.png
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/kubernetes.png
 repo: https://github.com/microtica/templates/aws-eks
 
 inputs:
