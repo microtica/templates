@@ -12,5 +12,5 @@ service:
       maxReplicas: 1
       cpu: 1
       maxCpu: 20
-      memory: 256
-      maxMemory: 350
+      memory: 192
+      maxMemory: 300
