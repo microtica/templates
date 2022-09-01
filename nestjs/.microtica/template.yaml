@@ -1,0 +1,16 @@
+name: NestJS
+description: Nest (NestJS) is a framework for building efficient, scalable Node.js server-side applications. It uses progressive JavaScript, is built with and fully supports TypeScript.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/nestjs.svg
+repo: https://github.com/microtica/templates/tree/master/nestjs
+
+service:
+  nestjs:
+    source: git
+    containerPort: 3000
+    autoScaling:
+      minReplicas: 1
+      maxReplicas: 1
+      cpu: 1
+      maxCpu: 20
+      memory: 256
+      maxMemory: 350
