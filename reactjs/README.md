@@ -2,6 +2,12 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+<p align="center">
+<a href="https://app.microtica.com/templates/new?template=https://raw.githubusercontent.com/microtica/templates/master/reactjs/.microtica/template.yaml&utm_content=reactjs&utm_source=github&utm_medium=button&utm_campaign=deploy_with_microtica">
+    <img src="https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/deploy-with-microtica.svg" alt="Deploy with Microtica" width="180px" />
+</a>
+</p>
+
 ## Available Scripts
 
 In the project directory, you can run:

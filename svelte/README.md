@@ -1,5 +1,11 @@
 # Svelte + Vite
 
+<p align="center">
+<a href="https://app.microtica.com/templates/new?template=https://raw.githubusercontent.com/microtica/templates/master/svelte/.microtica/template.yaml&utm_content=svelte&utm_source=github&utm_medium=button&utm_campaign=deploy_with_microtica">
+    <img src="https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/deploy-with-microtica.svg" alt="Deploy with Microtica" width="180px" />
+</a>
+</p>
+
 This template should help get you started developing with Svelte in Vite.
 
 ## Recommended IDE Setup

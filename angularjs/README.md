@@ -1,5 +1,11 @@
 # Angularjs
 
+<p align="center">
+<a href="https://app.microtica.com/templates/new?template=https://raw.githubusercontent.com/microtica/templates/master/angularjs/.microtica/template.yaml&utm_content=angularjs&utm_source=github&utm_medium=button&utm_campaign=deploy_with_microtica">
+    <img src="https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/deploy-with-microtica.svg" alt="Deploy with Microtica" width="180px" />
+</a>
+</p>
+
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 13.3.2.
 
 ## Development server

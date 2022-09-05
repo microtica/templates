@@ -1,5 +1,11 @@
 # 🚀 Getting started with Strapi
 
+<p align="center">
+<a href="https://app.microtica.com/templates/new?template=https://raw.githubusercontent.com/microtica/templates/master/strapi/.microtica/template.yaml&utm_content=strapi&utm_source=github&utm_medium=button&utm_campaign=deploy_with_microtica">
+    <img src="https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/deploy-with-microtica.svg" alt="Deploy with Microtica" width="180px" />
+</a>
+</p>
+
 Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/developer-docs/latest/developer-resources/cli/CLI.html) (CLI) which lets you scaffold and manage your project in seconds.
 
 ### `develop`
