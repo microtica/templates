@@ -49,18 +49,6 @@
             "Type": "String",
             "Default": "1"
         },
-        "ContainerPort": {
-            "Type": "String",
-            "Default": "1337"
-        },
-        "StickySession": {
-            "Type": "String",
-            "Default": "false",
-            "AllowedValues": [
-                "true",
-                "false"
-            ]
-        },
         "DomainName": {
             "Type": "String",
             "Default": ""
@@ -70,9 +58,6 @@
             "Default": ""
         },
         "ImageUrl": {
-            "Type": "String"
-        },
-        "Version": {
             "Type": "String"
         },
         "DatabaseClient": {
@@ -114,14 +99,6 @@
                 {
                     "Condition": "EnableHTTP"
                 }
-            ]
-        },
-        "EnableStickySession": {
-            "Fn::Equals": [
-                {
-                    "Ref": "StickySession"
-                },
-                "true"
             ]
         },
         "ProvisionRDSDatabase": {
@@ -315,26 +292,12 @@
                 "HealthyThresholdCount": 2,
                 "UnhealthyThresholdCount": 5,
                 "TargetType": "ip",
-                "Port": {
-                    "Ref": "ContainerPort"
-                },
+                "Port": 1337,
                 "Protocol": "HTTP",
                 "VpcId": {
                     "Ref": "VpcId"
                 },
                 "TargetGroupAttributes": [
-                    {
-                        "Fn::If": [
-                            "EnableStickySession",
-                            {
-                                "Key": "stickiness.enabled",
-                                "Value": true
-                            },
-                            {
-                                "Ref": "AWS::NoValue"
-                            }
-                        ]
-                    },
                     {
                         "Key": "deregistration_delay.timeout_seconds",
                         "Value": 30
@@ -460,9 +423,7 @@
                 "LoadBalancers": [
                     {
                         "ContainerName": "service",
-                        "ContainerPort": {
-                            "Ref": "ContainerPort"
-                        },
+                        "ContainerPort": 1337,
                         "TargetGroupArn": {
                             "Ref": "TargetGroup"
                         }
@@ -781,19 +742,13 @@
                         },
                         "PortMappings": [
                             {
-                                "ContainerPort": "1337"
+                                "ContainerPort": 1337
                             }
                         ],
                         "Environment": {
                             "Fn::If": [
                                 "ProvisionRDSDatabase",
                                 [
-                                    {
-                                        "Name": "VERSION",
-                                        "Value": {
-                                            "Ref": "Version"
-                                        }
-                                    },
                                     {
                                         "Name": "AWS_BUCKET",
                                         "Value": {
@@ -876,12 +831,6 @@
                                     }
                                 ],
                                 [
-                                    {
-                                        "Name": "VERSION",
-                                        "Value": {
-                                            "Ref": "Version"
-                                        }
-                                    },
                                     {
                                         "Name": "AWS_BUCKET",
                                         "Value": {
@@ -1210,6 +1159,108 @@
         }
     },
     "Outputs": {
+        "ApplicationLogs": {
+            "Value": {
+                "Fn::Sub": "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#logEventViewer:group=${ServiceLogs}"
+            }
+        },
+        "AccessUrl": {
+            "Value": {
+                "Fn::If": [
+                    "EnableHTTPS",
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "https://",
+                                {
+                                    "Ref": "DomainName"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "http://",
+                                {
+                                    "Fn::GetAtt": "LoadBalancer.DNSName"
+                                }
+                            ]
+                        ]
+                    }
+                ]
+            }
+        },
+        "CNAME": {
+            "Value": {
+                "Fn::GetAtt": "LoadBalancer.DNSName"
+            }
+        },
+        "DatabaseEndpointAddress": {
+            "Value": {
+                "Fn::If": [
+                    "ProvisionRDSDatabase",
+                    {
+                        "Fn::If": [
+                            "ProvisionMySqlDatabase",
+                            {
+                                "Fn::GetAtt": "MySqlInstance.Endpoint.Address"
+                            },
+                            {
+                                "Fn::GetAtt": "PostgresInstance.Endpoint.Address"
+                            }
+                        ]
+                    },
+                    ""
+                ]
+            }
+        },
+        "DatabaseEndpointPort": {
+            "Value": {
+                "Fn::If": [
+                    "ProvisionRDSDatabase",
+                    {
+                        "Fn::If": [
+                            "ProvisionMySqlDatabase",
+                            {
+                                "Fn::GetAtt": "MySqlInstance.Endpoint.Port"
+                            },
+                            {
+                                "Fn::GetAtt": "PostgresInstance.Endpoint.Port"
+                            }
+                        ]
+                    },
+                    ""
+                ]
+            }
+        },
+        "DatabaseUsername": {
+            "Value": {
+                "Fn::If": [
+                    "ProvisionRDSDatabase",
+                    "dbuser",
+                    ""
+                ]
+            }
+        },
+        "DatabaseSecret": {
+            "Value": {
+                "Fn::If": [
+                    "ProvisionRDSDatabase",
+                    {
+                        "Ref": "DbInstanceRotationSecret"
+                    },
+                    ""
+                ]
+            }
+        },
+        "MediaBucket": {
+            "Value": {
+                "Ref": "MediaBucket"
+            }
+        },
         "ImageUrl": {
             "Value": {
                 "Ref": "ImageUrl"

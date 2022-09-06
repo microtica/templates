@@ -76,7 +76,7 @@ infrastructure:
         - key: Memory
           value: "{{Memory}}"
         - key: DesiredReplicas
-          reference: StrapiServerless{{AppName}}.DesiredReplicas
+          reference: "{{DesiredReplicas}}"
         - key: DatabaseClient
           value: "{{DatabaseClient}}"
         - key: ImageUrl

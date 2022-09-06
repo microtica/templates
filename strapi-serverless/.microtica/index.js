@@ -15,7 +15,6 @@ async function handleCreateOrUpdate() {
     transformTemplate(EnvironmentVariables);
 
     return {
-        Version: version,
         ImageUrl: `${ImageUrl}:${MIC_COMPONENT_VERSION}`,
         ShouldMountApiFolder: false
     };
