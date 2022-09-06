@@ -2,18 +2,1210 @@
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "Strapi App",
     "Parameters": {
+        "VpcId": {
+            "Type": "String"
+        },
+        "PrivateSubnet1Id": {
+            "Type": "String"
+        },
+        "PrivateSubnet2Id": {
+            "Type": "String"
+        },
+        "PublicSubnet1Id": {
+            "Type": "String"
+        },
+        "PublicSubnet2Id": {
+            "Type": "String"
+        },
+        "CPU": {
+            "Type": "String",
+            "Default": "256",
+            "AllowedValues": [
+                "256",
+                "512",
+                "1024",
+                "2048",
+                "4096"
+            ]
+        },
+        "Memory": {
+            "Type": "String",
+            "Default": "512",
+            "AllowedValues": [
+                "512",
+                "1024",
+                "2048",
+                "3072",
+                "4096",
+                "5120",
+                "6144",
+                "7168",
+                "8192",
+                "16384",
+                "30720"
+            ]
+        },
+        "DesiredReplicas": {
+            "Type": "String",
+            "Default": "1"
+        },
+        "ContainerPort": {
+            "Type": "String",
+            "Default": "1337"
+        },
+        "StickySession": {
+            "Type": "String",
+            "Default": "false",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
+        },
+        "DomainName": {
+            "Type": "String",
+            "Default": ""
+        },
+        "CertificateArn": {
+            "Type": "String",
+            "Default": ""
+        },
         "ImageUrl": {
             "Type": "String"
+        },
+        "Version": {
+            "Type": "String"
+        },
+        "DatabaseClient": {
+            "Type": "String",
+            "AllowedValues": [
+                "sqlite",
+                "mysql",
+                "postgres"
+            ]
+        },
+        "ShouldMountApiFolder": {
+            "Type": "String",
+            "Default": "true"
+        }
+    },
+    "Conditions": {
+        "EnableHTTP": {
+            "Fn::Or": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "CertificateArn"
+                        },
+                        ""
+                    ]
+                },
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "DomainName"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "EnableHTTPS": {
+            "Fn::Not": [
+                {
+                    "Condition": "EnableHTTP"
+                }
+            ]
+        },
+        "EnableStickySession": {
+            "Fn::Equals": [
+                {
+                    "Ref": "StickySession"
+                },
+                "true"
+            ]
+        },
+        "ProvisionRDSDatabase": {
+            "Fn::Or": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "DatabaseClient"
+                        },
+                        "mysql"
+                    ]
+                },
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "DatabaseClient"
+                        },
+                        "postgres"
+                    ]
+                }
+            ]
+        },
+        "ProvisionMySqlDatabase": {
+            "Fn::Equals": [
+                {
+                    "Ref": "DatabaseClient"
+                },
+                "mysql"
+            ]
+        },
+        "ProvisionPostgresDatabase": {
+            "Fn::Equals": [
+                {
+                    "Ref": "DatabaseClient"
+                },
+                "postgres"
+            ]
+        },
+        "MountApiFolder": {
+            "Fn::Equals": [
+                {
+                    "Ref": "ShouldMountApiFolder"
+                },
+                "true"
+            ]
+        }
+    },
+    "Mappings": {
+        "RegionMap": {
+            "us-west-1": {
+                "ELBZoneId": "Z368ELLRRE2KJ0"
+            },
+            "us-west-2": {
+                "ELBZoneId": "Z1H1FL5HABSF5"
+            },
+            "us-east-1": {
+                "ELBZoneId": "Z35SXDOTRQ7X7K"
+            },
+            "us-east-2": {
+                "ELBZoneId": "Z3AADJGX6KTTL2"
+            },
+            "eu-central-1": {
+                "ELBZoneId": "Z215JYRZR1TBD5"
+            },
+            "eu-north-1": {
+                "ELBZoneId": "Z23TAZ6LKFMNIO"
+            },
+            "eu-west-1": {
+                "ELBZoneId": "Z32O12XQLNTSW2"
+            },
+            "eu-west-2": {
+                "ELBZoneId": "ZHURV8PSTC4K8"
+            },
+            "eu-west-3": {
+                "ELBZoneId": "Z3Q77PNBQS71R4"
+            },
+            "ap-northeast-1": {
+                "ELBZoneId": "Z14GRHDCWA56QT"
+            },
+            "ap-northeast-2": {
+                "ELBZoneId": "ZWKZPGTI48KDX"
+            },
+            "ap-south-1": {
+                "ELBZoneId": "ZP97RAFLXTNZK"
+            },
+            "ap-southeast-1": {
+                "ELBZoneId": "Z1LMS91P8CMLE5"
+            },
+            "ap-southeast-2": {
+                "ELBZoneId": "Z1GM3OXH4ZPM65"
+            }
         }
     },
     "Resources": {
-        "ImageUrlParameter": {
-            "Type": "AWS::SSM::Parameter",
+        "MediaBucket": {
+            "Type": "AWS::S3::Bucket",
             "Properties": {
-                "Type": "String",
-                "Value": {
-                    "Ref": "ImageUrl"
+                "AccessControl": "PublicReadWrite",
+                "BucketEncryption": {
+                    "ServerSideEncryptionConfiguration": [
+                        {
+                            "ServerSideEncryptionByDefault": {
+                                "SSEAlgorithm": "AES256"
+                            }
+                        }
+                    ]
+                },
+                "CorsConfiguration": {
+                    "CorsRules": [
+                        {
+                            "AllowedHeaders": [
+                                "*"
+                            ],
+                            "AllowedMethods": [
+                                "GET",
+                                "HEAD"
+                            ],
+                            "AllowedOrigins": [
+                                "*"
+                            ]
+                        }
+                    ]
                 }
+            }
+        },
+        "LoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "Scheme": "internet-facing",
+                "LoadBalancerAttributes": [
+                    {
+                        "Key": "idle_timeout.timeout_seconds",
+                        "Value": "30"
+                    }
+                ],
+                "Subnets": [
+                    {
+                        "Ref": "PublicSubnet1Id"
+                    },
+                    {
+                        "Ref": "PublicSubnet2Id"
+                    }
+                ],
+                "SecurityGroups": [
+                    {
+                        "Ref": "LoadBalancerSG"
+                    }
+                ]
+            }
+        },
+        "LoadBalancerRule": {
+            "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+            "Properties": {
+                "Actions": [
+                    {
+                        "TargetGroupArn": {
+                            "Ref": "TargetGroup"
+                        },
+                        "Type": "forward"
+                    }
+                ],
+                "Conditions": [
+                    {
+                        "Field": "path-pattern",
+                        "Values": [
+                            "*"
+                        ]
+                    }
+                ],
+                "ListenerArn": {
+                    "Fn::If": [
+                        "EnableHTTPS",
+                        {
+                            "Ref": "HTTPSListener"
+                        },
+                        {
+                            "Ref": "HTTPListener"
+                        }
+                    ]
+                },
+                "Priority": 1
+            }
+        },
+        "TargetGroup": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties": {
+                "HealthCheckIntervalSeconds": 10,
+                "HealthCheckPath": "/",
+                "HealthCheckProtocol": "HTTP",
+                "HealthCheckTimeoutSeconds": 5,
+                "HealthyThresholdCount": 2,
+                "UnhealthyThresholdCount": 5,
+                "TargetType": "ip",
+                "Port": {
+                    "Ref": "ContainerPort"
+                },
+                "Protocol": "HTTP",
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "TargetGroupAttributes": [
+                    {
+                        "Fn::If": [
+                            "EnableStickySession",
+                            {
+                                "Key": "stickiness.enabled",
+                                "Value": true
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    },
+                    {
+                        "Key": "deregistration_delay.timeout_seconds",
+                        "Value": 30
+                    }
+                ]
+            }
+        },
+        "LoadBalancerSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Access to the public facing load balancer",
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "IpProtocol": -1
+                    }
+                ]
+            }
+        },
+        "HTTPListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "DefaultActions": {
+                    "Fn::If": [
+                        "EnableHTTP",
+                        [
+                            {
+                                "TargetGroupArn": {
+                                    "Ref": "TargetGroup"
+                                },
+                                "Type": "forward"
+                            }
+                        ],
+                        [
+                            {
+                                "RedirectConfig": {
+                                    "Host": "#{host}",
+                                    "Path": "/#{path}",
+                                    "Port": "443",
+                                    "Protocol": "HTTPS",
+                                    "Query": "#{query}",
+                                    "StatusCode": "HTTP_301"
+                                },
+                                "Type": "redirect"
+                            }
+                        ]
+                    ]
+                },
+                "LoadBalancerArn": {
+                    "Ref": "LoadBalancer"
+                },
+                "Port": 80,
+                "Protocol": "HTTP"
+            }
+        },
+        "HTTPSListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Condition": "EnableHTTPS",
+            "Properties": {
+                "DefaultActions": [
+                    {
+                        "TargetGroupArn": {
+                            "Ref": "TargetGroup"
+                        },
+                        "Type": "forward"
+                    }
+                ],
+                "LoadBalancerArn": {
+                    "Ref": "LoadBalancer"
+                },
+                "Port": 443,
+                "Protocol": "HTTPS",
+                "Certificates": [
+                    {
+                        "CertificateArn": {
+                            "Ref": "CertificateArn"
+                        }
+                    }
+                ]
+            }
+        },
+        "ECSCluster": {
+            "Type": "AWS::ECS::Cluster"
+        },
+        "FargateService": {
+            "Type": "AWS::ECS::Service",
+            "DependsOn": "LoadBalancerRule",
+            "Properties": {
+                "Cluster": {
+                    "Ref": "ECSCluster"
+                },
+                "LaunchType": "FARGATE",
+                "DeploymentConfiguration": {
+                    "MaximumPercent": 200,
+                    "MinimumHealthyPercent": 75
+                },
+                "DesiredCount": {
+                    "Ref": "DesiredReplicas"
+                },
+                "NetworkConfiguration": {
+                    "AwsvpcConfiguration": {
+                        "SecurityGroups": [
+                            {
+                                "Ref": "FargateServiceSG"
+                            }
+                        ],
+                        "Subnets": [
+                            {
+                                "Ref": "PrivateSubnet1Id"
+                            },
+                            {
+                                "Ref": "PrivateSubnet2Id"
+                            }
+                        ]
+                    }
+                },
+                "TaskDefinition": {
+                    "Ref": "StrapiTaskDefinition"
+                },
+                "LoadBalancers": [
+                    {
+                        "ContainerName": "service",
+                        "ContainerPort": {
+                            "Ref": "ContainerPort"
+                        },
+                        "TargetGroupArn": {
+                            "Ref": "TargetGroup"
+                        }
+                    }
+                ]
+            }
+        },
+        "StrapiServiceRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ecs-tasks.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "AmazonECSTaskRolePolicy",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:Put*",
+                                        "s3:Get*",
+                                        "s3:List*",
+                                        "s3:Delete*"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${MediaBucket}"
+                                        },
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${MediaBucket}/*"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Fn::If": [
+                                        "ProvisionRDSDatabase",
+                                        {
+                                            "Effect": "Allow",
+                                            "Action": [
+                                                "secretsmanager:GetSecretValue"
+                                            ],
+                                            "Resource": {
+                                                "Ref": "DbInstanceRotationSecret"
+                                            }
+                                        },
+                                        {
+                                            "Ref": "AWS::NoValue"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "PersistentStorage": {
+            "Type": "AWS::EFS::FileSystem",
+            "Properties": {
+                "Encrypted": true,
+                "PerformanceMode": "generalPurpose",
+                "ThroughputMode": "bursting",
+                "BackupPolicy": {
+                    "Status": "ENABLED"
+                }
+            }
+        },
+        "ApiStorageAccessPoint": {
+            "Type": "AWS::EFS::AccessPoint",
+            "Properties": {
+                "FileSystemId": {
+                    "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                },
+                "PosixUser": {
+                    "Uid": "1001",
+                    "Gid": "1001",
+                    "SecondaryGids": [
+                        "0"
+                    ]
+                },
+                "RootDirectory": {
+                    "CreationInfo": {
+                        "OwnerGid": "1001",
+                        "OwnerUid": "1001",
+                        "Permissions": "755"
+                    },
+                    "Path": "/strapi/api"
+                }
+            }
+        },
+        "ApiV4StorageAccessPoint": {
+            "Type": "AWS::EFS::AccessPoint",
+            "Properties": {
+                "FileSystemId": {
+                    "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                },
+                "PosixUser": {
+                    "Uid": "1001",
+                    "Gid": "1001",
+                    "SecondaryGids": [
+                        "0"
+                    ]
+                },
+                "RootDirectory": {
+                    "CreationInfo": {
+                        "OwnerGid": "1001",
+                        "OwnerUid": "1001",
+                        "Permissions": "755"
+                    },
+                    "Path": "/strapi/src/api"
+                }
+            }
+        },
+        "UploadsStorageAccessPoint": {
+            "Type": "AWS::EFS::AccessPoint",
+            "Properties": {
+                "FileSystemId": {
+                    "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                },
+                "PosixUser": {
+                    "Uid": "1001",
+                    "Gid": "1001",
+                    "SecondaryGids": [
+                        "0"
+                    ]
+                },
+                "RootDirectory": {
+                    "CreationInfo": {
+                        "OwnerGid": "1001",
+                        "OwnerUid": "1001",
+                        "Permissions": "755"
+                    },
+                    "Path": "/strapi/public/uploads"
+                }
+            }
+        },
+        "DatabaseStorageAccessPoint": {
+            "Type": "AWS::EFS::AccessPoint",
+            "Properties": {
+                "FileSystemId": {
+                    "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                },
+                "PosixUser": {
+                    "Uid": "1001",
+                    "Gid": "1001",
+                    "SecondaryGids": [
+                        "0"
+                    ]
+                },
+                "RootDirectory": {
+                    "CreationInfo": {
+                        "OwnerGid": "1001",
+                        "OwnerUid": "1001",
+                        "Permissions": "755"
+                    },
+                    "Path": "/strapi/db"
+                }
+            }
+        },
+        "PersistentStorageMountTargetResource1": {
+            "Type": "AWS::EFS::MountTarget",
+            "Properties": {
+                "FileSystemId": {
+                    "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                },
+                "SubnetId": {
+                    "Ref": "PrivateSubnet1Id"
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "PersistentStorageSG"
+                    }
+                ]
+            }
+        },
+        "PersistentStorageMountTargetResource2": {
+            "Type": "AWS::EFS::MountTarget",
+            "Properties": {
+                "FileSystemId": {
+                    "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                },
+                "SubnetId": {
+                    "Ref": "PrivateSubnet2Id"
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "PersistentStorageSG"
+                    }
+                ]
+            }
+        },
+        "PersistentStorageSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Access to the EFS persistent storage",
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "IpProtocol": "tcp",
+                        "FromPort": 2049,
+                        "ToPort": 2049
+                    }
+                ]
+            }
+        },
+        "StrapiTaskDefinition": {
+            "Type": "AWS::ECS::TaskDefinition",
+            "Properties": {
+                "Cpu": {
+                    "Ref": "CPU"
+                },
+                "Memory": {
+                    "Ref": "Memory"
+                },
+                "NetworkMode": "awsvpc",
+                "RequiresCompatibilities": [
+                    "FARGATE"
+                ],
+                "ExecutionRoleArn": {
+                    "Ref": "FargateServiceExecutionRole"
+                },
+                "TaskRoleArn": {
+                    "Ref": "StrapiServiceRole"
+                },
+                "Volumes": [
+                    {
+                        "Name": "api-persistent-volume",
+                        "EFSVolumeConfiguration": {
+                            "FilesystemId": {
+                                "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                            },
+                            "TransitEncryption": "ENABLED",
+                            "AuthorizationConfig": {
+                                "AccessPointId": {
+                                    "Fn::GetAtt": "ApiStorageAccessPoint.AccessPointId"
+                                },
+                                "IAM": "DISABLED"
+                            }
+                        }
+                    },
+                    {
+                        "Name": "api-v4-persistent-volume",
+                        "EFSVolumeConfiguration": {
+                            "FilesystemId": {
+                                "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                            },
+                            "TransitEncryption": "ENABLED",
+                            "AuthorizationConfig": {
+                                "AccessPointId": {
+                                    "Fn::GetAtt": "ApiV4StorageAccessPoint.AccessPointId"
+                                },
+                                "IAM": "DISABLED"
+                            }
+                        }
+                    },
+                    {
+                        "Name": "uploads-persistent-volume",
+                        "EFSVolumeConfiguration": {
+                            "FilesystemId": {
+                                "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                            },
+                            "TransitEncryption": "ENABLED",
+                            "AuthorizationConfig": {
+                                "AccessPointId": {
+                                    "Fn::GetAtt": "UploadsStorageAccessPoint.AccessPointId"
+                                },
+                                "IAM": "DISABLED"
+                            }
+                        }
+                    },
+                    {
+                        "Name": "db-persistent-volume",
+                        "EFSVolumeConfiguration": {
+                            "FilesystemId": {
+                                "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                            },
+                            "TransitEncryption": "ENABLED",
+                            "AuthorizationConfig": {
+                                "AccessPointId": {
+                                    "Fn::GetAtt": "DatabaseStorageAccessPoint.AccessPointId"
+                                },
+                                "IAM": "DISABLED"
+                            }
+                        }
+                    }
+                ],
+                "ContainerDefinitions": [
+                    {
+                        "Name": "service",
+                        "Cpu": {
+                            "Ref": "CPU"
+                        },
+                        "Memory": {
+                            "Ref": "Memory"
+                        },
+                        "Image": {
+                            "Fn::Sub": "${ImageUrl}"
+                        },
+                        "PortMappings": [
+                            {
+                                "ContainerPort": "1337"
+                            }
+                        ],
+                        "Environment": {
+                            "Fn::If": [
+                                "ProvisionRDSDatabase",
+                                [
+                                    {
+                                        "Name": "VERSION",
+                                        "Value": {
+                                            "Ref": "Version"
+                                        }
+                                    },
+                                    {
+                                        "Name": "AWS_BUCKET",
+                                        "Value": {
+                                            "Ref": "MediaBucket"
+                                        }
+                                    },
+                                    {
+                                        "Name": "AWS_REGION",
+                                        "Value": {
+                                            "Ref": "AWS::Region"
+                                        }
+                                    },
+                                    {
+                                        "Name": "DATABASE_HOST",
+                                        "Value": {
+                                            "Fn::If": [
+                                                "ProvisionMySqlDatabase",
+                                                {
+                                                    "Fn::GetAtt": [
+                                                        "MySqlInstance",
+                                                        "Endpoint.Address"
+                                                    ]
+                                                },
+                                                {
+                                                    "Fn::GetAtt": [
+                                                        "PostgresInstance",
+                                                        "Endpoint.Address"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "Name": "DATABASE_PORT",
+                                        "Value": {
+                                            "Fn::If": [
+                                                "ProvisionMySqlDatabase",
+                                                {
+                                                    "Fn::GetAtt": [
+                                                        "MySqlInstance",
+                                                        "Endpoint.Port"
+                                                    ]
+                                                },
+                                                {
+                                                    "Fn::GetAtt": [
+                                                        "PostgresInstance",
+                                                        "Endpoint.Port"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "Name": "DATABASE_NAME",
+                                        "Value": "strapi"
+                                    },
+                                    {
+                                        "Name": "DATABASE_USERNAME",
+                                        "Value": {
+                                            "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::username}}"
+                                        }
+                                    },
+                                    {
+                                        "Name": "DATABASE_PASSWORD",
+                                        "Value": {
+                                            "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::password}}"
+                                        }
+                                    },
+                                    {
+                                        "Name": "DATABASE_CLIENT",
+                                        "Value": {
+                                            "Ref": "DatabaseClient"
+                                        }
+                                    },
+                                    {
+                                        "Name": "DATABASE_SECRET_ARN",
+                                        "Value": {
+                                            "Ref": "DbInstanceRotationSecret"
+                                        }
+                                    }
+                                ],
+                                [
+                                    {
+                                        "Name": "VERSION",
+                                        "Value": {
+                                            "Ref": "Version"
+                                        }
+                                    },
+                                    {
+                                        "Name": "AWS_BUCKET",
+                                        "Value": {
+                                            "Ref": "MediaBucket"
+                                        }
+                                    },
+                                    {
+                                        "Name": "AWS_REGION",
+                                        "Value": {
+                                            "Ref": "AWS::Region"
+                                        }
+                                    },
+                                    {
+                                        "Name": "DATABASE_CLIENT",
+                                        "Value": {
+                                            "Ref": "DatabaseClient"
+                                        }
+                                    }
+                                ]
+                            ]
+                        },
+                        "MountPoints": [
+                            {
+                                "Fn::If": [
+                                    "MountApiFolder",
+                                    {
+                                        "ContainerPath": "/strapi/api",
+                                        "SourceVolume": "api-persistent-volume"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            {
+                                "Fn::If": [
+                                    "MountApiFolder",
+                                    {
+                                        "ContainerPath": "/strapi/src/api",
+                                        "SourceVolume": "api-v4-persistent-volume"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            {
+                                "ContainerPath": "/strapi/public/uploads",
+                                "SourceVolume": "uploads-persistent-volume"
+                            },
+                            {
+                                "ContainerPath": "/strapi/.tmp",
+                                "SourceVolume": "db-persistent-volume"
+                            }
+                        ],
+                        "LogConfiguration": {
+                            "LogDriver": "awslogs",
+                            "Options": {
+                                "awslogs-group": {
+                                    "Ref": "ServiceLogs"
+                                },
+                                "awslogs-region": {
+                                    "Ref": "AWS::Region"
+                                },
+                                "awslogs-stream-prefix": "container-logs"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "ServiceLogs": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "RetentionInDays": 90
+            }
+        },
+        "FargateServiceSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Access to the public facing load balancer",
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "SourceSecurityGroupId": {
+                            "Ref": "LoadBalancerSG"
+                        },
+                        "IpProtocol": -1
+                    }
+                ]
+            }
+        },
+        "FargateServiceExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ecs-tasks.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "AmazonECSTaskExecutionRolePolicy",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ecr:GetAuthorizationToken",
+                                        "ecr:BatchCheckLayerAvailability",
+                                        "ecr:GetDownloadUrlForLayer",
+                                        "ecr:BatchGetImage",
+                                        "logs:CreateLogStream",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "MySqlInstance": {
+            "Type": "AWS::RDS::DBInstance",
+            "Condition": "ProvisionMySqlDatabase",
+            "Properties": {
+                "MasterUsername": {
+                    "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::username}}"
+                },
+                "MasterUserPassword": {
+                    "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::password}}"
+                },
+                "DBName": "strapi",
+                "CopyTagsToSnapshot": true,
+                "DBInstanceClass": "db.t3.micro",
+                "Engine": "mysql",
+                "EngineVersion": "8.0.28",
+                "AllocatedStorage": "20",
+                "StorageType": "gp2",
+                "KmsKeyId": {
+                    "Ref": "DbEncryptionKey"
+                },
+                "StorageEncrypted": true,
+                "PubliclyAccessible": false,
+                "DBSubnetGroupName": {
+                    "Ref": "PrivateSubnetGroup"
+                },
+                "VPCSecurityGroups": [
+                    {
+                        "Ref": "DbSecurityGroup"
+                    }
+                ],
+                "MultiAZ": false
+            }
+        },
+        "PostgresInstance": {
+            "Type": "AWS::RDS::DBInstance",
+            "Condition": "ProvisionPostgresDatabase",
+            "Properties": {
+                "MasterUsername": {
+                    "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::username}}"
+                },
+                "MasterUserPassword": {
+                    "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::password}}"
+                },
+                "DBName": "strapi",
+                "CopyTagsToSnapshot": true,
+                "DBInstanceClass": "db.t3.small",
+                "Engine": "postgres",
+                "EngineVersion": "14.1",
+                "AllocatedStorage": "20",
+                "StorageType": "gp2",
+                "KmsKeyId": {
+                    "Ref": "DbEncryptionKey"
+                },
+                "StorageEncrypted": true,
+                "PubliclyAccessible": false,
+                "DBSubnetGroupName": {
+                    "Ref": "PrivateSubnetGroup"
+                },
+                "VPCSecurityGroups": [
+                    {
+                        "Ref": "DbSecurityGroup"
+                    }
+                ],
+                "MultiAZ": false
+            }
+        },
+        "PrivateSubnetGroup": {
+            "Type": "AWS::RDS::DBSubnetGroup",
+            "Condition": "ProvisionRDSDatabase",
+            "Properties": {
+                "DBSubnetGroupDescription": "private-subnet-group",
+                "SubnetIds": [
+                    {
+                        "Ref": "PrivateSubnet1Id"
+                    },
+                    {
+                        "Ref": "PrivateSubnet2Id"
+                    }
+                ]
+            }
+        },
+        "DbSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Condition": "ProvisionRDSDatabase",
+            "Properties": {
+                "GroupDescription": {
+                    "Fn::Sub": "DB Cluster Security Group"
+                },
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "3306",
+                        "ToPort": "3306",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "5432",
+                        "ToPort": "5432",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "DbEncryptionKey": {
+            "Type": "AWS::KMS::Key",
+            "Condition": "ProvisionRDSDatabase",
+            "Properties": {
+                "Description": "DB encyption key",
+                "EnableKeyRotation": "True",
+                "KeyPolicy": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": {
+                                    "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
+                                }
+                            },
+                            "Action": "kms:*",
+                            "Resource": "*"
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": "*"
+                            },
+                            "Action": [
+                                "kms:Encrypt",
+                                "kms:Decrypt",
+                                "kms:ReEncrypt*",
+                                "kms:GenerateDataKey*",
+                                "kms:CreateGrant",
+                                "kms:ListGrants",
+                                "kms:DescribeKey"
+                            ],
+                            "Resource": "*",
+                            "Condition": {
+                                "StringEquals": {
+                                    "kms:CallerAccount": {
+                                        "Ref": "AWS::AccountId"
+                                    },
+                                    "kms:ViaService": {
+                                        "Fn::Sub": "rds.${AWS::Region}.amazonaws.com"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "DbInstanceRotationSecret": {
+            "Type": "AWS::SecretsManager::Secret",
+            "Condition": "ProvisionRDSDatabase",
+            "Properties": {
+                "Description": "RDS instance secret",
+                "GenerateSecretString": {
+                    "SecretStringTemplate": "{\"username\": \"dbuser\"}",
+                    "GenerateStringKey": "password",
+                    "PasswordLength": 16,
+                    "ExcludeCharacters": "\"@/\\"
+                }
+            }
+        },
+        "DbInstanceAttachment": {
+            "Type": "AWS::SecretsManager::SecretTargetAttachment",
+            "Condition": "ProvisionRDSDatabase",
+            "Properties": {
+                "SecretId": {
+                    "Ref": "DbInstanceRotationSecret"
+                },
+                "TargetId": {
+                    "Fn::If": [
+                        "ProvisionMySqlDatabase",
+                        {
+                            "Ref": "MySqlInstance"
+                        },
+                        {
+                            "Ref": "PostgresInstance"
+                        }
+                    ]
+                },
+                "TargetType": "AWS::RDS::DBInstance"
             }
         }
     },
