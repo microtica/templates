@@ -195,6 +195,7 @@
     "Resources": {
         "MediaBucket": {
             "Type": "AWS::S3::Bucket",
+            "DeletionPolicy": "Retain",
             "Properties": {
                 "AccessControl": "PublicReadWrite",
                 "BucketEncryption": {
@@ -458,10 +459,11 @@
                                 {
                                     "Effect": "Allow",
                                     "Action": [
-                                        "s3:Put*",
-                                        "s3:Get*",
-                                        "s3:List*",
-                                        "s3:Delete*"
+                                        "s3:PutObject",
+                                        "s3:GetObject",
+                                        "s3:ListBucket",
+                                        "s3:DeleteObject",
+                                        "s3:PutObjectAcl"                                      
                                     ],
                                     "Resource": [
                                         {
