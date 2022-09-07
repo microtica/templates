@@ -72,7 +72,7 @@ infrastructure:
         - key: Memory
           value: "{{Memory}}"
         - key: DesiredReplicas
-          value: "{{DesiredReplicas}}"
+          reference: "{{DesiredReplicas}}"
         - key: DatabaseClient
           value: "{{DatabaseClient}}"
         - key: ImageUrl
