@@ -40,4 +40,4 @@ steps:
     partial:
         create_missing_resources: true
         resource_version_overrides:
-          {{AppName}}: "{{MIC_PIPELINE_EXECUTION_ID}}"
+          StrapiApp{{AppName}}: "{{MIC_PIPELINE_EXECUTION_ID}}"
