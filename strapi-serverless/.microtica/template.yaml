@@ -58,27 +58,8 @@ infrastructure:
       properties:
         - key: natInstanceType
           value: t2.micro
-    StrapiServerless{{AppName}}:
-      type: microtica-aws-strapi-serverless:latest
-      properties:
-        - key: VpcId
-          reference: VPC{{AppName}}.vpcId
-        - key: PrivateSubnet1Id
-          reference: VPC{{AppName}}.privateSubnet1
-        - key: PrivateSubnet2Id
-          reference: VPC{{AppName}}.privateSubnet2
-        - key: CPU
-          value: "{{CPU}}"
-        - key: Memory
-          value: "{{Memory}}"
-        - key: DesiredReplicas
-          value: "{{DesiredReplicas}}"
-        - key: DatabaseClient
-          value: "{{DatabaseClient}}"
-        - key: ImageUrl
-          reference: "StrapiApp{{AppName}}.ImageUrl"
-    ContainerRunner{{AppName}}:
-      type: microtica-aws-fargate:latest
+    {{AppName}}:
+      source: git
       properties:
         - key: VpcId
           reference: VPC{{AppName}}.vpcId
@@ -90,20 +71,13 @@ infrastructure:
           reference: VPC{{AppName}}.publicSubnet1
         - key: PublicSubnet2Id
           reference: VPC{{AppName}}.publicSubnet2
-        - key: CustomTaskDefinitionArn
-          reference: StrapiServerless{{AppName}}.TaskDefinitionArn
-        - key: ContainerPort
-          reference: StrapiServerless{{AppName}}.ContainerPort
-        - key: DesiredReplicas
-          reference: StrapiServerless{{AppName}}.DesiredReplicas
         - key: CPU
           value: "{{CPU}}"
         - key: Memory
           value: "{{Memory}}"
-        - key: StickySession
-          value: "false"
-    StrapiApp{{AppName}}:
-      source: git
-      properties:
+        - key: DesiredReplicas
+          reference: "{{DesiredReplicas}}"
+        - key: DatabaseClient
+          value: "{{DatabaseClient}}"
         - key: ImageUrl
           value: "{{CONTAINER_REGISTRY_URL}}/microtica/strapi-app"
