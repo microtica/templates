@@ -11,22 +11,17 @@ inputs:
       maxLength: 23
       pattern: ^[a-z]*$
       patternErrorMessage: "The app name can contain only lowercase letters."
-    Port:
-      type: number
-      default: 80
-      description: The port on which the application is listening for requests.
   required:
     - AppName
-    - Port
 
 service:
   "{{AppName}}":
     source: git
-    containerPort: "{{Port}}"
+    containerPort: "{{CONTAINER_PORT}}"
     autoScaling:
       minReplicas: 1
       maxReplicas: 1
       cpu: 1
-      maxCpu: 10
+      maxCpu: 50
       memory: 32
-      maxMemory: 64
+      maxMemory: 256
