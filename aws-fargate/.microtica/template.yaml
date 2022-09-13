@@ -48,6 +48,7 @@ inputs:
     - Memory
     - DesiredReplicas
     - AppName
+    - Port
 
 infrastructure:
   resources:
