@@ -1,7 +1,7 @@
 name: AWS Fargate
 description: Provides on-demand, right-sized compute capacity for containers.
 logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/fargate.png
-repo: https://github.com/microtica/templates/tree/master/aws-fargate
+repo: https://github.com/microtica/templates/tree/aws-fargate-template/aws-fargate
 
 inputs:
   properties:
@@ -14,7 +14,7 @@ inputs:
         - 2048
         - 4096
       default: 256
-      description: The number of CPU units reserved for the container app.
+      description: The number of CPU units reserved for the Strapi app
     Memory:
       type: number
       enum:
@@ -24,24 +24,15 @@ inputs:
         - 3072
         - 4096
       default: 512
-      description: The amount (in MiB) of memory reserved for the container app.
+      description: The amount (in MiB) of memory reserved for the Strapi app
     DesiredReplicas:
       type: number
       default: 1
       minimum: 0
       maximum: 10
-      description: The number of container applications running at the same time. The workload will be balanced between the apps.
-    ContainerPort:
-      type: number
-      default: 80
-      description: The port on which the application is listending for requests. 
-    ImageUrl:
-      type: string
-      placeholder: nginx:latest
-      description: Public container image to run on Fargate (format <image name>:<version>)
+      description: The number of Strapi applications running at the same time. The workload will be balanced between the apps.
     AppName:
       type: string
-      placeholder: MyFargateApp
       description: Unique name for your application
       maxLength: 20
       pattern: ^[A-Z][A-Za-z]*$
@@ -50,8 +41,6 @@ inputs:
     - CPU
     - Memory
     - DesiredReplicas
-    - ContainerPort
-    - ImageUrl
     - AppName
 
 infrastructure:
@@ -61,8 +50,8 @@ infrastructure:
       properties:
         - key: natInstanceType
           value: t2.micro
-    Fargate{{AppName}}:
-      type: microtica-aws-fargate:latest
+    {{AppName}}:
+      source: git
       properties:
         - key: VpcId
           reference: VPC{{AppName}}.vpcId
@@ -74,15 +63,11 @@ infrastructure:
           reference: VPC{{AppName}}.publicSubnet1
         - key: PublicSubnet2Id
           reference: VPC{{AppName}}.publicSubnet2
-        - key: ContainerPort
-          value: "{{ContainerPort}}"
-        - key: DesiredReplicas
-          value: "{{DesiredReplicas}}"
         - key: CPU
           value: "{{CPU}}"
         - key: Memory
           value: "{{Memory}}"
-        - key: StickySession
-          value: "false"
+        - key: DesiredReplicas
+          value: "{{DesiredReplicas}}"
         - key: ImageUrl
-          value: "{{ImageUrl}}"
+          value: "{{CONTAINER_REGISTRY_URL}}/microtica/fargate-app"
