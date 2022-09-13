@@ -4,7 +4,7 @@
   "description": "Node.js is an open-source, cross-platform, back-end JavaScript runtime environment that runs on a JavaScript engine.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\""
   },
   "author": "Microtica",
   "license": "ISC",
