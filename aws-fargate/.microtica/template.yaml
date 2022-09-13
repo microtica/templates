@@ -79,4 +79,4 @@ infrastructure:
         - key: ImageUrl
           value: "{{CONTAINER_REGISTRY_URL}}/microtica/fargate-app"
         - key: ContainerPort
-          value: "{{ContainerPort}}"
+          value: "{{Port}}"
