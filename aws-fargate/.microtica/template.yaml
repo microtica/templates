@@ -31,6 +31,12 @@ inputs:
       minimum: 0
       maximum: 10
       description: The number of Strapi applications running at the same time. The workload will be balanced between the apps.
+    Port:
+      type: number
+      default: 3000
+      minimum: 1
+      maximum: 65535
+      description: The port on which the application is listening for requests.
     AppName:
       type: string
       description: Unique name for your application
@@ -71,3 +77,5 @@ infrastructure:
           value: "{{DesiredReplicas}}"
         - key: ImageUrl
           value: "{{CONTAINER_REGISTRY_URL}}/microtica/fargate-app"
+        - key: ContainerPort
+          value: "{{ContainerPort}}"
