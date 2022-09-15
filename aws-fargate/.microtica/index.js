@@ -46,15 +46,7 @@ function transformTemplate(envVarsString) {
                 .FargateTaskDefinition
                 .Properties
                 .ContainerDefinitions[0]
-                .Environment["Fn::If"][1]
-                .push(...containerEnvironment);
-
-            template
-                .Resources
-                .FargateTaskDefinition
-                .Properties
-                .ContainerDefinitions[0]
-                .Environment["Fn::If"][2]
+                .Environment
                 .push(...containerEnvironment);
 
             return template;
