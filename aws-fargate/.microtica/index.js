@@ -43,7 +43,7 @@ function transformTemplate(envVarsString) {
 
             template
                 .Resources
-                .StrapiTaskDefinition
+                .FargateTaskDefinition
                 .Properties
                 .ContainerDefinitions[0]
                 .Environment["Fn::If"][1]
@@ -51,7 +51,7 @@ function transformTemplate(envVarsString) {
 
             template
                 .Resources
-                .StrapiTaskDefinition
+                .FargateTaskDefinition
                 .Properties
                 .ContainerDefinitions[0]
                 .Environment["Fn::If"][2]
