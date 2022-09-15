@@ -1,0 +1,14 @@
+{
+  "name": "nodejs",
+  "version": "1.0.0",
+  "description": "Node.js is an open-source, cross-platform, back-end JavaScript runtime environment that runs on a JavaScript engine.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\""
+  },
+  "author": "Microtica",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
+}
