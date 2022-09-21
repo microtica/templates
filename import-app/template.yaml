@@ -24,4 +24,4 @@ service:
       cpu: 1
       maxCpu: 50
       memory: 32
-      maxMemory: 256
+      maxMemory: 250

@@ -6,7 +6,7 @@ repo: https://github.com/microtica/templates/tree/master/nestjs
 service:
   nestjs:
     source: git
-    containerPort: 3000
+    containerPort: "{{CONTAINER_PORT}}"
     autoScaling:
       minReplicas: 1
       maxReplicas: 1

@@ -17,11 +17,11 @@ inputs:
 service:
   "{{AppName}}":
     source: git
-    containerPort: 9000
+    containerPort: "{{CONTAINER_PORT}}"
     autoScaling:
       minReplicas: 1
       maxReplicas: 1
       cpu: 1
       maxCpu: 20
       memory: 128
-      maxMemory: 256
+      maxMemory: 250

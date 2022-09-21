@@ -6,11 +6,11 @@ repo: https://github.com/microtica/templates/tree/master/angularjs
 service:
   angularjs:
     source: git
-    containerPort: 80
+    containerPort: "{{CONTAINER_PORT}}"
     autoScaling:
       minReplicas: 1
       maxReplicas: 1
       cpu: 1
-      maxCpu: 5
+      maxCpu: 20
       memory: 32
-      maxMemory: 64
+      maxMemory: 128
