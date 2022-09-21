@@ -2,9 +2,20 @@ name: Vue.js
 description: An approachable, performant and versatile framework for building web user interfaces.
 logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/vuejs.png
 repo: https://github.com/microtica/templates/tree/master/vuejs
-            
+
+inputs:
+  properties:
+    AppName:
+      type: string
+      description: The name of the application. The name will be shown in the portal.
+      maxLength: 23
+      pattern: ^[a-zA-Z0-9]*$
+      patternErrorMessage: "The app name can contain only letters and numbers"
+  required:
+    - AppName
+
 service:
-  vuejs:
+  "{{AppName}}":
     source: git
     containerPort: "{{CONTAINER_PORT}}"
     autoScaling:

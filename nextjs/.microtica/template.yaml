@@ -3,8 +3,19 @@ description: Next.js gives you the best developer experience with all the featur
 logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/nextjs.png
 repo: https://github.com/microtica/templates/tree/master/nextjs
 
+inputs:
+  properties:
+    AppName:
+      type: string
+      description: The name of the application. The name will be shown in the portal.
+      maxLength: 23
+      pattern: ^[a-zA-Z0-9]*$
+      patternErrorMessage: "The app name can contain only letters and numbers"
+  required:
+    - AppName
+
 service:
-  nextjs:
+  "{{AppName}}":
     source: git
     containerPort: "{{CONTAINER_PORT}}"
     autoScaling:
