@@ -21,7 +21,7 @@ service:
     autoScaling:
       minReplicas: 1
       maxReplicas: 1
-      cpu: 1
-      maxCpu: 50
-      memory: 32
-      maxMemory: 250
+      cpu: 10
+      maxCpu: 100
+      memory: 64
+      maxMemory: 300
