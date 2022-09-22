@@ -1,5 +1,5 @@
-name: AngularJS
-description: AngularJS is a framework for developing single page web applications.
+name: Angular
+description: Angular is a framework for developing single page web applications.
 logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/angularjs.png
 repo: https://github.com/microtica/templates/tree/master/angularjs
 

@@ -1,0 +1,573 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Fargate App",
+    "Parameters": {
+        "VpcId": {
+            "Type": "String"
+        },
+        "PrivateSubnet1Id": {
+            "Type": "String"
+        },
+        "PrivateSubnet2Id": {
+            "Type": "String"
+        },
+        "PublicSubnet1Id": {
+            "Type": "String"
+        },
+        "PublicSubnet2Id": {
+            "Type": "String"
+        },
+        "CPU": {
+            "Type": "String",
+            "Default": "256",
+            "AllowedValues": [
+                "256",
+                "512",
+                "1024",
+                "2048",
+                "4096"
+            ]
+        },
+        "Memory": {
+            "Type": "String",
+            "Default": "512",
+            "AllowedValues": [
+                "512",
+                "1024",
+                "2048",
+                "3072",
+                "4096",
+                "5120",
+                "6144",
+                "7168",
+                "8192",
+                "16384",
+                "30720"
+            ]
+        },
+        "DesiredReplicas": {
+            "Type": "String",
+            "Default": "1"
+        },
+        "DomainName": {
+            "Type": "String",
+            "Default": ""
+        },
+        "CertificateArn": {
+            "Type": "String",
+            "Default": ""
+        },
+        "ImageUrl": {
+            "Type": "String"
+        },
+        "ContainerPort": {
+            "Type": "String"
+        }
+    },
+    "Conditions": {
+        "EnableHTTP": {
+            "Fn::Or": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "CertificateArn"
+                        },
+                        ""
+                    ]
+                },
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "DomainName"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "EnableHTTPS": {
+            "Fn::Not": [
+                {
+                    "Condition": "EnableHTTP"
+                }
+            ]
+        }
+    },
+    "Resources": {
+        "StorageBucket": {
+            "Type": "AWS::S3::Bucket",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AccessControl": "PublicReadWrite",
+                "BucketEncryption": {
+                    "ServerSideEncryptionConfiguration": [
+                        {
+                            "ServerSideEncryptionByDefault": {
+                                "SSEAlgorithm": "AES256"
+                            }
+                        }
+                    ]
+                },
+                "CorsConfiguration": {
+                    "CorsRules": [
+                        {
+                            "AllowedHeaders": [
+                                "*"
+                            ],
+                            "AllowedMethods": [
+                                "GET",
+                                "HEAD"
+                            ],
+                            "AllowedOrigins": [
+                                "*"
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        "LoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "Scheme": "internet-facing",
+                "LoadBalancerAttributes": [
+                    {
+                        "Key": "idle_timeout.timeout_seconds",
+                        "Value": "30"
+                    }
+                ],
+                "Subnets": [
+                    {
+                        "Ref": "PublicSubnet1Id"
+                    },
+                    {
+                        "Ref": "PublicSubnet2Id"
+                    }
+                ],
+                "SecurityGroups": [
+                    {
+                        "Ref": "LoadBalancerSG"
+                    }
+                ]
+            }
+        },
+        "LoadBalancerRule": {
+            "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+            "Properties": {
+                "Actions": [
+                    {
+                        "TargetGroupArn": {
+                            "Ref": "TargetGroup"
+                        },
+                        "Type": "forward"
+                    }
+                ],
+                "Conditions": [
+                    {
+                        "Field": "path-pattern",
+                        "Values": [
+                            "*"
+                        ]
+                    }
+                ],
+                "ListenerArn": {
+                    "Fn::If": [
+                        "EnableHTTPS",
+                        {
+                            "Ref": "HTTPSListener"
+                        },
+                        {
+                            "Ref": "HTTPListener"
+                        }
+                    ]
+                },
+                "Priority": 1
+            }
+        },
+        "TargetGroup": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties": {
+                "HealthCheckIntervalSeconds": 10,
+                "HealthCheckPath": "/",
+                "HealthCheckProtocol": "HTTP",
+                "HealthCheckTimeoutSeconds": 5,
+                "HealthyThresholdCount": 2,
+                "UnhealthyThresholdCount": 5,
+                "TargetType": "ip",
+                "Port": {
+                    "Ref": "ContainerPort"
+                },
+                "Protocol": "HTTP",
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "TargetGroupAttributes": [
+                    {
+                        "Key": "deregistration_delay.timeout_seconds",
+                        "Value": 30
+                    }
+                ]
+            }
+        },
+        "LoadBalancerSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Access to the public facing load balancer",
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "IpProtocol": -1
+                    }
+                ]
+            }
+        },
+        "HTTPListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "DefaultActions": {
+                    "Fn::If": [
+                        "EnableHTTP",
+                        [
+                            {
+                                "TargetGroupArn": {
+                                    "Ref": "TargetGroup"
+                                },
+                                "Type": "forward"
+                            }
+                        ],
+                        [
+                            {
+                                "RedirectConfig": {
+                                    "Host": "#{host}",
+                                    "Path": "/#{path}",
+                                    "Port": "443",
+                                    "Protocol": "HTTPS",
+                                    "Query": "#{query}",
+                                    "StatusCode": "HTTP_301"
+                                },
+                                "Type": "redirect"
+                            }
+                        ]
+                    ]
+                },
+                "LoadBalancerArn": {
+                    "Ref": "LoadBalancer"
+                },
+                "Port": 80,
+                "Protocol": "HTTP"
+            }
+        },
+        "HTTPSListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Condition": "EnableHTTPS",
+            "Properties": {
+                "DefaultActions": [
+                    {
+                        "TargetGroupArn": {
+                            "Ref": "TargetGroup"
+                        },
+                        "Type": "forward"
+                    }
+                ],
+                "LoadBalancerArn": {
+                    "Ref": "LoadBalancer"
+                },
+                "Port": 443,
+                "Protocol": "HTTPS",
+                "Certificates": [
+                    {
+                        "CertificateArn": {
+                            "Ref": "CertificateArn"
+                        }
+                    }
+                ]
+            }
+        },
+        "ECSCluster": {
+            "Type": "AWS::ECS::Cluster"
+        },
+        "FargateService": {
+            "Type": "AWS::ECS::Service",
+            "DependsOn": "LoadBalancerRule",
+            "Properties": {
+                "Cluster": {
+                    "Ref": "ECSCluster"
+                },
+                "LaunchType": "FARGATE",
+                "DeploymentConfiguration": {
+                    "MaximumPercent": 200,
+                    "MinimumHealthyPercent": 75
+                },
+                "DesiredCount": {
+                    "Ref": "DesiredReplicas"
+                },
+                "NetworkConfiguration": {
+                    "AwsvpcConfiguration": {
+                        "SecurityGroups": [
+                            {
+                                "Ref": "FargateServiceSG"
+                            }
+                        ],
+                        "Subnets": [
+                            {
+                                "Ref": "PrivateSubnet1Id"
+                            },
+                            {
+                                "Ref": "PrivateSubnet2Id"
+                            }
+                        ]
+                    }
+                },
+                "TaskDefinition": {
+                    "Ref": "FargateTaskDefinition"
+                },
+                "LoadBalancers": [
+                    {
+                        "ContainerName": "service",
+                        "ContainerPort": {
+                            "Ref": "ContainerPort"
+                        },
+                        "TargetGroupArn": {
+                            "Ref": "TargetGroup"
+                        }
+                    }
+                ]
+            }
+        },
+        "FargateServiceRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ecs-tasks.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "AmazonECSTaskRolePolicy",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:PutObject",
+                                        "s3:GetObject",
+                                        "s3:ListBucket",
+                                        "s3:DeleteObject",
+                                        "s3:PutObjectAcl"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${StorageBucket}"
+                                        },
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${StorageBucket}/*"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "FargateTaskDefinition": {
+            "Type": "AWS::ECS::TaskDefinition",
+            "Properties": {
+                "Cpu": {
+                    "Ref": "CPU"
+                },
+                "Memory": {
+                    "Ref": "Memory"
+                },
+                "NetworkMode": "awsvpc",
+                "RequiresCompatibilities": [
+                    "FARGATE"
+                ],
+                "ExecutionRoleArn": {
+                    "Ref": "FargateServiceExecutionRole"
+                },
+                "TaskRoleArn": {
+                    "Ref": "FargateServiceRole"
+                },
+                "ContainerDefinitions": [
+                    {
+                        "Name": "service",
+                        "Cpu": {
+                            "Ref": "CPU"
+                        },
+                        "Memory": {
+                            "Ref": "Memory"
+                        },
+                        "Image": {
+                            "Fn::Sub": "${ImageUrl}"
+                        },
+                        "PortMappings": [
+                            {
+                                "ContainerPort": {
+                                    "Ref": "ContainerPort"
+                                }
+                            }
+                        ],
+                        "Environment": [
+                            {
+                                "Name": "STORAGE_BUCKET_NAME",
+                                "Value": {
+                                    "Ref": "StorageBucket"
+                                }
+                            },
+                            {
+                                "Name": "AWS_REGION",
+                                "Value": {
+                                    "Ref": "AWS::Region"
+                                }
+                            }
+                        ],
+                        "LogConfiguration": {
+                            "LogDriver": "awslogs",
+                            "Options": {
+                                "awslogs-group": {
+                                    "Ref": "ServiceLogs"
+                                },
+                                "awslogs-region": {
+                                    "Ref": "AWS::Region"
+                                },
+                                "awslogs-stream-prefix": "container-logs"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "ServiceLogs": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "RetentionInDays": 90
+            }
+        },
+        "FargateServiceSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Access to the public facing load balancer",
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "SourceSecurityGroupId": {
+                            "Ref": "LoadBalancerSG"
+                        },
+                        "IpProtocol": -1
+                    }
+                ]
+            }
+        },
+        "FargateServiceExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ecs-tasks.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "AmazonECSTaskExecutionRolePolicy",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ecr:GetAuthorizationToken",
+                                        "ecr:BatchCheckLayerAvailability",
+                                        "ecr:GetDownloadUrlForLayer",
+                                        "ecr:BatchGetImage",
+                                        "logs:CreateLogStream",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "AccessUrl": {
+            "Value": {
+                "Fn::If": [
+                    "EnableHTTPS",
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "https://",
+                                {
+                                    "Ref": "DomainName"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "http://",
+                                {
+                                    "Fn::GetAtt": "LoadBalancer.DNSName"
+                                }
+                            ]
+                        ]
+                    }
+                ]
+            }
+        },
+        "CNAME": {
+            "Value": {
+                "Fn::GetAtt": "LoadBalancer.DNSName"
+            }
+        },
+        "ApplicationLogs": {
+            "Value": {
+                "Fn::Sub": "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#logEventViewer:group=${ServiceLogs}"
+            }
+        },
+        "StorageBucket": {
+            "Value": {
+                "Ref": "StorageBucket"
+            }
+        },
+        "ImageUrl": {
+            "Value": {
+                "Ref": "ImageUrl"
+            }
+        }
+    }
+}
