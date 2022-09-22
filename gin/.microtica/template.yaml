@@ -3,10 +3,21 @@ description: Gin is a web framework written in Go (Golang). It features a martin
 logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/gin.png
 repo: https://github.com/microtica/templates/tree/master/gin
 
+inputs:
+  properties:
+    AppName:
+      type: string
+      description: The name of the application. The name will be shown in the portal.
+      maxLength: 23
+      pattern: ^[a-zA-Z0-9]*$
+      patternErrorMessage: "The app name can contain only letters and numbers"
+  required:
+    - AppName
+
 service:
-  gin:
+  "{{AppName}}":
     source: git
-    containerPort: 8080
+    containerPort: "{{CONTAINER_PORT}}"
     autoScaling:
       minReplicas: 1
       maxReplicas: 1
