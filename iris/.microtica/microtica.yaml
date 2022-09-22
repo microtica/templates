@@ -1,0 +1,19 @@
+steps:
+    Clone:
+        type: git-clone
+
+    PushContainerImage:
+        type: docker-push
+        image_name: "{{MIC_PIPELINE_NAME}}"
+        dockerfile: ./.microtica/Dockerfile
+        registry: "{{CONTAINER_REGISTRY_ID}}"
+        tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
+
+    DeployApplication:
+        type: deploy
+        target: kubernetes
+        cluster: "{{CLUSTER_ID}}"
+        service: "{{SERVICE_NAME}}"
+        namespace: "{{CLUSTER_NAMESPACE}}"
+        branch_filter: "{{MIC_BRANCH_FILTER}}"
+        tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
