@@ -1,6 +1,6 @@
 name: Import an existing app
 description: Import an existing app from your Git repository and deploy it on your Kubernetes cluster.
-logo: https://upload.wikimedia.org/wikipedia/commons/3/3f/Git_icon.svg
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/import-app.svg
 repo: https://github.com/microtica/templates/tree/master/import-app
 
 inputs:
