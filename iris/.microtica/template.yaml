@@ -1,6 +1,6 @@
 name: Iris
 description: Iris is the fastest HTTP/2 Go Web Framework. Easy to learn. Fast development with Code you control. Unbeatable cost-performance ratio.
-logo: https://www.iris-go.com/images/logo.png
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/iris.png
 repo: https://github.com/microtica/templates/tree/master/iris
 
 inputs:
