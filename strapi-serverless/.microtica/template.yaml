@@ -5,32 +5,6 @@ repo: https://github.com/microtica/templates/tree/master/strapi-serverless
 
 inputs:
   properties:
-    CPU:
-      type: number
-      enum:
-        - 256
-        - 512
-        - 1024
-        - 2048
-        - 4096
-      default: 256
-      description: The number of CPU units reserved for the Strapi app
-    Memory:
-      type: number
-      enum:
-        - 512
-        - 1024
-        - 2048
-        - 3072
-        - 4096
-      default: 512
-      description: The amount (in MiB) of memory reserved for the Strapi app
-    DesiredReplicas:
-      type: number
-      default: 1
-      minimum: 0
-      maximum: 10
-      description: The number of Strapi applications running at the same time. The workload will be balanced between the apps.
     DatabaseClient:
       type: string
       enum:
@@ -45,9 +19,6 @@ inputs:
       pattern: ^[A-Z][A-Za-z]*$
       patternErrorMessage: "The app name can only contain letters and must start with an uppercase."
   required:
-    - CPU
-    - Memory
-    - DesiredReplicas
     - DatabaseClient
     - AppName
 
@@ -72,11 +43,11 @@ infrastructure:
         - key: PublicSubnet2Id
           reference: VPC{{AppName}}.publicSubnet2
         - key: CPU
-          value: "{{CPU}}"
+          value: "256"
         - key: Memory
-          value: "{{Memory}}"
+          value: "512"
         - key: DesiredReplicas
-          value: "{{DesiredReplicas}}"
+          value: "1"
         - key: DatabaseClient
           value: "{{DatabaseClient}}"
         - key: ImageUrl
