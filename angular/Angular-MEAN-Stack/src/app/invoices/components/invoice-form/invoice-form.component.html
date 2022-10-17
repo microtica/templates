@@ -1,0 +1,94 @@
+<mat-card>
+  <h3>{{ editMode ? "Edit" : "Create" }} Invoice</h3>
+  <form
+    class="form-container"
+    [formGroup]="invoiceForm"
+    novalidate
+    (ngSubmit)="onSubmit()"
+  >
+    <mat-form-field>
+      <input matInput placeholder="Item" formControlName="item" />
+      <mat-error
+        *ngIf="
+          this.invoiceForm.controls['item'].invalid &&
+          this.invoiceForm.controls['item'].touched
+        "
+        >Item is required</mat-error
+      >
+    </mat-form-field>
+
+    <mat-form-field>
+      <input
+        matInput
+        [matDatepicker]="date"
+        placeholder="Choose a date"
+        formControlName="date"
+      />
+      <mat-datepicker-toggle matSuffix [for]="date"></mat-datepicker-toggle>
+      <mat-datepicker #date></mat-datepicker>
+      <mat-error *ngIf="f['date'].invalid && f['date'].touched"
+        >Date is required</mat-error
+      >
+    </mat-form-field>
+
+    <mat-form-field>
+      <input
+        matInput
+        [matDatepicker]="due"
+        placeholder="Choose a due date"
+        formControlName="due"
+      />
+      <mat-datepicker-toggle matSuffix [for]="due"></mat-datepicker-toggle>
+      <mat-datepicker #due></mat-datepicker>
+      <mat-error *ngIf="f['due'].invalid && f['due'].touched"
+        >Due date is required</mat-error
+      >
+    </mat-form-field>
+
+    <mat-form-field>
+      <input matInput placeholder="Qty" type="number" formControlName="qty" />
+      <mat-error *ngIf="f['qty'].invalid && f['qty'].touched"
+        >Qty is required</mat-error
+      >
+    </mat-form-field>
+
+    <mat-form-field>
+      <input matInput placeholder="Tax" type="number" formControlName="tax" />
+      <mat-error *ngIf="f['tax'].invalid && f['tax'].touched"
+        >Tax is required</mat-error
+      >
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-select placeholder="Select Client" formControlName="client">
+        <mat-option *ngFor="let client of clients" [value]="client._id">
+          {{ client.firstName }} {{ client.lastName }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="f['client'].invalid && f['client'].touched"
+        >Client is required</mat-error
+      >
+    </mat-form-field>
+
+    <mat-form-field>
+      <input matInput placeholder="Rate" type="number" formControlName="rate" />
+      <mat-error *ngIf="f['rate'].invalid && f['rate'].touched"
+        >Rate is required</mat-error
+      >
+    </mat-form-field>
+
+    <div>
+      <button
+        mat-raised-button
+        [disabled]="!invoiceForm.valid"
+        type="submit"
+        color="primary"
+      >
+        Save
+      </button>
+      <button mat-raised-button type="reset" (click)="onCancel()">
+        Cancel
+      </button>
+    </div>
+  </form>
+</mat-card>
