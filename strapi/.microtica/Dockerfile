@@ -3,7 +3,7 @@ FROM public.ecr.aws/docker/library/node:16.16.0-slim
 WORKDIR /strapi
 
 COPY ./package.json ./
-COPY ./yarn.lock ./
+COPY ./yarn.* ./
 
 RUN yarn install
 

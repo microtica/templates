@@ -4,7 +4,7 @@ FROM public.ecr.aws/docker/library/node:16.16.0-slim as build-stage
 WORKDIR /app
 
 COPY ./package.json ./
-COPY ./yarn.lock ./
+COPY ./yarn.* ./
 
 RUN yarn install
 
