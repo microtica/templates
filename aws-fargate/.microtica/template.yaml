@@ -57,7 +57,7 @@ infrastructure:
       properties:
         - key: natInstanceType
           value: t2.micro
-    {{AppName}}:
+    "{{AppName}}":
       source: git
       properties:
         - key: VpcId
