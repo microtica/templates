@@ -1,5 +1,5 @@
 name: Django4
-description: Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design
+description: Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design.
 logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/django.png
 repo: https://github.com/microtica/templates/tree/master/django4
 
