@@ -44,7 +44,7 @@ infrastructure:
       properties:
         - key: natInstanceType
           value: t2.micro
-    KubernetesCluster{{AppName}}:
+    {{AppName}}:
       type: microtica-aws-eks-spot:latest
       properties:
         - key: keyName

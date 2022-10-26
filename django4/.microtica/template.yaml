@@ -1,0 +1,27 @@
+name: Django4
+description: Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/django.png
+repo: https://github.com/microtica/templates/tree/master/django4
+
+inputs:
+  properties:
+    AppName:
+      type: string
+      description: The name of the application. The name will be shown in the portal.
+      maxLength: 23
+      pattern: ^[a-zA-Z0-9]*$
+      patternErrorMessage: "The app name can contain only letters and numbers"
+  required:
+    - AppName
+
+service:
+  "{{AppName}}":
+    source: git
+    containerPort: "{{CONTAINER_PORT}}"
+    autoScaling:
+      minReplicas: 1
+      maxReplicas: 1
+      cpu: 1
+      maxCpu: 20
+      memory: 64
+      maxMemory: 128

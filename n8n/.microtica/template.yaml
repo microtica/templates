@@ -3,8 +3,19 @@ description: n8n helps you to interconnect every app with an API.
 logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/n8n.png
 repo: https://github.com/microtica/templates/tree/master/n8n
 
+inputs:
+  properties:
+    AppName:
+      type: string
+      description: The name of the application. The name will be shown in the portal.
+      maxLength: 23
+      pattern: ^[a-z]*$
+      patternErrorMessage: "The app name can contain only lowercase letters."
+  required:
+    - AppName
+
 service:
-  n8n:
+  "{{AppName}}":
     source: git
     containerPort: 5678
     autoScaling:
