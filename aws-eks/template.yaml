@@ -44,7 +44,7 @@ infrastructure:
       properties:
         - key: natInstanceType
           value: t2.micro
-    {{AppName}}:
+    "{{AppName}}":
       type: microtica-aws-eks:latest
       properties:
         - key: keyName
