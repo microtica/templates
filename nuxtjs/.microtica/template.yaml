@@ -1,6 +1,6 @@
 name: NuxtJS
 description: An open source framework for Vue.js making web development simple and powerful.
-logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/nuxtjs.png
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/nuxtjs.svg
 repo: https://github.com/microtica/templates/tree/master/nuxtjs
 
 inputs:
