@@ -11,12 +11,24 @@ inputs:
       maxLength: 20
       pattern: ^[A-Z][A-Za-z]*$
       patternErrorMessage: "The app name can only contain letters and must start with an uppercase."
+    AdminEmail:
+      type: string
+      description: Email for the initial admin user
+    AdminPassword:
+      type: string
+      description: Password for the initial admin user
+      sensitive: true
     Production:
-      type: boolean
+      type: string
       description: In production mode the template will provision managed RDS PostgreSQL and Redis instances. With production mode disabled, the template will use local SQLite and fake Redis instance.
-      default: false
+      default: "false"
+      enum:
+        - "true"
+        - "false"
   required:
     - AppName
+    - AdminEmail
+    - AdminPassword
     - Production
 
 infrastructure:
@@ -45,7 +57,12 @@ infrastructure:
           value: "512"
         - key: DesiredReplicas
           value: "1"
-        - key: DatabaseClient
-          value: "{{DatabaseClient}}"
+        - key: Production
+          value: "{{Production}}"
         - key: ImageUrl
           value: "{{CONTAINER_REGISTRY_URL}}/microtica/medusa-server"
+        - key: AdminEmail
+          value: "{{AdminEmail}}"
+        - key: AdminPassword
+          value: "{{AdminPassword}}"
+        
