@@ -17,7 +17,6 @@ inputs:
     AdminPassword:
       type: string
       description: Password for the initial admin user
-      sensitive: true
     Production:
       type: string
       description: In production mode the template will provision managed RDS PostgreSQL and Redis instances. With production mode disabled, the template will use local SQLite and fake Redis instance.
