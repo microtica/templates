@@ -2,23 +2,23 @@ const dotenv = require('dotenv')
 
 let ENV_FILE_NAME = '';
 switch (process.env.NODE_ENV) {
-	case 'production':
-		ENV_FILE_NAME = '.env.production';
-		break;
-	case 'staging':
-		ENV_FILE_NAME = '.env.staging';
-		break;
-	case 'test':
-		ENV_FILE_NAME = '.env.test';
-		break;
-	case 'development':
-	default:
-		ENV_FILE_NAME = '.env';
-		break;
+  case 'production':
+    ENV_FILE_NAME = '.env.production';
+    break;
+  case 'staging':
+    ENV_FILE_NAME = '.env.staging';
+    break;
+  case 'test':
+    ENV_FILE_NAME = '.env.test';
+    break;
+  case 'development':
+  default:
+    ENV_FILE_NAME = '.env';
+    break;
 }
 
 try {
-	dotenv.config({ path: process.cwd() + '/' + ENV_FILE_NAME });
+  dotenv.config({ path: process.cwd() + '/' + ENV_FILE_NAME });
 } catch (e) {
 }
 
@@ -43,6 +43,14 @@ const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
 const plugins = [
   `medusa-fulfillment-manual`,
   `medusa-payment-manual`,
+  {
+    resolve: `medusa-file-s3`,
+    options: {
+      s3_url: process.env.S3_URL,
+      bucket: process.env.S3_BUCKET,
+      region: process.env.S3_REGION
+    },
+  },
   // Uncomment to add Stripe support.
   // You can create a Stripe account via: https://stripe.com
   // {
@@ -55,15 +63,22 @@ const plugins = [
 ];
 
 module.exports = {
-  projectConfig: {
-    // redis_url: REDIS_URL,
-    // For more production-like environment install PostgresQL
-    // database_url: DATABASE_URL,
-    // database_type: "postgres",
-    database_database: "./medusa-db.sql",
-    database_type: "sqlite",
-    store_cors: STORE_CORS,
-    admin_cors: ADMIN_CORS,
-  },
+  projectConfig:
+    // Production configuration
+    process.env.PRODUCTION === "true" ?
+      {
+        redis_url: REDIS_URL,
+        database_url: DATABASE_URL,
+        database_type: "postgres",
+        store_cors: STORE_CORS,
+        admin_cors: ADMIN_CORS
+      } :
+      // Development configuration
+      {
+        database_database: "./.tmp/medusa-db.sql",
+        database_type: "sqlite",
+        store_cors: STORE_CORS,
+        admin_cors: ADMIN_CORS
+      },
   plugins,
 };
