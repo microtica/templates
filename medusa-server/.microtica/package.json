@@ -1,0 +1,24 @@
+{
+    "name": "@microtica/comp",
+    "version": "0.0.1",
+    "description": "Microtica Custom Component",
+    "main": "execute.js",
+    "scripts": {
+        "test": "npm run mocha",
+        "mocha": "./node_modules/.bin/mocha --recursive test --bail --sort --timeout 10000",
+        "build": "./node_modules/.bin/component-build"
+    },
+    "author": "Microtica",
+    "license": "ISC",
+    "dependencies": {
+        "@microtica/component": "^3.4.5",
+        "randomstring": "^1.2.3"
+    },
+    "devDependencies": {
+        "@types/chai": "^4.1.7",
+        "@types/mocha": "^5.2.6",
+        "aws-sdk": "^2.423.0",
+        "chai": "^4.2.0",
+        "mocha": "^5.2.0"
+    }
+}

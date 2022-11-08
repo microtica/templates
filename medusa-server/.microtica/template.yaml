@@ -1,0 +1,51 @@
+name: Medusa Server
+description: Medusa is a composable engine that combines an amazing developer experience with endless customizations for merchants to scale.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/medusa.png
+repo: https://github.com/microtica/templates/tree/master/medusa-server
+
+inputs:
+  properties:
+    AppName:
+      type: string
+      description: Unique name for your application
+      maxLength: 20
+      pattern: ^[A-Z][A-Za-z]*$
+      patternErrorMessage: "The app name can only contain letters and must start with an uppercase."
+    Production:
+      type: boolean
+      description: In production mode the template will provision managed RDS PostgreSQL and Redis instances. With production mode disabled, the template will use local SQLite and fake Redis instance.
+      default: false
+  required:
+    - AppName
+    - Production
+
+infrastructure:
+  resources:
+    VPC{{AppName}}:
+      type: microtica-aws-vpc:latest
+      properties:
+        - key: natInstanceType
+          value: t2.micro
+    {{AppName}}:
+      source: git
+      properties:
+        - key: VpcId
+          reference: VPC{{AppName}}.vpcId
+        - key: PrivateSubnet1Id
+          reference: VPC{{AppName}}.privateSubnet1
+        - key: PrivateSubnet2Id
+          reference: VPC{{AppName}}.privateSubnet2
+        - key: PublicSubnet1Id
+          reference: VPC{{AppName}}.publicSubnet1
+        - key: PublicSubnet2Id
+          reference: VPC{{AppName}}.publicSubnet2
+        - key: CPU
+          value: "256"
+        - key: Memory
+          value: "512"
+        - key: DesiredReplicas
+          value: "1"
+        - key: DatabaseClient
+          value: "{{DatabaseClient}}"
+        - key: ImageUrl
+          value: "{{CONTAINER_REGISTRY_URL}}/microtica/medusa-server"

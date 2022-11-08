@@ -1,0 +1,27 @@
+FROM public.ecr.aws/docker/library/node:16.16.0-slim as builder
+
+WORKDIR /app/admin
+
+# ENV NODE_OPTIONS=--openssl-legacy-provider
+
+COPY . .
+
+RUN rm -rf node_modules
+
+RUN apt-get update
+
+RUN yarn add sharp
+
+RUN yarn global add gatsby-cli
+
+RUN yarn install
+
+RUN gatsby build
+
+FROM public.ecr.aws/nginx/nginx:latest
+
+EXPOSE 80 
+
+COPY --from=builder /app/admin/public /usr/share/nginx/html
+
+ENTRYPOINT ["nginx", "-g", "daemon off;"]

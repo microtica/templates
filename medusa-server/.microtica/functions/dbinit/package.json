@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "prepackage": "rm -rf package.zip && npm install",
+    "package": "zip -r package.zip index.js cfn-response.js node_modules package.json",
+    "postpackage": "echo File size: $(ls -lah package.zip | awk '{print $5}')"
+  },
+  "dependencies": {
+    "ssm-session": "^1.0.6",
+    "ws": "^8.10.0"
+  }
+}

@@ -1,0 +1,108 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "schema://microtica/comp.json",
+    "title": "Component Schema",
+    "type": "object",
+    "properties": {
+        "inputs": {
+            "type": "object",
+            "properties": {
+                "VpcId": {
+                    "type": "string"
+                },
+                "PrivateSubnet1Id": {
+                    "type": "string"
+                },
+                "PrivateSubnet2Id": {
+                    "type": "string"
+                },
+                "PublicSubnet1Id": {
+                    "type": "string"
+                },
+                "PublicSubnet2Id": {
+                    "type": "string"
+                },
+                "CPU": {
+                    "type": "string",
+                    "default": "256",
+                    "enum": [
+                        "256",
+                        "512",
+                        "1024",
+                        "2048",
+                        "4096"
+                    ],
+                    "description": "The number of cpu units reserved for the container."
+                },
+                "Memory": {
+                    "type": "string",
+                    "default": "512",
+                    "enum": [
+                        "512",
+                        "1024",
+                        "2048",
+                        "3072",
+                        "4096",
+                        "5120",
+                        "6144",
+                        "7168",
+                        "8192",
+                        "16384",
+                        "30720"
+                    ],
+                    "description": "The amount (in MiB) of memory to present to the container."
+                },
+                "DesiredReplicas": {
+                    "type": "string",
+                    "default": "1",
+                    "description": "The number of applications copies running at the same time."
+                },
+                "ImageUrl": {
+                    "type": "string"
+                },
+                "Production": {
+                    "type": "string",
+                    "default": "false",
+                    "enum": [
+                        "true",
+                        "false"
+                    ]
+                },
+                "AdminEmail": {
+                    "type": "string"
+                },
+                "AdminPassword": {
+                    "type": "string",
+                    "sensitive": true
+                },
+                "EnvironmentVariables": {
+                    "type": "string",
+                    "description": "Comma-delimited environment variables provided in the app runtime (e.g. KEY=value,KEY=value)."
+                },
+                "DomainName": {
+                    "type": "string",
+                    "description": "A custom domain name on which the Strapi application will be exposed."
+                },
+                "CertificateArn": {
+                    "type": "string",
+                    "description": "A custom domain certificate (AWS Certificate Manager)."
+                }
+            },
+            "required": [
+                "VpcId",
+                "PrivateSubnet1Id",
+                "PrivateSubnet2Id",
+                "PublicSubnet1Id",
+                "PublicSubnet2Id",
+                "CPU",
+                "Memory",
+                "DesiredReplicas",
+                "Production",
+                "ImageUrl",
+                "AdminEmail",
+                "AdminPassword"
+            ]
+        }
+    },
+    "additionalProperties": false
+}
