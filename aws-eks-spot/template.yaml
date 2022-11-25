@@ -39,25 +39,20 @@ inputs:
 
 infrastructure:
   resources:
-    VPC{{AppName}}:
-      type: microtica-aws-vpc:latest
-      properties:
-        - key: natInstanceType
-          value: t2.micro
     "{{AppName}}":
       type: microtica-aws-eks-spot:latest
       properties:
         - key: keyName
-          reference: VPC{{AppName}}.keyName
+          reference: "{{VPC_RESOURCE_NAME}}.keyName"
         - key: vpcId
-          reference: VPC{{AppName}}.vpcId
+          reference: "{{VPC_RESOURCE_NAME}}.vpcId"
         - key: privateSubnet1Id
-          reference: VPC{{AppName}}.privateSubnet1
+          reference: "{{VPC_RESOURCE_NAME}}.privateSubnet1"
         - key: privateSubnet2Id
-          reference: VPC{{AppName}}.privateSubnet2
+          reference: "{{VPC_RESOURCE_NAME}}.privateSubnet2"
         - key: publicSubnet1Id
-          reference: VPC{{AppName}}.publicSubnet1
+          reference: "{{VPC_RESOURCE_NAME}}.publicSubnet1"
         - key: publicSubnet2Id
-          reference: VPC{{AppName}}.publicSubnet2
+          reference: "{{VPC_RESOURCE_NAME}}.publicSubnet2"
         - key: nodeInstanceTypes
           value: "{{NODE_INSTANCE_TYPES}}"
