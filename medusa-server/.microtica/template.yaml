@@ -13,10 +13,10 @@ inputs:
       patternErrorMessage: "The app name can only contain letters and must start with an uppercase."
     AdminEmail:
       type: string
-      description: Email for the initial admin user
+      description: This will create a new initial admin user that you can use to log into your admin panel.
     AdminPassword:
       type: string
-      description: Password for the initial admin user
+      description: This will create a new initial admin user that you can use to log into your admin panel.
     Production:
       type: string
       description: In production mode the template will provision managed RDS PostgreSQL and Redis instances. With production mode disabled, the template will use local SQLite and fake Redis instance.
