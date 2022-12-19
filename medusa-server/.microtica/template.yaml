@@ -13,9 +13,13 @@ inputs:
       patternErrorMessage: "The app name can only contain letters and must start with an uppercase."
     AdminEmail:
       type: string
+      pattern: ^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$
+      patternErrorMessage: "Provided email is not valid."
       description: This will create a new initial admin user that you can use to log into your admin panel.
     AdminPassword:
       type: string
+      pattern: ^[A-Za-z0-9]*$
+      patternErrorMessage: "The password can only contain letters and numbers."
       description: This will create a new initial admin user that you can use to log into your admin panel.
     Production:
       type: string
