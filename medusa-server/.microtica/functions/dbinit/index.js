@@ -12,7 +12,7 @@ const termOptions = {
     cols: 197,
 };
 
-exports.handler = async function (event, context) {
+exports.handler = async (event, context) => {
     if (event.RequestType === 'Delete') {
         return send(event, context, response.SUCCESS, {});
     }
@@ -25,9 +25,11 @@ exports.handler = async function (event, context) {
         const [taskId] = taskArns?.[0].split('/').reverse();
 
         console.log("Waiting for services to become stable...");
-        
         await ecs.waitFor('servicesStable', { cluster, services: [serviceName] }).promise();
         await ecs.waitFor('tasksRunning', { cluster, tasks: [taskId] }).promise();
+
+        // Wait a bit more for the service to become active
+        await delay(30000);
 
         console.log("Services are now stable. Executing medusa user command now...");
 
@@ -45,6 +47,7 @@ exports.handler = async function (event, context) {
 
         await send(event, context, response.SUCCESS, {});
     } catch (error) {
+        console.log("ERROR", error);
         await send(event, context, response.FAILED, { error });
     }
 }
@@ -58,9 +61,6 @@ const executeCommand = async (command, streamUrl, token) => {
                 token,
                 termOptions: termOptions,
             });
-
-            // Wait for a few second for the initial session to be established
-            await delay(5000);
 
             for (let item of command.split("")) {
                 ssm.sendText(connection, textEncoder.encode(item));
@@ -77,10 +77,10 @@ const executeCommand = async (command, streamUrl, token) => {
         connection.onmessage = (event) => {
             var agentMessage = ssm.decode(event.data);
             ssm.sendACK(connection, agentMessage);
-            
+
             if (agentMessage.payloadType === 1) {
                 const message = textDecoder.decode(agentMessage.payload);
-                process.stdout.write(message);
+                console.log(message);
 
                 // Close the Websocket connection when the command execution is completed
                 if (agentMessage.sequenceNumber !== 0 && message.trim().endsWith("#")) {

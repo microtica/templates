@@ -1030,7 +1030,7 @@
                 },
                 "Handler": "index.handler",
                 "Runtime": "nodejs16.x",
-                "Timeout": 60
+                "Timeout": 90
             }
         },
         "DBInitCustom": {
