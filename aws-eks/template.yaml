@@ -13,7 +13,7 @@ inputs:
         - t3.large
         - t3.xlarge
         - t3.2xlarge
-      default: t3.small
+      default: t3.medium
       description: Select the type of instances to be used for Kubernetes nodes
     MIN_NODES:
       type: number
@@ -22,7 +22,7 @@ inputs:
       miximum: 20
     MAX_NODES:
       type: number
-      default: 1
+      default: 2
       minimum: 1
       miximum: 20
     AppName:
