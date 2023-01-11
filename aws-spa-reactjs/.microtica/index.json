@@ -5,11 +5,13 @@
     "Parameters": {
         "DomainName": {
             "Type": "String",
-            "Description": "The full domain name e.g. site.com"
+            "Description": "The full domain name e.g. site.com",
+            "Default": ""
         },
         "CertificateArn": {
             "Type": "String",
-            "Description": "Public SSL certificate ARN"
+            "Description": "Public SSL certificate ARN",
+            "Default": ""
         },
         "DeploymentFunctionBucket": {
             "Type": "String",
@@ -35,6 +37,35 @@
             "Type": "String",
             "Description": "Backend endpoint",
             "Default": ""
+        }
+    },
+    "Conditions": {
+        "EnableHTTP": {
+            "Fn::Or": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "CertificateArn"
+                        },
+                        ""
+                    ]
+                },
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "DomainName"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "EnableHTTPS": {
+            "Fn::Not": [
+                {
+                    "Condition": "EnableHTTP"
+                }
+            ]
         }
     },
     "Resources": {
@@ -202,7 +233,15 @@
                     "DefaultRootObject": "index.html",
                     "Aliases": [
                         {
-                            "Ref": "DomainName"
+                            "Fn::If": [
+                                "EnableHTTP",
+                                {
+                                    "Ref": "AWS::NoValue"
+                                },
+                                {
+                                    "Ref": "DomainName"
+                                }
+                            ]
                         }
                     ],
                     "DefaultCacheBehavior": {
@@ -222,10 +261,18 @@
                     },
                     "PriceClass": "PriceClass_All",
                     "ViewerCertificate": {
-                        "AcmCertificateArn": {
-                            "Ref": "CertificateArn"
-                        },
-                        "SslSupportMethod": "sni-only"
+                        "Fn::If": [
+                            "EnableHTTP",
+                            {
+                                "Ref": "AWS::NoValue"
+                            },
+                            {
+                                "AcmCertificateArn": {
+                                    "Ref": "CertificateArn"
+                                },
+                                "SslSupportMethod": "sni-only"
+                            }
+                        ]
                     }
                 }
             }
@@ -465,7 +512,31 @@
     "Outputs": {
         "AccessUrl": {
             "Value": {
-                "Fn::Sub": "https://${DomainName}"
+                "Fn::If": [
+                    "EnableHTTPS",
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "https://",
+                                {
+                                    "Ref": "DomainName"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "http://",
+                                {
+                                    "Fn::GetAtt": "WebsiteCloudfront.DomainName"
+                                }
+                            ]
+                        ]
+                    }
+                ]
             },
             "Description": "The domain name on which the website is accessible."
         },

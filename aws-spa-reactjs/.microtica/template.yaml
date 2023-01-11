@@ -9,14 +9,6 @@ inputs:
       type: string
       placeholder: MyWebsite
       description: Use this parameter to distinguish multiple websites in Microtica portal.
-    DomainName:
-      type: string
-      placeholder: www.example.com
-      description: FQDN of the website
-    CertificateArn:
-      type: string
-      placeholder: arn:aws:acm:us-east-1:<account_id>:certificate/<uuid> (in US East region)
-      description: Certificate matching the domain name. The certificate should be created in US East (N. Virginia region)
     BackendUrl:
       type: string
       placeholder: https://mybackend.com
@@ -24,17 +16,11 @@ inputs:
 
   required:
     - AppName
-    - DomainName
-    - CertificateArn
 
 infrastructure:
   resources:
     "{{AppName}}":
       source: git
       properties:
-        - key: DomainName
-          value: "{{DomainName}}"
-        - key: CertificateArn
-          value: "{{CertificateArn}}"
         - key: BackendEndpoint
           value: "{{BackendUrl}}"
