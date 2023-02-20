@@ -1,0 +1,29 @@
+name: appwrite
+description: Appwrite is a self-hosted backend-as-a-service platform that provides developers with all the core APIs required to build any application.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/appwrite.svg
+repo: https://github.com/microtica/templates/tree/master/appwrite
+
+inputs:
+  properties:
+    AppName:
+      type: string
+      description: The name of the application. The name will be shown in the portal.
+      maxLength: 23
+      pattern: ^[a-z]*$
+      patternErrorMessage: "The app name can contain only lowercase letters."
+    Secret:
+      type: string
+      description: The secret value used to set the database password and executor secret.
+      maxLength: 32
+
+  required:
+    - AppName
+    - Secret
+
+service:
+  "{{AppName}}":
+    source: git
+    containerPort: 80
+    autoScaling:
+      minReplicas: 1
+      maxReplicas: 1

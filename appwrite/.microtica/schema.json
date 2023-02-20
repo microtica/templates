@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "schema://microtica/appwrite.json",
+    "title": "Appwrite service schema",
+    "type": "object",
+    "properties": {
+        "inputs": {
+            "type": "object",
+            "properties": {
+                "Secret": {
+                    "type": "string",
+                    "description": "The secret value used to set the database password and executor secret.",
+                    "maxLength": 32
+                }
+            },
+            "required": [
+                "Secret"
+            ]
+        }
+    },
+    "additionalProperties": false
+}
