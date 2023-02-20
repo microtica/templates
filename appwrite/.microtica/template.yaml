@@ -24,6 +24,9 @@ service:
   "{{AppName}}":
     source: git
     containerPort: 80
+    configuration:
+      - key: Secret
+        value: "{{Secret}}"
     autoScaling:
       minReplicas: 1
       maxReplicas: 1
