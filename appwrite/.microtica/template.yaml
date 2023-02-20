@@ -1,4 +1,4 @@
-name: appwrite
+name: Appwrite
 description: Appwrite is a self-hosted backend-as-a-service platform that provides developers with all the core APIs required to build any application.
 logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/appwrite.svg
 repo: https://github.com/microtica/templates/tree/master/appwrite
