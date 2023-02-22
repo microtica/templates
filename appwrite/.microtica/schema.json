@@ -7,14 +7,15 @@
         "inputs": {
             "type": "object",
             "properties": {
-                "Secret": {
+                "DatabasePassword": {
                     "type": "string",
-                    "description": "The secret value used to set the database password and executor secret.",
-                    "maxLength": 32
+                    "description": "MariaDB password. The same password will be used as a token for the Appwrite Executor.",
+                    "maxLength": 32,
+                    "sensitive": true
                 }
             },
             "required": [
-                "Secret"
+                "DatabasePassword"
             ]
         }
     },
