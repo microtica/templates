@@ -27,6 +27,7 @@ service:
     configuration:
       - key: DatabasePassword
         value: "{{DatabasePassword}}"
+        sensitive: true
     autoScaling:
       minReplicas: 1
       maxReplicas: 1
