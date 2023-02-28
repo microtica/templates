@@ -15,6 +15,7 @@ inputs:
       type: string
       description: MariaDB password. The same password will be used as a token for the Appwrite Executor.
       maxLength: 32
+      sensitive: true
 
   required:
     - AppName
@@ -27,7 +28,6 @@ service:
     configuration:
       - key: DatabasePassword
         value: "{{DatabasePassword}}"
-        sensitive: true
     autoScaling:
       minReplicas: 1
       maxReplicas: 1
