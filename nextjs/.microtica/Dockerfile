@@ -3,7 +3,6 @@ FROM public.ecr.aws/docker/library/node:16.16.0-slim
 WORKDIR /app
 
 COPY ./package.json ./
-COPY ./yarn.* ./
 
 RUN yarn install
 
