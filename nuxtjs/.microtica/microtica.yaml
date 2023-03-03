@@ -1,13 +1,16 @@
 steps:
-    Clone:
-        type: git-clone
+    BuildApplication:
+        type: build
+        commands:
+            - echo "No command to execute"
 
-    PushContainerImage:
-        type: docker-push
-        image_name: "{{MIC_PIPELINE_NAME}}"
-        dockerfile: ./.microtica/Dockerfile
-        registry: "{{CONTAINER_REGISTRY_ID}}"
-        tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
+        docker:
+            image_name: "{{MIC_PIPELINE_NAME}}"
+            registry: "{{CONTAINER_REGISTRY_ID}}"
+            tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
+            dockerfile: ./.microtica/Dockerfile
+
+        cache: false
 
     DeployApplication:
         type: deploy

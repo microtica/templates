@@ -1,17 +1,7 @@
-stages:
-  - clone
-  - build
-  - deploy
-
 steps:
-  Clone:
-    type: git-clone
-    stage: clone
-
   Package:
-    title: Package component
-    stage: build
-    image: aws/codebuild/standard:4.0
+    type: build
+    title: Build app/resource
     commands:
       - cd .microtica
       - npm install
@@ -19,24 +9,23 @@ steps:
       - npm test
       - npm prune --production
       - cd functions/dbinit && npm run package
-    artifacts:
-      files:
-        package_zip: ./.microtica/
-        schema_json: ./.microtica/schema.json
 
-  PushDockerImage:
-    type: docker-push
-    stage: build
-    title: Build and Push Docker Image
-    image_name: microtica/medusa-server
-    registry: "{{CONTAINER_REGISTRY_ID}}"
-    tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
-    dockerfile: ./.microtica/Dockerfile
+    docker:
+        image_name: microtica/medusa-server
+        registry: "{{CONTAINER_REGISTRY_ID}}"
+        tag: "{{MIC_PIPELINE_EXECUTION_ID}}"
+        dockerfile: ./.microtica/Dockerfile
+
+    artifacts:
+        files:
+          package_zip: ./.microtica/
+          schema_json: ./.microtica/schema.json
+
+    cache: false
 
   DeployComponent:
     type: deploy
     target: environment
-    stage: deploy
     env_id: "{{ENV_ID}}"
     partial:
         create_missing_resources: true
