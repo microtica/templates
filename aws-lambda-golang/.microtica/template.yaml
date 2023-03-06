@@ -1,0 +1,20 @@
+name: Lambda (Golang)
+description: A Lambda function written in Go language exposed through an API Gateway.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/lambda.png
+repo: https://github.com/microtica/templates/tree/master/aws-lambda-golang
+
+inputs:
+  properties:
+    AppName:
+      type: string
+      description: Unique name for your application
+      maxLength: 20
+      pattern: ^[A-Z][A-Za-z]*$
+      patternErrorMessage: "The app name can only contain letters and must start with an uppercase."
+  required:
+    - AppName
+
+infrastructure:
+  resources:
+    "{{AppName}}":
+      source: git
