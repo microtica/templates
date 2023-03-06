@@ -18,3 +18,8 @@ infrastructure:
   resources:
     "{{AppName}}":
       source: git
+      properties:
+        - key: DomainName
+          value: ""
+        - key: CertificateArn
+          value: ""
