@@ -19,7 +19,9 @@ infrastructure:
     "{{AppName}}":
       source: git
       properties:
-        - key: DomainName
-          value: ""
-        - key: CertificateArn
-          value: ""
+        - key: VpcId
+          reference: "{{VPC_RESOURCE_NAME}}.vpcId"
+        - key: Subnet1Id
+          reference: "{{VPC_RESOURCE_NAME}}.privateSubnet1"
+        - key: Subnet2Id
+          reference: "{{VPC_RESOURCE_NAME}}.privateSubnet2"

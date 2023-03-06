@@ -7,6 +7,15 @@
         "inputs": {
             "type": "object",
             "properties": {
+                "VpcId": {
+                    "type": "string"
+                },
+                "Subnet1Id": {
+                    "type": "string"
+                },
+                "Subnet2Id": {
+                    "type": "string"
+                },
                 "DomainName": {
                     "type": "string",
                     "description": "A custom domain name on which the Strapi application will be exposed."
@@ -16,7 +25,11 @@
                     "description": "A custom domain certificate (AWS Certificate Manager)."
                 }
             },
-            "required": []
+            "required": [
+                "VpcId",
+                "Subnet1Id",
+                "Subnet2Id"
+            ]
         }
     },
     "additionalProperties": false

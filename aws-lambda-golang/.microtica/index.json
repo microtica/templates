@@ -16,6 +16,15 @@
         },
         "ApiLambdaBucketKey": {
             "Type": "String"
+        },
+        "VpcId": {
+            "Type": "String"
+        },
+        "Subnet1Id": {
+            "Type": "String"
+        },
+        "Subnet2Id": {
+            "Type": "String"
         }
     },
     "Conditions": {
@@ -108,8 +117,38 @@
                         "Ref": "ApiLambdaBucketKey"
                     }
                 },
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        {
+                            "Ref": "LambdaSecurityGroup"
+                        }
+                    ],
+                    "SubnetIds": [
+                        {
+                            "Ref": "Subnet1Id"
+                        },
+                        {
+                            "Ref": "Subnet2Id"
+                        }
+                    ]
+                },
                 "Policies": [
                     "AWSLambdaVPCAccessExecutionRole"
+                ]
+            }
+        },
+        "LambdaSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Lambda Internet access",
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "-1",
+                        "CidrIp": "0.0.0.0/0"
+                    }
                 ]
             }
         }
