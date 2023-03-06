@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "schema://microtica/component.json",
+    "title": "Component Schema",
+    "type": "object",
+    "properties": {
+        "inputs": {
+            "type": "object",
+            "properties": {
+                "DomainName": {
+                    "type": "string",
+                    "description": "A custom domain name on which the Strapi application will be exposed."
+                },
+                "CertificateArn": {
+                    "type": "string",
+                    "description": "A custom domain certificate (AWS Certificate Manager)."
+                }
+            },
+            "required": []
+        }
+    },
+    "additionalProperties": false
+}

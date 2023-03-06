@@ -1,0 +1,23 @@
+steps:
+  Package:
+    type: build
+    commands:
+      - cd .microtica
+      - npm install
+      - npm run build
+      - npm test
+      - npm prune --production
+      # Build the lambda function
+      - cd ../functions/api
+      - go mod init api-lambda
+      - go get github.com/aws/aws-lambda-go/lambda
+      - go get github.com/awslabs/aws-lambda-go-api-proxy/httpadapter
+      - go build -o main
+      - zip -r ../../.microtica/api-lambda-package.zip *
+
+    artifacts:
+        files:
+          package_zip: ./.microtica/
+          schema_json: ./.microtica/schema.json
+
+    cache: false

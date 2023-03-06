@@ -1,0 +1,150 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Lambda (NodeJS) & API gateway",
+    "Transform": "AWS::Serverless-2016-10-31",
+    "Parameters": {
+        "DomainName": {
+            "Type": "String",
+            "Default": ""
+        },
+        "CertificateArn": {
+            "Type": "String",
+            "Default": ""
+        },
+        "ApiLambdaBucketName": {
+            "Type": "String"
+        },
+        "ApiLambdaBucketKey": {
+            "Type": "String"
+        }
+    },
+    "Conditions": {
+        "DisableCustomDomain": {
+            "Fn::Or": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "CertificateArn"
+                        },
+                        ""
+                    ]
+                },
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "DomainName"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "HasDomainName": {
+            "Fn::Not": [
+                {
+                    "Condition": "DisableCustomDomain"
+                }
+            ]
+        }
+    },
+    "Resources": {
+        "ApiGatewayApi": {
+            "Type": "AWS::Serverless::Api",
+            "Properties": {
+                "StageName": "api"
+            }
+        },
+        "ApiDomain": {
+            "Type": "AWS::ApiGatewayV2::DomainName",
+            "Condition": "HasDomainName",
+            "Properties": {
+                "DomainName": {
+                    "Ref": "DomainName"
+                },
+                "DomainNameConfigurations": [
+                    {
+                        "CertificateArn": {
+                            "Ref": "CertificateArn"
+                        }
+                    }
+                ]
+            }
+        },
+        "ApiDomainMapping": {
+            "Type": "AWS::ApiGatewayV2::ApiMapping",
+            "Condition": "HasDomainName",
+            "Properties": {
+                "ApiId": {
+                    "Ref": "ApiGatewayApi"
+                },
+                "Stage": "api",
+                "DomainName": {
+                    "Ref": "ApiDomain"
+                }
+            }
+        },
+        "ApiFunction": {
+            "Type": "AWS::Serverless::Function",
+            "Properties": {
+                "Events": {
+                    "ApiEvent": {
+                        "Type": "Api",
+                        "Properties": {
+                            "Path": "/",
+                            "Method": "get",
+                            "RestApiId": {
+                                "Ref": "ApiGatewayApi"
+                            }
+                        }
+                    }
+                },
+                "Runtime": "go1.x",
+                "Handler": "main",
+                "CodeUri": {
+                    "Bucket": {
+                        "Ref": "ApiLambdaBucketName"
+                    },
+                    "Key": {
+                        "Ref": "ApiLambdaBucketKey"
+                    }
+                },
+                "Policies": [
+                    "AWSLambdaVPCAccessExecutionRole"
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "AccessUrl": {
+            "Value": {
+                "Fn::If": [
+                    "HasDomainName",
+                    {
+                        "Fn::Sub": "https://${DomainName}"
+                    },
+                    {
+                        "Fn::Sub": "https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/api"
+                    }
+                ]
+            }
+        },
+        "CNAME": {
+            "Value": {
+                "Fn::If": [
+                    "HasDomainName",
+                    {
+                        "Fn::GetAtt": "ApiDomain.RegionalDomainName"
+                    },
+                    {
+                        "Fn::Sub": "${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com"
+                    }
+                ]
+            }
+        },
+        "ApplicationLogs": {
+            "Value": {
+                "Fn::Sub": "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#logEventViewer:group=/aws/lambda/${ApiFunction}"
+            }
+        }
+    }
+}
