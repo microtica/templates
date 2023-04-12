@@ -1,4 +1,5 @@
 const path = require("path");
+const crypto = require("crypto");
 const { NestedComponent } = require("@microtica/component").AwsCloud;
 
 const component = new NestedComponent(
