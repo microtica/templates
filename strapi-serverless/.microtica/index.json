@@ -71,6 +71,30 @@
         "ShouldMountApiFolder": {
             "Type": "String",
             "Default": "true"
+        },
+        "AppKeys": {
+            "Type": "String",
+            "NoEcho": "true"
+        },
+        "ApiTokenSalt": {
+            "Type": "String",
+            "NoEcho": "true"
+        },
+        "AdminJWTSecret": {
+            "Type": "String",
+            "NoEcho": "true"
+        },
+        "JWTSecret": {
+            "Type": "String",
+            "NoEcho": "true"
+        },
+        "TransferTokenSalt": {
+            "Type": "String",
+            "NoEcho": "true"
+        },
+        "UserPermissionsPluginJWTSecret": {
+            "Type": "String",
+            "NoEcho": "true"
         }
     },
     "Conditions": {
@@ -463,7 +487,7 @@
                                         "s3:GetObject",
                                         "s3:ListBucket",
                                         "s3:DeleteObject",
-                                        "s3:PutObjectAcl"                                      
+                                        "s3:PutObjectAcl"
                                     ],
                                     "Resource": [
                                         {
@@ -830,6 +854,42 @@
                                         "Value": {
                                             "Ref": "DbInstanceRotationSecret"
                                         }
+                                    },
+                                    {
+                                        "Name": "APP_KEYS",
+                                        "Value": {
+                                            "Ref": "AppKeys"
+                                        }
+                                    },
+                                    {
+                                        "Name": "API_TOKEN_SALT",
+                                        "Value": {
+                                            "Ref": "ApiTokenSalt"
+                                        }
+                                    },
+                                    {
+                                        "Name": "ADMIN_JWT_SECRET",
+                                        "Value": {
+                                            "Ref": "AdminJWTSecret"
+                                        }
+                                    },
+                                    {
+                                        "Name": "JWT_SECRET",
+                                        "Value": {
+                                            "Ref": "JWTSecret"
+                                        }
+                                    },
+                                    {
+                                        "Name": "TRANSFER_TOKEN_SALT",
+                                        "Value": {
+                                            "Ref": "TransferTokenSalt"
+                                        }
+                                    },
+                                    {
+                                        "Name": "USER_PERMISSIONS_PLUGIN_JWT_SECRET",
+                                        "Value": {
+                                            "Ref": "UserPermissionsPluginJWTSecret"
+                                        }
                                     }
                                 ],
                                 [
@@ -849,6 +909,42 @@
                                         "Name": "DATABASE_CLIENT",
                                         "Value": {
                                             "Ref": "DatabaseClient"
+                                        }
+                                    },
+                                    {
+                                        "Name": "APP_KEYS",
+                                        "Value": {
+                                            "Ref": "AppKeys"
+                                        }
+                                    },
+                                    {
+                                        "Name": "API_TOKEN_SALT",
+                                        "Value": {
+                                            "Ref": "ApiTokenSalt"
+                                        }
+                                    },
+                                    {
+                                        "Name": "ADMIN_JWT_SECRET",
+                                        "Value": {
+                                            "Ref": "AdminJWTSecret"
+                                        }
+                                    },
+                                    {
+                                        "Name": "JWT_SECRET",
+                                        "Value": {
+                                            "Ref": "JWTSecret"
+                                        }
+                                    },
+                                    {
+                                        "Name": "TRANSFER_TOKEN_SALT",
+                                        "Value": {
+                                            "Ref": "TransferTokenSalt"
+                                        }
+                                    },
+                                    {
+                                        "Name": "USER_PERMISSIONS_PLUGIN_JWT_SECRET",
+                                        "Value": {
+                                            "Ref": "UserPermissionsPluginJWTSecret"
                                         }
                                     }
                                 ]

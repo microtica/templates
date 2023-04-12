@@ -7,6 +7,7 @@ module.exports = ({ env }) => {
           filename: env('DATABASE_FILENAME', '.tmp/data.db'),
         },
         useNullAsDefault: true,
+        acquireConnectionTimeout: env.int('DATABASE_CONNECTION_TIMEOUT', 60000),
       }
     },
     mysql: {
@@ -20,6 +21,7 @@ module.exports = ({ env }) => {
           password: env('DATABASE_PASSWORD', 'strapi')
         },
         debug: false,
+        acquireConnectionTimeout: env.int('DATABASE_CONNECTION_TIMEOUT', 60000),
       }
     },
     postgres: {
@@ -33,6 +35,7 @@ module.exports = ({ env }) => {
           password: env('DATABASE_PASSWORD', 'strapi')
         },
         debug: false,
+        acquireConnectionTimeout: env.int('DATABASE_CONNECTION_TIMEOUT', 60000),
       }
     }
   };

@@ -1,15 +1,31 @@
 const path = require("path");
-const uuid = require("uuid");
 const { NestedComponent } = require("@microtica/component").AwsCloud;
 
 const component = new NestedComponent(
-    handleCreateOrUpdate,
-    handleCreateOrUpdate,
+    handleCreate,
+    handleUpdate,
     () => { },
     "/tmp/index.json"
 );
 
-async function handleCreateOrUpdate() {
+async function handleCreate() {
+    const { MIC_COMPONENT_VERSION, ImageUrl, EnvironmentVariables = "" } = await component.getInputParameters();
+
+    transformTemplate(EnvironmentVariables);
+
+    return {
+        ImageUrl: `${ImageUrl}:${MIC_COMPONENT_VERSION}`,
+        ShouldMountApiFolder: false,
+        AppKeys: `${crypto.randomBytes(32).toString('base64')},${crypto.randomBytes(32).toString('base64')}`,
+        ApiTokenSalt: crypto.randomBytes(32).toString('base64'),
+        AdminJWTSecret: crypto.randomBytes(32).toString('base64'),
+        JWTSecret: crypto.randomBytes(32).toString('base64'),
+        TransferTokenSalt: crypto.randomBytes(32).toString('base64'),
+        UserPermissionsPluginJWTSecret: crypto.randomBytes(32).toString('base64')
+    };
+}
+
+async function handleUpdate() {
     const { MIC_COMPONENT_VERSION, ImageUrl, EnvironmentVariables = "" } = await component.getInputParameters();
 
     transformTemplate(EnvironmentVariables);
