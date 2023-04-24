@@ -6,8 +6,17 @@
     "properties": {
         "inputs": {
             "type": "object",
-            "properties": {},
-            "required": []
+            "properties": {
+                "DatabasePassword": {
+                    "type": "string",
+                    "description": "MySQL password.",
+                    "maxLength": 32,
+                    "sensitive": true
+                }
+            },
+            "required": [
+                "DatabasePassword"
+            ]
         }
     },
     "additionalProperties": false
