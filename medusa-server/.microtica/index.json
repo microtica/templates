@@ -177,7 +177,12 @@
             "Type": "AWS::S3::Bucket",
             "DeletionPolicy": "Retain",
             "Properties": {
-                "AccessControl": "PublicReadWrite",
+                "PublicAccessBlockConfiguration": {
+                    "BlockPublicAcls": false,
+                    "BlockPublicPolicy": false,
+                    "IgnorePublicAcls": false,
+                    "RestrictPublicBuckets": false
+                },
                 "BucketEncryption": {
                     "ServerSideEncryptionConfiguration": [
                         {
