@@ -183,6 +183,11 @@
                     "IgnorePublicAcls": false,
                     "RestrictPublicBuckets": false
                 },
+                "OwnershipControls": {
+                    "Rules": [{
+                        "ObjectOwnership": "BucketOwnerPreferred"
+                    }]
+                },
                 "BucketEncryption": {
                     "ServerSideEncryptionConfiguration": [
                         {
