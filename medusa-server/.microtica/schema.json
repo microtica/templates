@@ -60,14 +60,6 @@
                 "ImageUrl": {
                     "type": "string"
                 },
-                "Production": {
-                    "type": "string",
-                    "default": "false",
-                    "enum": [
-                        "true",
-                        "false"
-                    ]
-                },
                 "AdminEmail": {
                     "type": "string"
                 },
@@ -97,7 +89,6 @@
                 "CPU",
                 "Memory",
                 "DesiredReplicas",
-                "Production",
                 "ImageUrl",
                 "AdminEmail",
                 "AdminPassword"

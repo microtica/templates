@@ -19,18 +19,10 @@ inputs:
     AdminPassword:
       type: string
       description: This will create a new initial admin user that you can use to log into your admin panel.
-    Production:
-      type: string
-      description: In production mode the template will provision managed RDS PostgreSQL and Redis instances. With production mode disabled, the template will use local SQLite and fake Redis instance.
-      default: "false"
-      enum:
-        - "true"
-        - "false"
   required:
     - AppName
     - AdminEmail
     - AdminPassword
-    - Production
 
 infrastructure:
   resources:
@@ -53,8 +45,6 @@ infrastructure:
           value: "512"
         - key: DesiredReplicas
           value: "1"
-        - key: Production
-          value: "{{Production}}"
         - key: ImageUrl
           value: "{{CONTAINER_REGISTRY_URL}}/microtica/medusa-server"
         - key: AdminEmail

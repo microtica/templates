@@ -60,13 +60,6 @@
         "ImageUrl": {
             "Type": "String"
         },
-        "Production": {
-            "Type": "String",
-            "AllowedValues": [
-                "true",
-                "false"
-            ]
-        },
         "AdminEmail": {
             "Type": "String"
         },
@@ -115,14 +108,6 @@
                 {
                     "Condition": "EnableHTTP"
                 }
-            ]
-        },
-        "IsProduction": {
-            "Fn::Equals": [
-                {
-                    "Ref": "Production"
-                },
-                "true"
             ]
         }
     },
@@ -515,21 +500,13 @@
                                     ]
                                 },
                                 {
-                                    "Fn::If": [
-                                        "IsProduction",
-                                        {
-                                            "Effect": "Allow",
-                                            "Action": [
-                                                "secretsmanager:GetSecretValue"
-                                            ],
-                                            "Resource": {
-                                                "Ref": "DbInstanceRotationSecret"
-                                            }
-                                        },
-                                        {
-                                            "Ref": "AWS::NoValue"
-                                        }
-                                    ]
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "secretsmanager:GetSecretValue"
+                                    ],
+                                    "Resource": {
+                                        "Ref": "DbInstanceRotationSecret"
+                                    }
                                 },
                                 {
                                     "Effect": "Allow",
@@ -599,21 +576,6 @@
                                 "IAM": "DISABLED"
                             }
                         }
-                    },
-                    {
-                        "Name": "db-persistent-volume",
-                        "EFSVolumeConfiguration": {
-                            "FilesystemId": {
-                                "Fn::GetAtt": "PersistentStorage.FileSystemId"
-                            },
-                            "TransitEncryption": "ENABLED",
-                            "AuthorizationConfig": {
-                                "AccessPointId": {
-                                    "Fn::GetAtt": "DatabaseStorageAccessPoint.AccessPointId"
-                                },
-                                "IAM": "DISABLED"
-                            }
-                        }
                     }
                 ],
                 "ContainerDefinitions": [
@@ -633,168 +595,107 @@
                                 "ContainerPort": 9000
                             }
                         ],
-                        "Environment": {
-                            "Fn::If": [
-                                "IsProduction",
-                                [
-                                    {
-                                        "Name": "S3_URL",
-                                        "Value": {
-                                            "Fn::Join": [
-                                                "",
-                                                [
-                                                    "https://",
-                                                    {
-                                                        "Fn::GetAtt": "MediaBucket.RegionalDomainName"
-                                                    }
+                        "Environment": [
+                            {
+                                "Name": "S3_URL",
+                                "Value": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "https://",
+                                            {
+                                                "Fn::GetAtt": "MediaBucket.RegionalDomainName"
+                                            }
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "S3_BUCKET",
+                                "Value": {
+                                    "Ref": "MediaBucket"
+                                }
+                            },
+                            {
+                                "Name": "S3_REGION",
+                                "Value": {
+                                    "Ref": "AWS::Region"
+                                }
+                            },
+                            {
+                                "Name": "DATABASE_URL",
+                                "Value": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "postgres://",
+                                            {
+                                                "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::username}}"
+                                            },
+                                            ":",
+                                            {
+                                                "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::password}}"
+                                            },
+                                            "@",
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "PostgresInstance",
+                                                    "Endpoint.Address"
                                                 ]
-                                            ]
-                                        }
-                                    },
-                                    {
-                                        "Name": "S3_BUCKET",
-                                        "Value": {
-                                            "Ref": "MediaBucket"
-                                        }
-                                    },
-                                    {
-                                        "Name": "S3_REGION",
-                                        "Value": {
-                                            "Ref": "AWS::Region"
-                                        }
-                                    },
-                                    {
-                                        "Name": "DATABASE_URL",
-                                        "Value": {
-                                            "Fn::Join": [
-                                                "",
-                                                [
-                                                    "postgresql://",
-                                                    {
-                                                        "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::username}}"
-                                                    },
-                                                    ":",
-                                                    {
-                                                        "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::password}}"
-                                                    },
-                                                    "@",
-                                                    {
-                                                        "Fn::GetAtt": [
-                                                            "PostgresInstance",
-                                                            "Endpoint.Address"
-                                                        ]
-                                                    },
-                                                    ":",
-                                                    {
-                                                        "Fn::GetAtt": [
-                                                            "PostgresInstance",
-                                                            "Endpoint.Port"
-                                                        ]
-                                                    },
-                                                    "/medusa"
+                                            },
+                                            ":",
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "PostgresInstance",
+                                                    "Endpoint.Port"
                                                 ]
-                                            ]
-                                        }
-                                    },
-                                    {
-                                        "Name": "PRODUCTION",
-                                        "Value": {
-                                            "Ref": "Production"
-                                        }
-                                    },
-                                    {
-                                        "Name": "REDIS_URL",
-                                        "Value": {
-                                            "Fn::Join": [
-                                                "",
-                                                [
-                                                    "redis://",
-                                                    {
-                                                        "Fn::GetAtt": [
-                                                            "ElastiCacheCluster",
-                                                            "RedisEndpoint.Address"
-                                                        ]
-                                                    },
-                                                    ":",
-                                                    {
-                                                        "Fn::GetAtt": [
-                                                            "ElastiCacheCluster",
-                                                            "RedisEndpoint.Port"
-                                                        ]
-                                                    }
+                                            },
+                                            "/medusa"
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "REDIS_URL",
+                                "Value": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "redis://",
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "ElastiCacheCluster",
+                                                    "RedisEndpoint.Address"
                                                 ]
-                                            ]
-                                        }
-                                    },
-                                    {
-                                        "Name": "COOKIE_SECRET",
-                                        "Value": {
-                                            "Ref": "CookieSecret"
-                                        }
-                                    },
-                                    {
-                                        "Name": "JWT_SECRET",
-                                        "Value": {
-                                            "Ref": "JWTSecret"
-                                        }
-                                    }
-                                ],
-                                [
-                                    {
-                                        "Name": "S3_URL",
-                                        "Value": {
-                                            "Fn::Join": [
-                                                "",
-                                                [
-                                                    "https://",
-                                                    {
-                                                        "Fn::GetAtt": "MediaBucket.RegionalDomainName"
-                                                    }
+                                            },
+                                            ":",
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "ElastiCacheCluster",
+                                                    "RedisEndpoint.Port"
                                                 ]
-                                            ]
-                                        }
-                                    },
-                                    {
-                                        "Name": "S3_BUCKET",
-                                        "Value": {
-                                            "Ref": "MediaBucket"
-                                        }
-                                    },
-                                    {
-                                        "Name": "S3_REGION",
-                                        "Value": {
-                                            "Ref": "AWS::Region"
-                                        }
-                                    },
-                                    {
-                                        "Name": "PRODUCTION",
-                                        "Value": {
-                                            "Ref": "Production"
-                                        }
-                                    },
-                                    {
-                                        "Name": "COOKIE_SECRET",
-                                        "Value": {
-                                            "Ref": "CookieSecret"
-                                        }
-                                    },
-                                    {
-                                        "Name": "JWT_SECRET",
-                                        "Value": {
-                                            "Ref": "JWTSecret"
-                                        }
-                                    }
-                                ]
-                            ]
-                        },
+                                            }
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "COOKIE_SECRET",
+                                "Value": {
+                                    "Ref": "CookieSecret"
+                                }
+                            },
+                            {
+                                "Name": "JWT_SECRET",
+                                "Value": {
+                                    "Ref": "JWTSecret"
+                                }
+                            }
+                        ],
                         "MountPoints": [
                             {
                                 "ContainerPath": "/medusa/uploads",
                                 "SourceVolume": "uploads-persistent-volume"
-                            },
-                            {
-                                "ContainerPath": "/medusa/.tmp",
-                                "SourceVolume": "db-persistent-volume"
                             }
                         ],
                         "LogConfiguration": {
@@ -880,7 +781,6 @@
         },
         "PostgresInstance": {
             "Type": "AWS::RDS::DBInstance",
-            "Condition": "IsProduction",
             "Properties": {
                 "MasterUsername": {
                     "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::username}}"
@@ -892,7 +792,7 @@
                 "CopyTagsToSnapshot": true,
                 "DBInstanceClass": "db.t3.small",
                 "Engine": "postgres",
-                "EngineVersion": "14.1",
+                "EngineVersion": "15.3",
                 "AllocatedStorage": "20",
                 "StorageType": "gp2",
                 "KmsKeyId": {
@@ -913,7 +813,6 @@
         },
         "PrivateSubnetGroup": {
             "Type": "AWS::RDS::DBSubnetGroup",
-            "Condition": "IsProduction",
             "Properties": {
                 "DBSubnetGroupDescription": "private-subnet-group",
                 "SubnetIds": [
@@ -928,7 +827,6 @@
         },
         "DbSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
-            "Condition": "IsProduction",
             "Properties": {
                 "GroupDescription": {
                     "Fn::Sub": "DB Cluster Security Group"
@@ -948,7 +846,6 @@
         },
         "DbEncryptionKey": {
             "Type": "AWS::KMS::Key",
-            "Condition": "IsProduction",
             "Properties": {
                 "Description": "DB encyption key",
                 "EnableKeyRotation": "True",
@@ -997,7 +894,6 @@
         },
         "DbInstanceRotationSecret": {
             "Type": "AWS::SecretsManager::Secret",
-            "Condition": "IsProduction",
             "Properties": {
                 "Description": "RDS instance secret",
                 "GenerateSecretString": {
@@ -1010,7 +906,6 @@
         },
         "DbInstanceAttachment": {
             "Type": "AWS::SecretsManager::SecretTargetAttachment",
-            "Condition": "IsProduction",
             "Properties": {
                 "SecretId": {
                     "Ref": "DbInstanceRotationSecret"
@@ -1063,9 +958,6 @@
                 },
                 "serviceName": {
                     "Fn::GetAtt": "FargateService.Name"
-                },
-                "production": {
-                    "Ref": "Production"
                 }
             }
         },
@@ -1145,7 +1037,6 @@
         },
         "RedisSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
-            "Condition": "IsProduction",
             "Properties": {
                 "GroupDescription": "Redis port from anywhere",
                 "VpcId": {
@@ -1163,7 +1054,6 @@
         },
         "RedisSubnetGroup": {
             "Type": "AWS::ElastiCache::SubnetGroup",
-            "Condition": "IsProduction",
             "Properties": {
                 "Description": "Cache Subnet Group",
                 "SubnetIds": [
@@ -1178,7 +1068,6 @@
         },
         "ElastiCacheCluster": {
             "Type": "AWS::ElastiCache::CacheCluster",
-            "Condition": "IsProduction",
             "Properties": {
                 "Engine": "redis",
                 "NumCacheNodes": 1,
@@ -1227,30 +1116,7 @@
                         "OwnerUid": "1001",
                         "Permissions": "755"
                     },
-                    "Path": "/modusa/uploads"
-                }
-            }
-        },
-        "DatabaseStorageAccessPoint": {
-            "Type": "AWS::EFS::AccessPoint",
-            "Properties": {
-                "FileSystemId": {
-                    "Fn::GetAtt": "PersistentStorage.FileSystemId"
-                },
-                "PosixUser": {
-                    "Uid": "1001",
-                    "Gid": "1001",
-                    "SecondaryGids": [
-                        "0"
-                    ]
-                },
-                "RootDirectory": {
-                    "CreationInfo": {
-                        "OwnerGid": "1001",
-                        "OwnerUid": "1001",
-                        "Permissions": "755"
-                    },
-                    "Path": "/medusa/db"
+                    "Path": "/medusa/uploads"
                 }
             }
         },
@@ -1346,44 +1212,20 @@
         },
         "DatabaseEndpointAddress": {
             "Value": {
-                "Fn::If": [
-                    "IsProduction",
-                    {
-                        "Fn::GetAtt": "PostgresInstance.Endpoint.Address"
-                    },
-                    ""
-                ]
+                "Fn::GetAtt": "PostgresInstance.Endpoint.Address"
             }
         },
         "DatabaseEndpointPort": {
             "Value": {
-                "Fn::If": [
-                    "IsProduction",
-                    {
-                        "Fn::GetAtt": "PostgresInstance.Endpoint.Port"
-                    },
-                    ""
-                ]
+                "Fn::GetAtt": "PostgresInstance.Endpoint.Port"
             }
         },
         "DatabaseUsername": {
-            "Value": {
-                "Fn::If": [
-                    "IsProduction",
-                    "dbuser",
-                    ""
-                ]
-            }
+            "Value": "dbuser"
         },
         "DatabaseSecret": {
             "Value": {
-                "Fn::If": [
-                    "IsProduction",
-                    {
-                        "Ref": "DbInstanceRotationSecret"
-                    },
-                    ""
-                ]
+                "Ref": "DbInstanceRotationSecret"
             }
         },
         "MediaBucket": {

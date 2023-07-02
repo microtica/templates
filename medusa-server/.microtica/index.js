@@ -74,15 +74,7 @@ function transformTemplate(envVarsString) {
                 .TaskDefinition
                 .Properties
                 .ContainerDefinitions[0]
-                .Environment["Fn::If"][1]
-                .push(...containerEnvironment);
-
-            template
-                .Resources
-                .TaskDefinition
-                .Properties
-                .ContainerDefinitions[0]
-                .Environment["Fn::If"][2]
+                .Environment
                 .push(...containerEnvironment);
 
             return template;
