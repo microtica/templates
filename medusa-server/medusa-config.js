@@ -19,7 +19,7 @@ switch (process.env.NODE_ENV) {
 
 try {
   dotenv.config({ path: process.cwd() + "/" + ENV_FILE_NAME });
-} catch (e) { }
+} catch (e) {}
 
 // CORS when consuming Medusa from admin
 const ADMIN_CORS =
@@ -28,8 +28,9 @@ const ADMIN_CORS =
 // CORS to avoid issues when consuming Medusa from a client
 const STORE_CORS = process.env.STORE_CORS || "http://localhost:8000";
 
-const DATABASE_TYPE = process.env.DATABASE_TYPE || "sqlite";
-const DATABASE_URL = process.env.DATABASE_URL || "postgres://localhost/medusa-store";
+const DATABASE_URL =
+  process.env.DATABASE_URL || "postgres://localhost/medusa-store";
+
 const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
 const plugins = [
@@ -66,18 +67,19 @@ const modules = {
       redisUrl: REDIS_URL
     }
   },*/
-}
+};
 
 /** @type {import('@medusajs/medusa').ConfigModule["projectConfig"]} */
 const projectConfig = {
   jwtSecret: process.env.JWT_SECRET,
   cookieSecret: process.env.COOKIE_SECRET,
   store_cors: STORE_CORS,
-  admin_cors: ADMIN_CORS,
-  redis_url: REDIS_URL,
   database_url: DATABASE_URL,
-  database_extra: { ssl: { rejectUnauthorized: false } }
-}
+  database_extra: { ssl: { rejectUnauthorized: false } },
+  admin_cors: ADMIN_CORS,
+  // Uncomment the following lines to enable REDIS
+  redis_url: REDIS_URL
+};
 
 /** @type {import('@medusajs/medusa').ConfigModule} */
 module.exports = {
