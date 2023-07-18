@@ -9,7 +9,7 @@
             "properties": {
                 "DatabasePassword": {
                     "type": "string",
-                    "description": "MySQL password.",
+                    "description": "Postgres database password",
                     "maxLength": 32,
                     "sensitive": true
                 }
