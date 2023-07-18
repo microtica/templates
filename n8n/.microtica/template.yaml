@@ -13,7 +13,7 @@ inputs:
       patternErrorMessage: "The app name can contain only lowercase letters."
     DatabasePassword:
       type: string
-      description: MySQL password
+      description: Postgres database password
       maxLength: 32
       sensitive: true
   required:
