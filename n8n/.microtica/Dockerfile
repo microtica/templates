@@ -1,1 +1,1 @@
-FROM public.ecr.aws/microtica/n8n:latest
+FROM public.ecr.aws/microtica/n8n:1.1.1
