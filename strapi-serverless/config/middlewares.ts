@@ -3,9 +3,9 @@ const {
   AWS_BUCKET
 } = process.env;
 
-
-module.exports = [
+export default [
   'strapi::errors',
+  'strapi::security',
   'strapi::cors',
   'strapi::poweredBy',
   'strapi::logger',

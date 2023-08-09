@@ -1,4 +1,4 @@
-module.exports = ({ env }) => ({
+export default ({ env }) => ({
     "users-permissions": {
         config: {
             jwtSecret: env('USER_PERMISSIONS_PLUGIN_JWT_SECRET')
@@ -22,4 +22,4 @@ module.exports = ({ env }) => ({
             }
         }
     }
-});  
+});
