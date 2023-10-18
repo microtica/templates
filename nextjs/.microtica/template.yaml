@@ -1,0 +1,23 @@
+name: Next.js
+description: Next.js gives you the best developer experience with all the features you need for production - hybrid static & server rendering, TypeScript support, smart bundling, route pre-fetching, and more. No config needed.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/nextjs.png
+repo: https://github.com/microtica/templates/tree/master/nextjs
+
+inputs:
+  properties:
+    AppName:
+      type: string
+      description: The name of the application. The name will be shown in the portal.
+      maxLength: 23
+      pattern: ^[a-z]*$
+      patternErrorMessage: "The app name can contain only lowercase letters."
+  required:
+    - AppName
+
+service:
+  "{{AppName}}":
+    source: git
+    containerPort: "{{CONTAINER_PORT}}"
+    autoScaling:
+      minReplicas: 1
+      maxReplicas: 1
