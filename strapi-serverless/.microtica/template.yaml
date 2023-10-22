@@ -37,10 +37,12 @@ infrastructure:
           reference: "{{VPC_RESOURCE_NAME}}.publicSubnet1"
         - key: PublicSubnet2Id
           reference: "{{VPC_RESOURCE_NAME}}.publicSubnet2"
-        - key: CPU
-          value: "256"
-        - key: Memory
-          value: "512"
+        - key: InstanceType
+          value: "Small - .25 Core - 512MB Memory"
+        - key: MinReplicas
+          value: "1"
+        - key: MaxReplicas
+          value: "1"
         - key: DesiredReplicas
           value: "1"
         - key: DatabaseClient

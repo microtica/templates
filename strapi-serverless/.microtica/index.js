@@ -10,7 +10,15 @@ const component = new NestedComponent(
 );
 
 async function handleCreate() {
-    const { MIC_COMPONENT_VERSION, ImageUrl, EnvironmentVariables = "" } = await component.getInputParameters();
+    const {
+        MIC_PROJECT_ID,
+        MIC_ENVIRONMENT_ID,
+        MIC_RESOURCE_ID,
+        MIC_COMPONENT_VERSION,
+        ImageUrl,
+        EnvironmentVariables = "",
+        InstanceType
+    } = await component.getInputParameters();
 
     transformTemplate(EnvironmentVariables);
 
@@ -22,19 +30,50 @@ async function handleCreate() {
         AdminJWTSecret: crypto.randomBytes(32).toString('base64'),
         JWTSecret: crypto.randomBytes(32).toString('base64'),
         TransferTokenSalt: crypto.randomBytes(32).toString('base64'),
-        UserPermissionsPluginJWTSecret: crypto.randomBytes(32).toString('base64')
+        UserPermissionsPluginJWTSecret: crypto.randomBytes(32).toString('base64'),
+        ProjectId: MIC_PROJECT_ID,
+        EnvironmentId: MIC_ENVIRONMENT_ID,
+        ResourceId: MIC_RESOURCE_ID,
+        ...mapInstanceType(InstanceType)
     };
 }
 
 async function handleUpdate() {
-    const { MIC_COMPONENT_VERSION, ImageUrl, EnvironmentVariables = "" } = await component.getInputParameters();
+    const {
+        MIC_PROJECT_ID,
+        MIC_ENVIRONMENT_ID,
+        MIC_RESOURCE_ID,
+        MIC_COMPONENT_VERSION,
+        ImageUrl,
+        EnvironmentVariables = "",
+        InstanceType
+    } = await component.getInputParameters();
 
     transformTemplate(EnvironmentVariables);
 
     return {
         ImageUrl: `${ImageUrl}:${MIC_COMPONENT_VERSION}`,
-        ShouldMountApiFolder: false
+        ShouldMountApiFolder: false,
+        ProjectId: MIC_PROJECT_ID,
+        EnvironmentId: MIC_ENVIRONMENT_ID,
+        ResourceId: MIC_RESOURCE_ID,
+        ...mapInstanceType(InstanceType)
     };
+}
+
+function mapInstanceType(type) {
+    switch (type) {
+        case "Small - .25 Core - 512MB Memory":
+            return { CPU: "256", Memory: "512" };
+        case "Medium - .5 Core - 1GB Memory":
+            return { CPU: "512", Memory: "1024" };
+        case "Large - 1 Core - 2GB Memory":
+            return { CPU: "1024", Memory: "2048" };
+        case "XLarge - 2 Core - 4GB Memory":
+            return { CPU: "2048", Memory: "4096" };
+        case "2XLarge - 4 Core - 8GB Memory":
+            return { CPU: "4096", Memory: "8192" };
+    }
 }
 
 function transformTemplate(envVarsString) {

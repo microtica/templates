@@ -8,78 +8,142 @@
             "type": "object",
             "properties": {
                 "VpcId": {
-                    "type": "string"
+                    "type": "string",
+                    "label": "VPC ID",
+                    "category": "advanced"
                 },
                 "PrivateSubnet1Id": {
-                    "type": "string"
+                    "type": "string",
+                    "label": "Primary Private Subnet ID",
+                    "category": "advanced"
                 },
                 "PrivateSubnet2Id": {
-                    "type": "string"
+                    "type": "string",
+                    "label": "Secondary Private Subnet ID",
+                    "category": "advanced"
                 },
                 "PublicSubnet1Id": {
-                    "type": "string"
+                    "type": "string",
+                    "label": "Primary Public Subnet ID",
+                    "category": "advanced"
                 },
                 "PublicSubnet2Id": {
-                    "type": "string"
-                },
-                "CPU": {
                     "type": "string",
-                    "default": "256",
-                    "enum": [
-                        "256",
-                        "512",
-                        "1024",
-                        "2048",
-                        "4096"
-                    ],
-                    "description": "The number of cpu units reserved for the container."
+                    "label": "Secondary Public Subnet ID",
+                    "category": "advanced"
                 },
-                "Memory": {
+                "ImageUrl": {
                     "type": "string",
-                    "default": "512",
+                    "category": "advanced"
+                },
+                "InstanceType": {
+                    "type": "string",
+                    "label": "Instance type",
+                    "default": "Small - .25 Core - 512MB Memory",
                     "enum": [
-                        "512",
-                        "1024",
-                        "2048",
-                        "3072",
-                        "4096",
-                        "5120",
-                        "6144",
-                        "7168",
-                        "8192",
-                        "16384",
-                        "30720"
+                        "Small - .25 Core - 512MB Memory",
+                        "Medium - .5 Core - 1GB Memory",
+                        "Large - 1 Core - 2GB Memory",
+                        "XLarge - 2 Core - 4GB Memory",
+                        "2XLarge - 4 Core - 8GB Memory"
                     ],
-                    "description": "The amount (in MiB) of memory to present to the container."
+                    "description": "The number of cpu and memory units reserved for the container.",
+                    "category": "allocation"
                 },
                 "DesiredReplicas": {
                     "type": "string",
+                    "dataType": "number",
+                    "label": "Replicas",
                     "default": "1",
-                    "description": "The number of applications copies running at the same time."
+                    "minimum": 0,
+                    "description": "The number of application instances running at any given time.",
+                    "category": "scaling",
+                    "subcategory": "replicas"
                 },
-                "ImageUrl": {
-                    "type": "string"
+                "MinReplicas": {
+                    "type": "string",
+                    "dataType": "number",
+                    "label": "Minimum replicas",
+                    "default": "1",
+                    "minimum": 0,
+                    "description": "The minimum number of application instances running at any given time.",
+                    "category": "autoscaling",
+                    "subcategory": "replicas"
+                },
+                "MaxReplicas": {
+                    "type": "string",
+                    "dataType": "number",
+                    "label": "Maximum replicas",
+                    "default": "1",
+                    "minimum": 0,
+                    "description": "The maximum number of application instances running at any given time.",
+                    "category": "autoscaling",
+                    "subcategory": "replicas"
+                },
+                "RequestsThreshold": {
+                    "type": "string",
+                    "dataType": "number",
+                    "label": "Requests per minute",
+                    "default": "2000",
+                    "minimum":0,
+                    "description": "Automated scaling will be triggered once the number of requests per minute exceeds this threshold.",
+                    "category": "autoscaling"
+                },
+                "503ErrorThreshold": {
+                    "type": "string",
+                    "dataType": "number",
+                    "label": "503 errors per minute",
+                    "default": "1",
+                    "minimum": 0,
+                    "description": "An alarm will be triggered if the count of 503 errors exceeds the defined threshold. Set 0 to disable this alarm.",
+                    "category": "alarm"
+                },
+                "5xxErrorThreshold": {
+                    "type": "string",
+                    "dataType": "number",
+                    "label": "5xx errors per minute",
+                    "default": "10",
+                    "minimum": 0,
+                    "description": "An alarm will be triggered if the count of 5xx errors exceeds the defined threshold. Set 0 to disable this alarm.",
+                    "category": "alarm"
+                },
+                "4xxErrorThreshold": {
+                    "type": "string",
+                    "dataType": "number",
+                    "label": "4xx errors per minute",
+                    "default": "50",
+                    "minimum": 0,
+                    "description": "An alarm will be triggered if the count of 4xx errors exceeds the defined threshold. Set 0 to disable this alarm.",
+                    "category": "alarm"
                 },
                 "DatabaseClient": {
                     "type": "string",
+                    "label": "Database Type",
                     "default": "sqlite",
                     "enum": [
                         "sqlite",
                         "mysql",
                         "postgres"
-                    ]
+                    ],
+                    "category": "storage"
                 },
                 "EnvironmentVariables": {
                     "type": "string",
-                    "description": "Comma-delimited environment variables provided in the app runtime (e.g. KEY=value,KEY=value)."
+                    "label": "Environment variables",
+                    "description": "Comma-delimited environment variables provided in the app runtime (e.g. KEY=value,KEY=value).",
+                    "category": "variables"
                 },
                 "DomainName": {
                     "type": "string",
-                    "description": "A custom domain name on which the Strapi application will be exposed."
+                    "label": "Domain name",
+                    "description": "A custom domain name on which the Strapi application will be exposed.",
+                    "category": "domain"
                 },
                 "CertificateArn": {
                     "type": "string",
-                    "description": "A custom domain certificate (AWS Certificate Manager)."
+                    "label": "Certificate ARN",
+                    "description": "A custom domain certificate (AWS Certificate Manager).",
+                    "category": "domain"
                 }
             },
             "required": [
@@ -88,11 +152,11 @@
                 "PrivateSubnet2Id",
                 "PublicSubnet1Id",
                 "PublicSubnet2Id",
-                "CPU",
-                "Memory",
+                "ImageUrl",
                 "DesiredReplicas",
-                "DatabaseClient",
-                "ImageUrl"
+                "MinReplicas",
+                "MaxReplicas",
+                "DatabaseClient"
             ]
         }
     },
