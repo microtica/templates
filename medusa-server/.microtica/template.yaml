@@ -5,6 +5,7 @@ repo: https://github.com/microtica/templates/tree/master/medusa-server
 
 inputs:
   properties:
+    AppName:
       type: string
       label: App Name
       description: Unique name for your application
