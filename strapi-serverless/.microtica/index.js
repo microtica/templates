@@ -73,6 +73,8 @@ function mapInstanceType(type) {
             return { CPU: "2048", Memory: "4096" };
         case "2XLarge - 4 Core - 8GB Memory":
             return { CPU: "4096", Memory: "8192" };
+        case "3XLarge - 4 Core - 16GB Memory":
+            return { CPU: "4096", Memory: "16384" };
     }
 }
 

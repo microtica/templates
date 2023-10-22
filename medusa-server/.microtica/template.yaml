@@ -5,20 +5,23 @@ repo: https://github.com/microtica/templates/tree/master/medusa-server
 
 inputs:
   properties:
-    AppName:
       type: string
+      label: App Name
       description: Unique name for your application
       maxLength: 20
       pattern: ^[A-Z][A-Za-z]*$
       patternErrorMessage: "The app name can only contain letters and must start with an uppercase."
     AdminEmail:
       type: string
+      label: Admin Dashboard Email
       pattern: ^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$
       patternErrorMessage: "Provided email is not valid."
-      description: This will create a new initial admin user that you can use to log into your admin panel.
+      description: The initial login email for Medusa Admin Dashboard.
     AdminPassword:
       type: string
-      description: This will create a new initial admin user that you can use to log into your admin panel.
+      label: Admin Dashboard Password
+      description: The initial login password for Medusa Admin Dashboard.
+      sensitive: true
   required:
     - AppName
     - AdminEmail
@@ -39,10 +42,12 @@ infrastructure:
           reference: "{{VPC_RESOURCE_NAME}}.publicSubnet1"
         - key: PublicSubnet2Id
           reference: "{{VPC_RESOURCE_NAME}}.publicSubnet2"
-        - key: CPU
-          value: "256"
-        - key: Memory
-          value: "512"
+        - key: InstanceType
+          value: "Small - .25 Core - 512MB Memory"
+        - key: MinReplicas
+          value: "1"
+        - key: MaxReplicas
+          value: "1"
         - key: DesiredReplicas
           value: "1"
         - key: ImageUrl

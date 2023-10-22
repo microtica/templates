@@ -11,7 +11,15 @@ const component = new NestedComponent(
 
 async function handleCreate() {
     const [dbinitPackage] = await uploadPackages();
-    const { MIC_COMPONENT_VERSION, ImageUrl, EnvironmentVariables = "" } = await component.getInputParameters();
+    const {
+        MIC_PROJECT_ID,
+        MIC_ENVIRONMENT_ID,
+        MIC_RESOURCE_ID,
+        MIC_COMPONENT_VERSION,
+        ImageUrl,
+        EnvironmentVariables = "",
+        InstanceType
+    } = await component.getInputParameters();
 
     transformTemplate(EnvironmentVariables);
 
@@ -23,21 +31,54 @@ async function handleCreate() {
         DbInitS3Bucket: dbinitPackage.s3Bucket,
         DbInitS3Key: dbinitPackage.s3Key,
         CookieSecret: cookieSecret,
-        JWTSecret: jwtSecret
+        JWTSecret: jwtSecret,
+        ProjectId: MIC_PROJECT_ID,
+        EnvironmentId: MIC_ENVIRONMENT_ID,
+        ResourceId: MIC_RESOURCE_ID,
+        ...mapInstanceType(InstanceType)
     };
 }
 
 async function handleUpdate() {
     const [dbinitPackage] = await uploadPackages();
-    const { MIC_COMPONENT_VERSION, ImageUrl, EnvironmentVariables = "" } = await component.getInputParameters();
+    const {
+        MIC_PROJECT_ID,
+        MIC_ENVIRONMENT_ID,
+        MIC_RESOURCE_ID,
+        MIC_COMPONENT_VERSION,
+        ImageUrl,
+        EnvironmentVariables = "",
+        InstanceType
+    } = await component.getInputParameters();
 
     transformTemplate(EnvironmentVariables);
 
     return {
         ImageUrl: `${ImageUrl}:${MIC_COMPONENT_VERSION}`,
         DbInitS3Bucket: dbinitPackage.s3Bucket,
-        DbInitS3Key: dbinitPackage.s3Key
+        DbInitS3Key: dbinitPackage.s3Key,
+        ProjectId: MIC_PROJECT_ID,
+        EnvironmentId: MIC_ENVIRONMENT_ID,
+        ResourceId: MIC_RESOURCE_ID,
+        ...mapInstanceType(InstanceType)
     };
+}
+
+function mapInstanceType(type) {
+    switch (type) {
+        case "Small - .25 Core - 512MB Memory":
+            return { CPU: "256", Memory: "512" };
+        case "Medium - .5 Core - 1GB Memory":
+            return { CPU: "512", Memory: "1024" };
+        case "Large - 1 Core - 2GB Memory":
+            return { CPU: "1024", Memory: "2048" };
+        case "XLarge - 2 Core - 4GB Memory":
+            return { CPU: "2048", Memory: "4096" };
+        case "2XLarge - 4 Core - 8GB Memory":
+            return { CPU: "4096", Memory: "8192" };
+        case "3XLarge - 4 Core - 16GB Memory":
+            return { CPU: "4096", Memory: "16384" };
+    }
 }
 
 async function uploadPackages() {

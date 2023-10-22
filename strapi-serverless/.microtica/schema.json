@@ -45,7 +45,8 @@
                         "Medium - .5 Core - 1GB Memory",
                         "Large - 1 Core - 2GB Memory",
                         "XLarge - 2 Core - 4GB Memory",
-                        "2XLarge - 4 Core - 8GB Memory"
+                        "2XLarge - 4 Core - 8GB Memory",
+                        "3XLarge - 4 Core - 16GB Memory"
                     ],
                     "description": "The number of cpu and memory units reserved for the container.",
                     "category": "allocation"
@@ -111,7 +112,7 @@
                     "type": "string",
                     "dataType": "number",
                     "label": "4xx errors per minute",
-                    "default": "50",
+                    "default": "100",
                     "minimum": 0,
                     "description": "An alarm will be triggered if the count of 4xx errors exceeds the defined threshold. Set 0 to disable this alarm.",
                     "category": "alarm"

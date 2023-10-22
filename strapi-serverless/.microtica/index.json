@@ -71,7 +71,7 @@
         },
         "4xxErrorThreshold": {
             "Type": "String",
-            "Default": "50"
+            "Default": "100"
         },
         "DomainName": {
             "Type": "String",
@@ -665,7 +665,7 @@
                 },
                 "AlarmActions": [
                     {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:678898389733:MicroticaCFNTopic"
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "AlarmDescription": {
@@ -689,7 +689,7 @@
                 "Namespace": "AWS/ApplicationELB",
                 "OKActions": [
                     {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:678898389733:MicroticaCFNTopic"
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "Period": 60,
@@ -712,7 +712,7 @@
                 },
                 "AlarmActions": [
                     {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:678898389733:MicroticaCFNTopic"
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "AlarmDescription": {
@@ -736,7 +736,7 @@
                 "Namespace": "AWS/ApplicationELB",
                 "OKActions": [
                     {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:678898389733:MicroticaCFNTopic"
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "Period": 60,
@@ -759,7 +759,7 @@
                 },
                 "AlarmActions": [
                     {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:678898389733:MicroticaCFNTopic"
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "AlarmDescription": {
@@ -783,7 +783,7 @@
                 "Namespace": "AWS/ApplicationELB",
                 "OKActions": [
                     {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:678898389733:MicroticaCFNTopic"
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "Period": 60,
@@ -809,7 +809,7 @@
                         "Ref": "ScaleUpPolicy"
                     },
                     {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:678898389733:MicroticaCFNTopic"
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "AlarmDescription": {
@@ -836,7 +836,7 @@
                         "Ref": "ScaleDownPolicy"
                     },
                     {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:678898389733:MicroticaCFNTopic"
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "Period": 60,
@@ -857,7 +857,7 @@
                         "Ref": "ScaleUpPolicy"
                     },
                     {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:678898389733:MicroticaCFNTopic"
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "AlarmDescription": {
@@ -887,7 +887,7 @@
                         "Ref": "ScaleDownPolicy"
                     },
                     {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:678898389733:MicroticaCFNTopic"
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "Period": 60,
@@ -905,7 +905,7 @@
                         "Ref": "ScaleUpPolicy"
                     },
                     {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:678898389733:MicroticaCFNTopic"
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "AlarmDescription": {
@@ -935,7 +935,7 @@
                         "Ref": "ScaleDownPolicy"
                     },
                     {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:678898389733:MicroticaCFNTopic"
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "Period": 60,

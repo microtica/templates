@@ -49,6 +49,30 @@
             "Type": "String",
             "Default": "1"
         },
+        "MinReplicas": {
+            "Type": "String",
+            "Default": "1"
+        },
+        "MaxReplicas": {
+            "Type": "String",
+            "Default": "1"
+        },
+        "RequestsThreshold": {
+            "Type": "String",
+            "Default": "5000"
+        },
+        "503ErrorThreshold": {
+            "Type": "String",
+            "Default": "1"
+        },
+        "5xxErrorThreshold": {
+            "Type": "String",
+            "Default": "10"
+        },
+        "4xxErrorThreshold": {
+            "Type": "String",
+            "Default": "100"
+        },
         "DomainName": {
             "Type": "String",
             "Default": ""
@@ -64,8 +88,7 @@
             "Type": "String"
         },
         "AdminPassword": {
-            "Type": "String",
-            "NoEcho": true
+            "Type": "String"
         },
         "DbInitS3Bucket": {
             "Type": "String"
@@ -74,12 +97,19 @@
             "Type": "String"
         },
         "CookieSecret": {
-            "Type": "String",
-            "NoEcho": true
+            "Type": "String"
         },
         "JWTSecret": {
-            "Type": "String",
-            "NoEcho": true
+            "Type": "String"
+        },
+        "ProjectId": {
+            "Type": "String"
+        },
+        "EnvironmentId": {
+            "Type": "String"
+        },
+        "ResourceId": {
+            "Type": "String"
         }
     },
     "Conditions": {
@@ -108,6 +138,38 @@
                 {
                     "Condition": "EnableHTTP"
                 }
+            ]
+        },
+        "ShouldDisable503Alarm": {
+            "Fn::Equals": [
+                {
+                    "Ref": "503ErrorThreshold"
+                },
+                "0"
+            ]
+        },
+        "ShouldDisable5xxAlarm": {
+            "Fn::Equals": [
+                {
+                    "Ref": "5xxErrorThreshold"
+                },
+                "0"
+            ]
+        },
+        "ShouldDisable4xxAlarm": {
+            "Fn::Equals": [
+                {
+                    "Ref": "4xxErrorThreshold"
+                },
+                "0"
+            ]
+        },
+        "ShouldDisableRequestsAlarm": {
+            "Fn::Equals": [
+                {
+                    "Ref": "RequestsThreshold"
+                },
+                "0"
             ]
         }
     },
@@ -421,7 +483,11 @@
                 "EnableExecuteCommand": true,
                 "DeploymentConfiguration": {
                     "MaximumPercent": 200,
-                    "MinimumHealthyPercent": 75
+                    "MinimumHealthyPercent": 75,
+                    "DeploymentCircuitBreaker": {
+                        "Enable": true,
+                        "Rollback": true
+                    }
                 },
                 "DesiredCount": {
                     "Ref": "DesiredReplicas"
@@ -455,6 +521,419 @@
                         }
                     }
                 ]
+            }
+        },
+        "AutoScalingRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ecs-tasks.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "ScalingPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ecs:DescribeServices",
+                                        "ecs:UpdateService",
+                                        "cloudwatch:DeleteAlarms",
+                                        "cloudwatch:DescribeAlarms",
+                                        "cloudwatch:PutMetricAlarm"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "AutoScalingTarget": {
+            "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
+            "Properties": {
+                "MinCapacity": {
+                    "Ref": "MinReplicas"
+                },
+                "MaxCapacity": {
+                    "Ref": "MaxReplicas"
+                },
+                "ResourceId": {
+                    "Fn::Join": [
+                        "/",
+                        [
+                            "service",
+                            {
+                                "Ref": "ECSCluster"
+                            },
+                            {
+                                "Fn::GetAtt": "FargateService.Name"
+                            }
+                        ]
+                    ]
+                },
+                "ScalableDimension": "ecs:service:DesiredCount",
+                "ServiceNamespace": "ecs",
+                "RoleARN": {
+                    "Fn::GetAtt": [
+                        "AutoScalingRole",
+                        "Arn"
+                    ]
+                }
+            }
+        },
+        "ScaleUpPolicy": {
+            "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+            "Properties": {
+                "PolicyName": {
+                    "Fn::Sub": "${FargateService}ScaleUpPolicy"
+                },
+                "PolicyType": "StepScaling",
+                "ScalingTargetId": {
+                    "Ref": "AutoScalingTarget"
+                },
+                "StepScalingPolicyConfiguration": {
+                    "AdjustmentType": "ChangeInCapacity",
+                    "Cooldown": 60,
+                    "MetricAggregationType": "Average",
+                    "StepAdjustments": [
+                        {
+                            "MetricIntervalLowerBound": 0,
+                            "ScalingAdjustment": 1
+                        }
+                    ]
+                }
+            }
+        },
+        "ScaleDownPolicy": {
+            "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+            "Properties": {
+                "PolicyName": {
+                    "Fn::Sub": "${FargateService}ScaleDownPolicy"
+                },
+                "PolicyType": "StepScaling",
+                "ScalingTargetId": {
+                    "Ref": "AutoScalingTarget"
+                },
+                "StepScalingPolicyConfiguration": {
+                    "AdjustmentType": "ChangeInCapacity",
+                    "Cooldown": 60,
+                    "MetricAggregationType": "Average",
+                    "StepAdjustments": [
+                        {
+                            "MetricIntervalUpperBound": 0,
+                            "ScalingAdjustment": -1
+                        }
+                    ]
+                }
+            }
+        },
+        "Alarm503Count": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "ActionsEnabled": {
+                    "Fn::If": [
+                        "ShouldDisable503Alarm",
+                        false,
+                        true
+                    ]
+                },
+                "AlarmActions": [
+                    {
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "{\"projectId\":\"${ProjectId}\",\"envId\":\"${EnvironmentId}\",\"resourceId\":\"${ResourceId}\",\"severity\":\"CRITICAL\"}"
+                },
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "DatapointsToAlarm": 1,
+                "Dimensions": [
+                    {
+                        "Name": "LoadBalancer",
+                        "Value": {
+                            "Fn::GetAtt": [
+                                "LoadBalancer",
+                                "LoadBalancerFullName"
+                            ]
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 1,
+                "MetricName": "HTTPCode_ELB_503_Count",
+                "Namespace": "AWS/ApplicationELB",
+                "OKActions": [
+                    {
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Sum",
+                "Threshold": {
+                    "Ref": "503ErrorThreshold"
+                },
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "Alarm5xxCount": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "ActionsEnabled": {
+                    "Fn::If": [
+                        "ShouldDisable5xxAlarm",
+                        false,
+                        true
+                    ]
+                },
+                "AlarmActions": [
+                    {
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "{\"projectId\":\"${ProjectId}\",\"envId\":\"${EnvironmentId}\",\"resourceId\":\"${ResourceId}\",\"severity\":\"HIGH\"}"
+                },
+                "ComparisonOperator": "GreaterThanThreshold",
+                "DatapointsToAlarm": 1,
+                "Dimensions": [
+                    {
+                        "Name": "LoadBalancer",
+                        "Value": {
+                            "Fn::GetAtt": [
+                                "LoadBalancer",
+                                "LoadBalancerFullName"
+                            ]
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 1,
+                "MetricName": "HTTPCode_ELB_5XX_Count",
+                "Namespace": "AWS/ApplicationELB",
+                "OKActions": [
+                    {
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Sum",
+                "Threshold": {
+                    "Ref": "5xxErrorThreshold"
+                },
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "Alarm4xxCount": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "ActionsEnabled": {
+                    "Fn::If": [
+                        "ShouldDisable4xxAlarm",
+                        false,
+                        true
+                    ]
+                },
+                "AlarmActions": [
+                    {
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "{\"projectId\":\"${ProjectId}\",\"envId\":\"${EnvironmentId}\",\"resourceId\":\"${ResourceId}\",\"severity\":\"MEDIUM\"}"
+                },
+                "ComparisonOperator": "GreaterThanThreshold",
+                "DatapointsToAlarm": 1,
+                "Dimensions": [
+                    {
+                        "Name": "LoadBalancer",
+                        "Value": {
+                            "Fn::GetAtt": [
+                                "LoadBalancer",
+                                "LoadBalancerFullName"
+                            ]
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 1,
+                "MetricName": "HTTPCode_ELB_4XX_Count",
+                "Namespace": "AWS/ApplicationELB",
+                "OKActions": [
+                    {
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Sum",
+                "Threshold": {
+                    "Ref": "4xxErrorThreshold"
+                },
+                "TreatMissingData": "notBreaching"
+            }
+        },
+        "AlarmHighRequests": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "ActionsEnabled": {
+                    "Fn::If": [
+                        "ShouldDisableRequestsAlarm",
+                        false,
+                        true
+                    ]
+                },
+                "AlarmActions": [
+                    {
+                        "Ref": "ScaleUpPolicy"
+                    },
+                    {
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "{\"projectId\":\"${ProjectId}\",\"envId\":\"${EnvironmentId}\",\"resourceId\":\"${ResourceId}\",\"severity\":\"MEDIUM\",\"action\":\"SCALE\"}"
+                },
+                "ComparisonOperator": "GreaterThanThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "TargetGroup",
+                        "Value": {
+                            "Fn::GetAtt": [
+                                "TargetGroup",
+                                "TargetGroupFullName"
+                            ]
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 3,
+                "MetricName": "RequestCountPerTarget",
+                "Namespace": "AWS/ApplicationELB",
+                "OKActions": [
+                    {
+                        "Ref": "ScaleDownPolicy"
+                    },
+                    {
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Sum",
+                "Threshold": {
+                    "Ref": "RequestsThreshold"
+                },
+                "TreatMissingData": "ignore",
+                "Unit": "None"
+            }
+        },
+        "AlarmCPUUtilization": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "ActionsEnabled": true,
+                "AlarmActions": [
+                    {
+                        "Ref": "ScaleUpPolicy"
+                    },
+                    {
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "{\"projectId\":\"${ProjectId}\",\"envId\":\"${EnvironmentId}\",\"resourceId\":\"${ResourceId}\",\"severity\":\"MEDIUM\",\"action\":\"SCALE\"}"
+                },
+                "ComparisonOperator": "GreaterThanThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "ClusterName",
+                        "Value": {
+                            "Ref": "ECSCluster"
+                        }
+                    },
+                    {
+                        "Name": "ServiceName",
+                        "Value": {
+                            "Fn::GetAtt": "FargateService.Name"
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 3,
+                "MetricName": "CPUUtilization",
+                "Namespace": "AWS/ECS",
+                "OKActions": [
+                    {
+                        "Ref": "ScaleDownPolicy"
+                    },
+                    {
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Average",
+                "Threshold": 80,
+                "TreatMissingData": "ignore"
+            }
+        },
+        "AlarmMemoryUtilization": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "ActionsEnabled": true,
+                "AlarmActions": [
+                    {
+                        "Ref": "ScaleUpPolicy"
+                    },
+                    {
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "{\"projectId\":\"${ProjectId}\",\"envId\":\"${EnvironmentId}\",\"resourceId\":\"${ResourceId}\",\"severity\":\"MEDIUM\",\"action\":\"SCALE\"}"
+                },
+                "ComparisonOperator": "GreaterThanThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "ClusterName",
+                        "Value": {
+                            "Ref": "ECSCluster"
+                        }
+                    },
+                    {
+                        "Name": "ServiceName",
+                        "Value": {
+                            "Fn::GetAtt": "FargateService.Name"
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 3,
+                "MetricName": "MemoryUtilization",
+                "Namespace": "AWS/ECS",
+                "OKActions": [
+                    {
+                        "Ref": "ScaleDownPolicy"
+                    },
+                    {
+                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Average",
+                "Threshold": 80,
+                "TreatMissingData": "ignore"
             }
         },
         "TaskRole": {
@@ -808,7 +1287,8 @@
                         "Ref": "DbSecurityGroup"
                     }
                 ],
-                "MultiAZ": false
+                "MultiAZ": false,
+                "EnablePerformanceInsights": true
             }
         },
         "PrivateSubnetGroup": {
