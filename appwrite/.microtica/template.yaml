@@ -7,12 +7,14 @@ inputs:
   properties:
     AppName:
       type: string
+      label: App Name
       description: The name of the application. The name will be shown in the portal.
       maxLength: 23
       pattern: ^[a-z]*$
       patternErrorMessage: "The app name can contain only lowercase letters."
     DatabasePassword:
       type: string
+      label: Database Password
       description: MariaDB password. The same password will be used as a token for the Appwrite Executor.
       maxLength: 32
       sensitive: true
