@@ -17,7 +17,6 @@ inputs:
       label: Database Password
       description: MariaDB password. The same password will be used as a token for the Appwrite Executor.
       maxLength: 32
-
   required:
     - AppName
     - DatabasePassword
