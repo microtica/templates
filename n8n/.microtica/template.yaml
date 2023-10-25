@@ -17,6 +17,7 @@ inputs:
       label: Database Password
       description: Postgres database password
       maxLength: 32
+      sensitive: true
   required:
     - AppName
     - DatabasePassword
