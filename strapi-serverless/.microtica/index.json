@@ -1583,8 +1583,7 @@
                         "Ref": "DbSecurityGroup"
                     }
                 ],
-                "MultiAZ": false,
-                "EnablePerformanceInsights": true
+                "MultiAZ": false
             }
         },
         "PostgresInstance": {
