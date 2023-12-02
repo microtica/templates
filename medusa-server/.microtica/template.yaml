@@ -22,7 +22,6 @@ inputs:
       type: string
       label: Admin Dashboard Password
       description: The initial login password for Medusa Admin Dashboard.
-      sensitive: true
   required:
     - AppName
     - AdminEmail
