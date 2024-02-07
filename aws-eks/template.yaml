@@ -40,7 +40,7 @@ inputs:
 infrastructure:
   resources:
     "{{AppName}}":
-      type: microtica-aws-eks:latest
+      type: microtica-aws-eks:v1.24.11-fix-increase-max-pods-in-node
       properties:
         - key: keyName
           reference: "{{VPC_RESOURCE_NAME}}.keyName"
