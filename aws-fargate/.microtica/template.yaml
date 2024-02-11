@@ -54,6 +54,7 @@ infrastructure:
   resources:
     "{{AppName}}":
       source: git
+      componentType: fargate
       properties:
         - key: VpcId
           reference: "{{VPC_RESOURCE_NAME}}.vpcId"
