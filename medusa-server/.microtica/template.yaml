@@ -10,8 +10,8 @@ inputs:
       label: App Name
       description: Unique name for your application
       maxLength: 20
-      pattern: ^[A-Z][A-Za-z]*$
-      patternErrorMessage: "The app name can only contain letters and must start with an uppercase."
+      pattern: ^[A-Za-z]*$
+      patternErrorMessage: "The app name can only contain letters."
     AdminEmail:
       type: string
       label: Admin Dashboard Email
