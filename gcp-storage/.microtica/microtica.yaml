@@ -1,0 +1,21 @@
+steps:
+  Clone:
+    type: git-clone
+
+  TerraformBuild:
+    type: terraform-build
+    work_dir: ./.microtica/tf
+
+    artifacts:
+      files:
+        package_zip.zip: ./.microtica/
+        schema_json: ./.microtica/schema.json
+    
+  DeployComponent:
+    type: deploy
+    target: environment
+    env_id: "{{ENV_ID}}"
+    partial:
+        create_missing_resources: true
+        resource_version_overrides:
+          {{AppName}}: "{{MIC_PIPELINE_EXECUTION_ID}}"
