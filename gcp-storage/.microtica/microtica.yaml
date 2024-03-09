@@ -5,11 +5,6 @@ steps:
   TerraformBuild:
     type: terraform-build
     work_dir: ./.microtica/tf
-
-    artifacts:
-      files:
-        package_zip.zip: ./.microtica/
-        schema_json: ./.microtica/schema.json
     
   DeployComponent:
     type: deploy
