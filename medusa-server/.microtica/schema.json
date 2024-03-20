@@ -103,33 +103,6 @@
                     "description": "Automated scaling will be triggered once the number of requests per minute exceeds this threshold.",
                     "category": "autoscaling"
                 },
-                "503ErrorThreshold": {
-                    "type": "string",
-                    "dataType": "number",
-                    "label": "503 errors per minute",
-                    "default": "1",
-                    "minimum": 0,
-                    "description": "An alarm will be triggered if the count of 503 errors exceeds the defined threshold. Set 0 to disable this alarm.",
-                    "category": "alarm"
-                },
-                "5xxErrorThreshold": {
-                    "type": "string",
-                    "dataType": "number",
-                    "label": "5xx errors per minute",
-                    "default": "10",
-                    "minimum": 0,
-                    "description": "An alarm will be triggered if the count of 5xx errors exceeds the defined threshold. Set 0 to disable this alarm.",
-                    "category": "alarm"
-                },
-                "4xxErrorThreshold": {
-                    "type": "string",
-                    "dataType": "number",
-                    "label": "4xx errors per minute",
-                    "default": "100",
-                    "minimum": 0,
-                    "description": "An alarm will be triggered if the count of 4xx errors exceeds the defined threshold. Set 0 to disable this alarm.",
-                    "category": "alarm"
-                },
                 "EnvironmentVariables": {
                     "type": "string",
                     "label": "Environment variables",

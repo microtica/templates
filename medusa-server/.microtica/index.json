@@ -61,18 +61,6 @@
             "Type": "String",
             "Default": "5000"
         },
-        "503ErrorThreshold": {
-            "Type": "String",
-            "Default": "1"
-        },
-        "5xxErrorThreshold": {
-            "Type": "String",
-            "Default": "10"
-        },
-        "4xxErrorThreshold": {
-            "Type": "String",
-            "Default": "100"
-        },
         "DomainName": {
             "Type": "String",
             "Default": ""
@@ -138,30 +126,6 @@
                 {
                     "Condition": "EnableHTTP"
                 }
-            ]
-        },
-        "ShouldDisable503Alarm": {
-            "Fn::Equals": [
-                {
-                    "Ref": "503ErrorThreshold"
-                },
-                "0"
-            ]
-        },
-        "ShouldDisable5xxAlarm": {
-            "Fn::Equals": [
-                {
-                    "Ref": "5xxErrorThreshold"
-                },
-                "0"
-            ]
-        },
-        "ShouldDisable4xxAlarm": {
-            "Fn::Equals": [
-                {
-                    "Ref": "4xxErrorThreshold"
-                },
-                "0"
             ]
         },
         "ShouldDisableRequestsAlarm": {
@@ -645,147 +609,6 @@
                 }
             }
         },
-        "Alarm503Count": {
-            "Type": "AWS::CloudWatch::Alarm",
-            "Properties": {
-                "ActionsEnabled": {
-                    "Fn::If": [
-                        "ShouldDisable503Alarm",
-                        false,
-                        true
-                    ]
-                },
-                "AlarmActions": [
-                    {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
-                    }
-                ],
-                "AlarmDescription": {
-                    "Fn::Sub": "{\"projectId\":\"${ProjectId}\",\"envId\":\"${EnvironmentId}\",\"resourceId\":\"${ResourceId}\",\"severity\":\"CRITICAL\"}"
-                },
-                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
-                "DatapointsToAlarm": 1,
-                "Dimensions": [
-                    {
-                        "Name": "LoadBalancer",
-                        "Value": {
-                            "Fn::GetAtt": [
-                                "LoadBalancer",
-                                "LoadBalancerFullName"
-                            ]
-                        }
-                    }
-                ],
-                "EvaluationPeriods": 1,
-                "MetricName": "HTTPCode_ELB_503_Count",
-                "Namespace": "AWS/ApplicationELB",
-                "OKActions": [
-                    {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
-                    }
-                ],
-                "Period": 60,
-                "Statistic": "Sum",
-                "Threshold": {
-                    "Ref": "503ErrorThreshold"
-                },
-                "TreatMissingData": "notBreaching"
-            }
-        },
-        "Alarm5xxCount": {
-            "Type": "AWS::CloudWatch::Alarm",
-            "Properties": {
-                "ActionsEnabled": {
-                    "Fn::If": [
-                        "ShouldDisable5xxAlarm",
-                        false,
-                        true
-                    ]
-                },
-                "AlarmActions": [
-                    {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
-                    }
-                ],
-                "AlarmDescription": {
-                    "Fn::Sub": "{\"projectId\":\"${ProjectId}\",\"envId\":\"${EnvironmentId}\",\"resourceId\":\"${ResourceId}\",\"severity\":\"HIGH\"}"
-                },
-                "ComparisonOperator": "GreaterThanThreshold",
-                "DatapointsToAlarm": 1,
-                "Dimensions": [
-                    {
-                        "Name": "LoadBalancer",
-                        "Value": {
-                            "Fn::GetAtt": [
-                                "LoadBalancer",
-                                "LoadBalancerFullName"
-                            ]
-                        }
-                    }
-                ],
-                "EvaluationPeriods": 1,
-                "MetricName": "HTTPCode_ELB_5XX_Count",
-                "Namespace": "AWS/ApplicationELB",
-                "OKActions": [
-                    {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
-                    }
-                ],
-                "Period": 60,
-                "Statistic": "Sum",
-                "Threshold": {
-                    "Ref": "5xxErrorThreshold"
-                },
-                "TreatMissingData": "notBreaching"
-            }
-        },
-        "Alarm4xxCount": {
-            "Type": "AWS::CloudWatch::Alarm",
-            "Properties": {
-                "ActionsEnabled": {
-                    "Fn::If": [
-                        "ShouldDisable4xxAlarm",
-                        false,
-                        true
-                    ]
-                },
-                "AlarmActions": [
-                    {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
-                    }
-                ],
-                "AlarmDescription": {
-                    "Fn::Sub": "{\"projectId\":\"${ProjectId}\",\"envId\":\"${EnvironmentId}\",\"resourceId\":\"${ResourceId}\",\"severity\":\"MEDIUM\"}"
-                },
-                "ComparisonOperator": "GreaterThanThreshold",
-                "DatapointsToAlarm": 1,
-                "Dimensions": [
-                    {
-                        "Name": "LoadBalancer",
-                        "Value": {
-                            "Fn::GetAtt": [
-                                "LoadBalancer",
-                                "LoadBalancerFullName"
-                            ]
-                        }
-                    }
-                ],
-                "EvaluationPeriods": 1,
-                "MetricName": "HTTPCode_ELB_4XX_Count",
-                "Namespace": "AWS/ApplicationELB",
-                "OKActions": [
-                    {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
-                    }
-                ],
-                "Period": 60,
-                "Statistic": "Sum",
-                "Threshold": {
-                    "Ref": "4xxErrorThreshold"
-                },
-                "TreatMissingData": "notBreaching"
-            }
-        },
         "AlarmHighRequests": {
             "Type": "AWS::CloudWatch::Alarm",
             "Properties": {
@@ -799,14 +622,8 @@
                 "AlarmActions": [
                     {
                         "Ref": "ScaleUpPolicy"
-                    },
-                    {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
-                "AlarmDescription": {
-                    "Fn::Sub": "{\"projectId\":\"${ProjectId}\",\"envId\":\"${EnvironmentId}\",\"resourceId\":\"${ResourceId}\",\"severity\":\"MEDIUM\",\"action\":\"SCALE\"}"
-                },
                 "ComparisonOperator": "GreaterThanThreshold",
                 "DatapointsToAlarm": 2,
                 "Dimensions": [
@@ -826,9 +643,6 @@
                 "OKActions": [
                     {
                         "Ref": "ScaleDownPolicy"
-                    },
-                    {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "Period": 60,
@@ -847,14 +661,8 @@
                 "AlarmActions": [
                     {
                         "Ref": "ScaleUpPolicy"
-                    },
-                    {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
-                "AlarmDescription": {
-                    "Fn::Sub": "{\"projectId\":\"${ProjectId}\",\"envId\":\"${EnvironmentId}\",\"resourceId\":\"${ResourceId}\",\"severity\":\"MEDIUM\",\"action\":\"SCALE\"}"
-                },
                 "ComparisonOperator": "GreaterThanThreshold",
                 "DatapointsToAlarm": 2,
                 "Dimensions": [
@@ -877,9 +685,6 @@
                 "OKActions": [
                     {
                         "Ref": "ScaleDownPolicy"
-                    },
-                    {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "Period": 60,
@@ -895,14 +700,8 @@
                 "AlarmActions": [
                     {
                         "Ref": "ScaleUpPolicy"
-                    },
-                    {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
-                "AlarmDescription": {
-                    "Fn::Sub": "{\"projectId\":\"${ProjectId}\",\"envId\":\"${EnvironmentId}\",\"resourceId\":\"${ResourceId}\",\"severity\":\"MEDIUM\",\"action\":\"SCALE\"}"
-                },
                 "ComparisonOperator": "GreaterThanThreshold",
                 "DatapointsToAlarm": 2,
                 "Dimensions": [
@@ -925,9 +724,6 @@
                 "OKActions": [
                     {
                         "Ref": "ScaleDownPolicy"
-                    },
-                    {
-                        "Fn::Sub": "arn:aws:sns:${AWS::Region}:652222714481:MicroticaCFNTopic"
                     }
                 ],
                 "Period": 60,
@@ -1716,6 +1512,96 @@
         "ImageUrl": {
             "Value": {
                 "Ref": "ImageUrl"
+            }
+        },
+        "MetricCpuUsage": {
+            "Value": {
+                "Fn::Sub": "Name:CPU|Namespace:AWS/ECS|MetricName:CPUUtilization|Statistics:Average|Unit:Percent|Dimensions:ClusterName=${ECSCluster},ServiceName=${FargateService.Name}"
+            }  
+        },
+        "MetricMemoryUsage": {
+            "Value": {
+                "Fn::Sub": "Name:Memory|Namespace:AWS/ECS|MetricName:MemoryUtilization|Statistics:Average|Unit:Percent|Dimensions:ClusterName=${ECSCluster},ServiceName=${FargateService.Name}"
+            }  
+        },
+        "Metric2xxCount": {
+            "Value": {
+                "Fn::Sub": "Name:Success requests|Namespace:AWS/ApplicationELB|MetricName:HTTPCode_Target_2XX_Count|Statistics:Sum|Unit:Count|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
+            }  
+        },
+        "Metric4xxCount": {
+            "Value": {
+                "Fn::Sub": "Name:4xx errors|Namespace:AWS/ApplicationELB|MetricName:HTTPCode_Target_4XX_Count|Statistics:Sum|Unit:Count|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
+            }  
+        },
+        "Metric5xxCount": {
+            "Value": {
+                "Fn::Sub": "Name:5xx errors|Namespace:AWS/ApplicationELB|MetricName:HTTPCode_Target_5XX_Count|Statistics:Sum|Unit:Count|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
+            }  
+        },
+        "Metric503Count": {
+            "Value": {
+                "Fn::Sub": "Name:503 errors|Namespace:AWS/ApplicationELB|MetricName:HTTPCode_ELB_503_Count|Statistics:Sum|Unit:Count|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
+            }  
+        },
+        "MetricNetworkTraffic": {
+            "Value": {
+                "Fn::Sub": "Name:Network traffic|Namespace:AWS/ApplicationELB|MetricName:ProcessedBytes|Statistics:Sum|Unit:Bytes|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
+            }
+        },
+        "MetricResponseTime": {
+            "Value": {
+                "Fn::Sub": "Name:Response time|Namespace:AWS/ApplicationELB|MetricName:TargetResponseTime|Statistics:Average|Unit:Seconds|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
+            }
+        },
+        "MetricPostgresCPUUtilization": {
+            "Value": {
+                "Fn::Sub": "Name:PostgreSQL CPU utilization|Namespace:AWS/RDS|MetricName:CPUUtilization|Statistics:Average|Unit:Percent|Dimensions:DBInstanceIdentifier=${PostgresInstance}"
+            }
+        },
+        "MetricPostgresAvailableMemory": {
+            "Value": {
+                "Fn::Sub": "Name:PostgreSQL available memory|Namespace:AWS/RDS|MetricName:FreeableMemory|Statistics:Average|Unit:Bytes|Dimensions:DBInstanceIdentifier=${PostgresInstance}"
+            }
+        },
+        "MetricPostgresFreeStorageSpace": {
+            "Value": {
+                "Fn::Sub": "Name:PostgreSQL free storage space|Namespace:AWS/RDS|MetricName:FreeStorageSpace|Statistics:Average|Unit:Bytes|Dimensions:DBInstanceIdentifier=${PostgresInstance}"
+            }
+        },
+        "MetricPostgresDatabaseConnections": {
+            "Value": {
+                "Fn::Sub": "Name:PostgreSQL database connections|Namespace:AWS/RDS|MetricName:DatabaseConnections|Statistics:Average|Unit:Bytes|Dimensions:DBInstanceIdentifier=${PostgresInstance}"
+            }
+        },
+        "MetricRedisCachedItems": {
+            "Value": {
+                "Fn::Sub": "Name:Redis cached items|Namespace:AWS/ElastiCache|MetricName:CurrItems|Statistics:Average|Unit:Count|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisConnections": {
+            "Value": {
+                "Fn::Sub": "Name:Redis connections|Namespace:AWS/ElastiCache|MetricName:CurrConnections|Statistics:Average|Unit:Count|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisCPUUtilization": {
+            "Value": {
+                "Fn::Sub": "Name:Redis CPU utilization|Namespace:AWS/ElastiCache|MetricName:CPUUtilization|Statistics:Average|Unit:Percent|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisAvailableMemory": {
+            "Value": {
+                "Fn::Sub": "Name:Redis available memory|Namespace:AWS/ElastiCache|MetricName:FreeableMemory|Statistics:Average|Unit:Bytes|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisCacheHits": {
+            "Value": {
+                "Fn::Sub": "Name:Redis cache hits|Namespace:AWS/ElastiCache|MetricName:CacheHits|Statistics:Sum|Unit:Count|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisCacheMisses": {
+            "Value": {
+                "Fn::Sub": "Name:Redis cache misses|Namespace:AWS/ElastiCache|MetricName:CacheMisses|Statistics:Sum|Unit:Count|Dimensions:CacheClusterId=${ElastiCacheCluster}"
             }
         }
     }
