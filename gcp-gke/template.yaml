@@ -1,0 +1,60 @@
+name: GCP GKE
+description: Google Kubernetes Engine (GKE) is a managed Kubernetes service for containers and container clusters running on Google Cloud infrastructure.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/kubernetes.png
+repo: https://github.com/microtica/templates/tree/master/gcp-gke
+
+inputs:
+  properties:
+    CLUSTER_NAME:
+      type: string
+      description: Name of the Kubernetes cluster
+    NODE_INSTANCE_TYPE:
+      type: string
+      enum:
+        - e2-small
+        - e2-medium
+        - e2-standard-2
+        - e2-standard-4
+        - e2-standard-8
+      default: e2-standard-2
+      description: Select the type of instances to be used for Kubernetes nodes
+    MIN_NODES:
+      type: number
+      default: 1
+      minimum: 1
+      miximum: 20
+    MAX_NODES:
+      type: number
+      default: 1
+      minimum: 1
+      miximum: 20
+    AppName:
+      type: string
+      description: Unique name for your cluster
+      maxLength: 20
+      pattern: ^[A-Za-z]*$
+      patternErrorMessage: "The cluster name can only contain letters."
+  required:
+    - CLUSTER_NAME
+    - NODE_INSTANCE_TYPE
+    - MIN_NODES
+    - MAX_NODES
+    - AppName
+
+infrastructure:
+  resources:
+    "{{AppName}}":
+      type: microtica-gcp-gke:latest
+      properties:
+        - key: cluster_name
+          value: "{{CLUSTER_NAME}}"
+        - key: min_nodes
+          value: "{{MIN_NODES}}"
+        - key: max_nodes
+          value: "{{MAX_NODES}}"
+        - key: node_type
+          value: "{{NODE_INSTANCE_TYPE}}"
+        - key: vpc_name
+          reference: "{{VPC_RESOURCE_NAME}}.vpc_name"
+        - key: subnet_name
+          reference: "{{VPC_RESOURCE_NAME}}.subnet_name"
