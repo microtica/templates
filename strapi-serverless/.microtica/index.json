@@ -1363,7 +1363,7 @@
                 "CopyTagsToSnapshot": true,
                 "DBInstanceClass": "db.t3.micro",
                 "Engine": "mysql",
-                "EngineVersion": "8.0.28",
+                "EngineVersion": "8.0.36",
                 "AllocatedStorage": "20",
                 "StorageType": "gp2",
                 "KmsKeyId": {
@@ -1397,7 +1397,7 @@
                 "CopyTagsToSnapshot": true,
                 "DBInstanceClass": "db.t3.small",
                 "Engine": "postgres",
-                "EngineVersion": "14.8",
+                "EngineVersion": "16.2",
                 "AllocatedStorage": "20",
                 "StorageType": "gp2",
                 "KmsKeyId": {
