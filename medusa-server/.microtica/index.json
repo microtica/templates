@@ -1067,7 +1067,7 @@
                 "CopyTagsToSnapshot": true,
                 "DBInstanceClass": "db.t3.small",
                 "Engine": "postgres",
-                "EngineVersion": "15.3",
+                "EngineVersion": "16.2",
                 "AllocatedStorage": "20",
                 "StorageType": "gp2",
                 "KmsKeyId": {
