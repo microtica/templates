@@ -1,7 +1,7 @@
 name: AWS Custom Component
-description: Craft your own AWS infrastructure with CloudFormation.
-logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/cloudformation.svg
-repo: https://github.com/microtica/templates/tree/master/aws-custom
+description: Craft your own AWS infrastructure with Terraform.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/terraform.png
+repo: https://github.com/microtica/templates/tree/master/aws-terraform-custom
 
 inputs:
   properties:
@@ -28,5 +28,5 @@ infrastructure:
     "{{AppName}}":
       source: git
       # properties:
-      #   - key: BucketName
+      #   - key: bucket_name
       #     value: "{{BucketName}}"
