@@ -1,7 +1,7 @@
 name: AWS Custom Component
 description: Craft your own AWS infrastructure with Terraform.
 logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/terraform.png
-repo: https://github.com/microtica/templates/tree/master/aws-terraform-custom
+repo: https://github.com/microtica/templates/tree/master/aws-tf-custom
 
 inputs:
   properties:
