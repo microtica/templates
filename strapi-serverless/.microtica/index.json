@@ -351,6 +351,9 @@
                 "HealthCheckTimeoutSeconds": 5,
                 "HealthyThresholdCount": 2,
                 "UnhealthyThresholdCount": 5,
+                "Matcher": {
+                    "HttpCode": "302"
+                },
                 "TargetType": "ip",
                 "Port": 1337,
                 "Protocol": "HTTP",
@@ -1140,6 +1143,14 @@
                                         }
                                     },
                                     {
+                                        "Name": "DATABASE_SSL",
+                                        "Value": "true"
+                                    },
+                                    {
+                                        "Name": "DATABASE_SSL_REJECT_UNAUTHORIZED",
+                                        "Value": "false"
+                                    },
+                                    {
                                         "Name": "APP_KEYS",
                                         "Value": {
                                             "Ref": "AppKeys"
@@ -1363,7 +1374,7 @@
                 "CopyTagsToSnapshot": true,
                 "DBInstanceClass": "db.t3.micro",
                 "Engine": "mysql",
-                "EngineVersion": "8.0.36",
+                "EngineVersion": "8.0.39",
                 "AllocatedStorage": "20",
                 "StorageType": "gp2",
                 "KmsKeyId": {
@@ -1397,7 +1408,7 @@
                 "CopyTagsToSnapshot": true,
                 "DBInstanceClass": "db.t3.small",
                 "Engine": "postgres",
-                "EngineVersion": "16.2",
+                "EngineVersion": "16.4",
                 "AllocatedStorage": "20",
                 "StorageType": "gp2",
                 "KmsKeyId": {
