@@ -195,9 +195,11 @@
                     "RestrictPublicBuckets": false
                 },
                 "OwnershipControls": {
-                    "Rules": [{
-                        "ObjectOwnership": "BucketOwnerPreferred"
-                    }]
+                    "Rules": [
+                        {
+                            "ObjectOwnership": "BucketOwnerPreferred"
+                        }
+                    ]
                 },
                 "BucketEncryption": {
                     "ServerSideEncryptionConfiguration": [
@@ -732,6 +734,22 @@
                 "TreatMissingData": "ignore"
             }
         },
+        "S3User": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+                ]
+            }
+        },
+        "S3AccessKey": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {
+                "UserName": {
+                    "Ref": "S3User"
+                }
+            }
+        },
         "TaskRole": {
             "Type": "AWS::IAM::Role",
             "Properties": {
@@ -886,6 +904,12 @@
                                 }
                             },
                             {
+                                "Name": "S3_ENDPOINT",
+                                "Value": {
+                                    "Fn::Sub": "https://s3.${AWS::Region}.amazonaws.com"
+                                }
+                            },
+                            {
                                 "Name": "S3_BUCKET",
                                 "Value": {
                                     "Ref": "MediaBucket"
@@ -895,6 +919,21 @@
                                 "Name": "S3_REGION",
                                 "Value": {
                                     "Ref": "AWS::Region"
+                                }
+                            },
+                            {
+                                "Name": "S3_ACCESS_KEY_ID",
+                                "Value": {
+                                    "Ref": "S3AccessKey"
+                                }
+                            },
+                            {
+                                "Name": "S3_SECRET_ACCESS_KEY",
+                                "Value": {
+                                    "Fn::GetAtt": [
+                                        "S3AccessKey",
+                                        "SecretAccessKey"
+                                    ]
                                 }
                             },
                             {
@@ -1517,32 +1556,32 @@
         "MetricCpuUsage": {
             "Value": {
                 "Fn::Sub": "Name:CPU|Namespace:AWS/ECS|MetricName:CPUUtilization|Statistics:Average|Unit:Percent|Dimensions:ClusterName=${ECSCluster},ServiceName=${FargateService.Name}"
-            }  
+            }
         },
         "MetricMemoryUsage": {
             "Value": {
                 "Fn::Sub": "Name:Memory|Namespace:AWS/ECS|MetricName:MemoryUtilization|Statistics:Average|Unit:Percent|Dimensions:ClusterName=${ECSCluster},ServiceName=${FargateService.Name}"
-            }  
+            }
         },
         "Metric2xxCount": {
             "Value": {
                 "Fn::Sub": "Name:Success requests|Namespace:AWS/ApplicationELB|MetricName:HTTPCode_Target_2XX_Count|Statistics:Sum|Unit:Count|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
-            }  
+            }
         },
         "Metric4xxCount": {
             "Value": {
                 "Fn::Sub": "Name:4xx errors|Namespace:AWS/ApplicationELB|MetricName:HTTPCode_Target_4XX_Count|Statistics:Sum|Unit:Count|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
-            }  
+            }
         },
         "Metric5xxCount": {
             "Value": {
                 "Fn::Sub": "Name:5xx errors|Namespace:AWS/ApplicationELB|MetricName:HTTPCode_Target_5XX_Count|Statistics:Sum|Unit:Count|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
-            }  
+            }
         },
         "Metric503Count": {
             "Value": {
                 "Fn::Sub": "Name:503 errors|Namespace:AWS/ApplicationELB|MetricName:HTTPCode_ELB_503_Count|Statistics:Sum|Unit:Count|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
-            }  
+            }
         },
         "MetricNetworkTraffic": {
             "Value": {

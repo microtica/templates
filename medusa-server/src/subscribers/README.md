@@ -1,43 +1,62 @@
 # Custom subscribers
 
-You may define custom eventhandlers, `subscribers` by creating files in the `/subscribers` directory.
+Subscribers handle events emitted in the Medusa application.
+
+The subscriber is created in a TypeScript or JavaScript file under the `src/subscribers` directory.
+
+For example, create the file `src/subscribers/product-created.ts` with the following content:
 
 ```ts
-import MyCustomService from "../services/my-custom";
-import { EntityManager } from "typeorm";
-import { OrderService } from "@medusajs/medusa";
-import { IEventBusService } from "@medusajs/types";
+import {
+  type SubscriberConfig,
+} from "@medusajs/framework"
 
-export default class MySubscriber {
-  protected readonly manager_: EntityManager;
-  protected readonly myCustomService_: MyCustomService
-
-  constructor(
-    {
-      manager,
-      eventBusService,
-      myCustomService,
-    }: {
-      manager: EntityManager;
-      eventBusService: IEventBusService;
-      myCustomService: MyCustomService;
-    }
-  ) {
-    this.manager_ = manager;
-    this.myCustomService_ = myCustomService;
-
-    eventBusService.subscribe(OrderService.Events.PLACED, this.handleOrderPlaced);
-  }
-
-  handleOrderPlaced = async (data): Promise<any> => {
-    return true;
-  }
+// subscriber function
+export default async function productCreateHandler() {
+  console.log("A product was created")
 }
 
+// subscriber config
+export const config: SubscriberConfig = {
+  event: "product.created",
+}
 ```
 
-A subscriber is defined as a `class` which is registered as a subscriber by invoking `eventBusService.subscribe` in the `constructor` of the class.
+A subscriber file must export:
 
-The type of event that the subscriber subscribes to is passed as the first parameter to the `eventBusService.subscribe` and the eventhandler is passed as the second parameter. The types of events a service can emmit are described in the individual service.
+- The subscriber function that is an asynchronous function executed whenever the associated event is triggered.
+- A configuration object defining the event this subscriber is listening to.
 
-An eventhandler has one parameter; a data `object` which contain information relating to the event, including relevant `id's`. The `id` can be used to fetch the appropriate entity in the eventhandler.
+## Subscriber Parameters
+
+A subscriber receives an object having the following properties:
+
+- `event`: An object holding the event's details. It has a `data` property, which is the event's data payload.
+- `container`: The Medusa container. Use it to resolve modules' main services and other registered resources.
+
+```ts
+import type {
+  SubscriberArgs,
+  SubscriberConfig,
+} from "@medusajs/framework"
+import { IProductModuleService } from "@medusajs/framework/types"
+import { Modules } from "@medusajs/framework/utils"
+
+export default async function productCreateHandler({
+  event: { data },
+  container,
+}: SubscriberArgs<{ id: string }>) {
+  const productId = data.id
+
+  const productModuleService: IProductModuleService =
+    container.resolve(Modules.PRODUCT)
+
+  const product = await productModuleService.retrieveProduct(productId)
+
+  console.log(`The product ${product.title} was created`)
+}
+
+export const config: SubscriberConfig = {
+  event: "product.created",
+}
+```

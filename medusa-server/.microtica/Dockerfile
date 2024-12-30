@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:18-slim
+FROM public.ecr.aws/docker/library/node:20-slim
 
 WORKDIR /medusa
 
@@ -8,12 +8,11 @@ RUN yarn install
 
 COPY . .
 
-ENV NODE_ENV production
-
 RUN yarn build
-RUN yarn build:admin
 RUN npm install @medusajs/medusa-cli -g
+
+ENV NODE_ENV production
 
 EXPOSE 9000
 
-CMD ["./develop.sh", "start"]
+CMD npx medusa db:migrate && cd .medusa/server && npm run start
