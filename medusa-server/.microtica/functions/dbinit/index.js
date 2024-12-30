@@ -42,7 +42,7 @@ exports.handler = async (event, context) => {
         //Start SSM session
         const { StreamUrl, TokenValue } = await new SSM().startSession({ Target: target }).promise();
 
-        const command = `npx medusa user --email "${adminEmail}" --password "${adminPassword}"`;
+        const command = `cd .medusa/server && npx medusa user --email "${adminEmail}" --password "${adminPassword}"`;
         await executeCommand(command, StreamUrl, TokenValue);
 
         await send(event, context, response.SUCCESS, {});
