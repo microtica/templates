@@ -60,6 +60,10 @@
                 "ImageUrl": {
                     "type": "string"
                 },
+                "ContainerPort": {
+                    "type": "string",
+                    "description": "The port on which the application is listening for requests."
+                },
                 "EnvironmentVariables": {
                     "type": "string",
                     "description": "Comma-delimited environment variables provided in the app runtime (e.g. KEY=value,KEY=value)."
@@ -82,7 +86,8 @@
                 "CPU",
                 "Memory",
                 "DesiredReplicas",
-                "ImageUrl"
+                "ImageUrl",
+                "ContainerPort"
             ]
         }
     },
