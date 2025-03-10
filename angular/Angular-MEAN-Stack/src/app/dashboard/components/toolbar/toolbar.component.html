@@ -1,0 +1,19 @@
+<mat-toolbar color="primary">
+  <button mat-button (click)="toggleSidenav.emit()" class="sidenav-toggle">
+    <mat-icon> menu </mat-icon>
+  </button>
+  <span>Invoice Builder</span>
+
+
+  <div class="menu-bar">
+    <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item (click)="logOut()">
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </div>
+
+</mat-toolbar>
