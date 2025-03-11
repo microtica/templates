@@ -1,4 +1,4 @@
-# Stage 1; build and compile the frontend
+# Stage 1: Build and compile the frontend
 FROM public.ecr.aws/docker/library/node:16.16.0-slim as build-stage
 
 WORKDIR /app
@@ -11,12 +11,14 @@ COPY . .
 
 RUN yarn build
 
-# Stage 2; nginx
+# Stage 2: Nginx
 FROM public.ecr.aws/nginx/nginx
 
+RUN apt-get update && apt-get install -y gettext-base
+
 COPY --from=build-stage /app/build/ /usr/share/nginx/html
-COPY ./.microtica/nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+COPY ./.microtica/nginx.conf /etc/nginx/conf.d/default.template
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD envsubst '$PORT' < /etc/nginx/conf.d/default.template > /etc/nginx/conf.d/default.conf && \
+    nginx -g 'daemon off;'
