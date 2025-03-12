@@ -1,4 +1,4 @@
-name: AWS RDS MySql Serverless Component
+name: AWS RDS MySql Serverless
 description: Infrastructure component for MySql database setup on AWS Cloud. This component sets one AWS RDS MySql serverless cluster. This component requires a VPC. You can use Microtica AWS VPC component for that purpose.
 logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/mysql.svg
 repo: https://github.com/microtica/templates/tree/master/rds-mysql-serverless
