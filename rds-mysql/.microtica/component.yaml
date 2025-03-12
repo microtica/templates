@@ -1,0 +1,7 @@
+# Microtica component spec
+
+name: MySQL component
+description: Microtica custom component
+spec:
+  cfn_path: index.json
+  schema_path: schema.json

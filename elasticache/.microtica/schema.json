@@ -1,0 +1,114 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "schema://microtica/component-aws-elasticache.json",
+    "title": "Component Schema",
+    "type": "object",
+    "properties": {
+        "inputs": {
+            "type": "object",
+            "properties": {
+                "vpcId": {
+                    "type": "string",
+                    "description": "ID of the VPC the Redis instance to be assigned in."
+                },
+                "subnet1Id": {
+                    "type": "string",
+                    "description": "ID of the first subnet the Redis instance to be assigned in. Use private so Redis instance won't be accessible from the outside of the VPC."
+                },
+                "subnet2Id": {
+                    "type": "string",
+                    "description": "ID of the second subnet the Redis instance to be assigned in. Use private so Redis instance won't be accessible from the outside of the VPC."
+                },
+                "engine": {
+                    "type": "string",
+                    "default": "redis",
+                    "enum": [
+                        "redis"
+                    ],
+                    "description": "The cache engine to be used for this cluster."
+                },
+                "instanceType": {
+                    "type": "string",
+                    "default": "cache.t2.micro",
+                    "description": "The compute and memory capacity of the nodes in the node group (shard).",
+                    "enum": [
+                        "cache.t2.micro",
+                        "cache.t2.small",
+                        "cache.t2.medium",
+                        "cache.t3.micro",
+                        "cache.t3.small",
+                        "cache.t3.medium",
+                        "cache.m5.large",
+                        "cache.m5.xlarge",
+                        "cache.m5.2xlarge",
+                        "cache.m5.4xlarge",
+                        "cache.m5.12xlarge",
+                        "cache.m5.24xlarge",
+                        "cache.r7g.large",
+                        "cache.r7g.xlarge",
+                        "cache.r7g.2xlarge",
+                        "cache.r6g.large",
+                        "cache.r6g.xlarge",
+                        "cache.r6g.2xlarge"
+                    ]
+                },
+                "numberOfNodes": {
+                    "type": "string",
+                    "default": "1",
+                    "pattern": "^([1-9]|1[0-9]|20)$",
+                    "description": "The number of cache nodes that the cache cluster should have."
+                },
+                "keyspaceEvents": {
+                    "type": "string",
+                    "default": "KEx",
+                    "pattern": "^(?!.*([KEg$lshzxeA]).*\\1)[KEg$lshzxeA]+$",
+                    "description": "The types of keyspace events that Redis can notify clients of. Each event type is represented by a single letter. https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/ParameterGroups.Redis.html#ParameterGroups.Redis.2-8-19"
+                }
+            },
+            "required": [
+                "vpcId",
+                "subnet1Id",
+                "subnet2Id",
+                "engine",
+                "instanceType",
+                "numberOfNodes",
+                "keyspaceEvents"
+            ],
+            "additionalProperties": false
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "vpcId": {
+                    "type": "string"
+                },
+                "subnet1Id": {
+                    "type": "string"
+                },
+                "subnet2Id": {
+                    "type": "string"
+                },
+                "numberOfNodes": {
+                    "type": "number"
+                },
+                "instanceType": {
+                    "type": "string"
+                }
+            }
+        },
+        "outputs": {
+            "type": "object",
+            "properties": {
+                "accessDomain": {
+                    "type": "string",
+                    "description": "The domain name to access the Redis instance."
+                },
+                "accessPort": {
+                    "type": "string",
+                    "description": "The port to access the Redis instance."
+                }
+            }
+        }
+    },
+    "additionalProperties": false
+}

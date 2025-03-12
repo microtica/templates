@@ -1,0 +1,125 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "schema://microtica/component-serverless-mysql.json",
+    "title": "Component Schema",
+    "type": "object",
+    "properties": {
+        "inputs": {
+            "type": "object",
+            "properties": {
+                "dbUsername": {
+                    "type": "string",
+                    "pattern": "[a-zA-Z][a-zA-Z0-9]*",
+                    "minimum": 1,
+                    "maximum": 16,
+                    "description": "Must begin with a letter and contain only alphanumeric characters.",
+                    "sensitive": true
+                },
+                "dbPassword": {
+                    "type": "string",
+                    "pattern": "[a-zA-Z0-9]*",
+                    "minimum": 8,
+                    "maxItems": 41,
+                    "description": "Must contain only alphanumeric characters.",
+                    "sensitive": true
+                },
+                "vpcId": {
+                    "type": "string",
+                    "description": "ID of the VPC the database to be assigned in."
+                },
+                "subnet1Id": {
+                    "type": "string",
+                    "description": "ID of the first subnet the database to be assigned in. Use publc subnet so database won't be accessible from the outside of the VPC."
+                },
+                "subnet2Id": {
+                    "type": "string",
+                    "description": "ID of the second subnet the database to be assigned in. Use publc subnet so database won't be accessible from the outside of the VPC."
+                },
+                "minCapacity": {
+                    "type": "string",
+                    "enum": [
+                        "0",
+                        "0.5",
+                        "1",
+                        "2",
+                        "4",
+                        "8",
+                        "16",
+                        "32",
+                        "64",
+                        "128",
+                        "256"
+                    ],
+                    "default": "0.5",
+                    "description": "The minimum capacity for an Aurora DB cluster in serverless DB engine mode."
+                },
+                "maxCapacity": {
+                    "type": "string",
+                    "enum": [
+                        "1",
+                        "2",
+                        "4",
+                        "8",
+                        "16",
+                        "32",
+                        "64",
+                        "192",
+                        "384"
+                    ],
+                    "default": "1",
+                    "description": "The maximum capacity for an Aurora DB cluster in serverless DB engine mode."
+                }
+            },
+            "required": [
+                "dbUsername",
+                "dbPassword",
+                "vpcId",
+                "subnet1Id",
+                "subnet2Id",
+                "minCapacity",
+                "maxCapacity"
+            ],
+            "additionalProperties": false
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "dbUsername": {
+                    "type": "string"
+                },
+                "dbPassword": {
+                    "type": "string"
+                },
+                "vpcId": {
+                    "type": "string"
+                },
+                "subnet1Id": {
+                    "type": "string"
+                },
+                "subnet2Id": {
+                    "type": "string"
+                },
+                "minCapacity": {
+                    "type": "string"
+                },
+                "maxCapacity": {
+                    "type": "string"
+                }
+            }
+        },
+        "outputs": {
+            "type": "object",
+            "properties": {
+                "dbEndpoint": {
+                    "type": "string",
+                    "description": "Domain name of the RDS database (e.g. mic-dev-msdatabase.cluster-c0c2ueamlonz.eu-central-1.rds.amazonaws.com)."
+                },
+                "dbUser": {
+                    "type": "string",
+                    "description": "MySQL username"
+                }
+            }
+        }
+    },
+    "additionalProperties": false
+}

@@ -1,0 +1,436 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "RDS PostgreSQL database component",
+    "Parameters": {
+        "VpcId": {
+            "Description": "VPC ID",
+            "Type": "String"
+        },
+        "Subnet1Id": {
+            "Description": "Subnet 1 ID",
+            "Type": "String"
+        },
+        "Subnet2Id": {
+            "Description": "Subnet 2 ID",
+            "Type": "String"
+        },
+        "MultiAZ": {
+            "Type": "String",
+            "Default": "false",
+            "Description": "Specifies whether the database instance is a multiple Availability Zone deployment.",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
+        },
+        "DBUsername": {
+            "Description": "Database admin username.",
+            "Type": "String",
+            "MinLength": "1",
+            "MaxLength": "16",
+            "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+            "ConstraintDescription": "Must begin with a letter and contain only alphanumeric characters."
+        },
+        "DBPassword": {
+            "Description": "Database admin password.",
+            "Type": "String",
+            "MinLength": "8",
+            "MaxLength": "128",
+            "AllowedPattern": "[a-zA-Z0-9]*",
+            "ConstraintDescription": "Must contain only alphanumeric characters.",
+            "NoEcho": "true"
+        },
+        "DBEngineVersion": {
+            "Description": "Database Engine Version",
+            "Type": "String",
+            "Default": "11.22",
+            "AllowedValues": [
+                "11.22",
+                "12.15",
+                "12.16",
+                "12.17",
+                "12.18",
+                "12.19",
+                "12.20",
+                "12.21",
+                "12.22",
+                "13.15",
+                "13.16",
+                "13.17",
+                "13.18",
+                "13.19",
+                "14.12",
+                "14.13",
+                "14.14",
+                "14.15",
+                "14.16",
+                "15.7",
+                "15.8",
+                "15.9",
+                "15.10",
+                "15.11",
+                "16.3",
+                "16.4",
+                "16.5",
+                "16.6",
+                "16.7",
+                "17.1",
+                "17.2",
+                "17.3"
+            ]
+        },
+        "DBInstanceClass": {
+            "Default": "db.t3.micro",
+            "Description": "The compute and memory capacity of the DB instance, for example, db.m4.large. Not all DB instance classes are available in all AWS Regions, or for all database engines",
+            "Type": "String",
+            "AllowedValues": [
+                "db.t1.micro",
+                "db.m1.small",
+                "db.m1.medium",
+                "db.m1.large",
+                "db.m1.xlarge",
+                "db.m3.medium",
+                "db.m3.large",
+                "db.m3.xlarge",
+                "db.m3.2xlarge",
+                "db.m4.large",
+                "db.m4.xlarge",
+                "db.m4.2xlarge",
+                "db.m4.4xlarge",
+                "db.m4.10xlarge",
+                "db.r3.large",
+                "db.r3.xlarge",
+                "db.r3.2xlarge",
+                "db.r3.4xlarge",
+                "db.r3.8xlarge",
+                "db.m2.xlarge",
+                "db.m2.2xlarge",
+                "db.m2.4xlarge",
+                "db.cr1.8xlarge",
+                "db.t3.micro",
+                "db.t3.small",
+                "db.t3.medium",
+                "db.t3.large",
+                "db.t3.xlarge",
+                "db.t3.2xlarge",
+                "db.r6g.large",
+                "db.m5.large",
+                "db.m5.xlarge",
+                "db.m5.2xlarge",
+                "db.m5.4xlarge"
+            ]
+        },
+        "AllocatedStorage": {
+            "Type": "String",
+            "Default": "20",
+            "Description": "The amount of storage (in gigabytes) to be initially allocated for the database instance"
+        },
+        "ReadReplica": {
+            "Type": "String",
+            "Default": "false",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
+        },
+        "EnableRDSProxy": {
+            "Type": "String",
+            "Default": "false",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
+        },
+        "ProxyName": {
+            "Type": "String",
+            "Default": "RdsProxy"
+        }
+    },
+    "Conditions": {
+        "ReadReplica": {
+            "Fn::Equals": [
+                {
+                    "Ref": "ReadReplica"
+                },
+                "true"
+            ]
+        },
+        "EnableRDSProxy": {
+            "Fn::Equals": [
+                {
+                    "Ref": "EnableRDSProxy"
+                },
+                "true"
+            ]
+        }
+    },
+    "Resources": {
+        "PrivateSubnetGroup": {
+            "Type": "AWS::RDS::DBSubnetGroup",
+            "Properties": {
+                "DBSubnetGroupDescription": "private-subnet-group",
+                "SubnetIds": [
+                    {
+                        "Ref": "Subnet1Id"
+                    },
+                    {
+                        "Ref": "Subnet2Id"
+                    }
+                ]
+            }
+        },
+        "DbSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": {
+                    "Fn::Sub": "DB Cluster Security Group"
+                },
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "5432",
+                        "ToPort": "5432",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "DbEncryptionKey": {
+            "Type": "AWS::KMS::Key",
+            "Properties": {
+                "Description": "DB encyption key",
+                "EnableKeyRotation": "True",
+                "KeyPolicy": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": {
+                                    "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
+                                }
+                            },
+                            "Action": "kms:*",
+                            "Resource": "*"
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": "*"
+                            },
+                            "Action": [
+                                "kms:Encrypt",
+                                "kms:Decrypt",
+                                "kms:ReEncrypt*",
+                                "kms:GenerateDataKey*",
+                                "kms:CreateGrant",
+                                "kms:ListGrants",
+                                "kms:DescribeKey"
+                            ],
+                            "Resource": "*",
+                            "Condition": {
+                                "StringEquals": {
+                                    "kms:CallerAccount": {
+                                        "Ref": "AWS::AccountId"
+                                    },
+                                    "kms:ViaService": {
+                                        "Fn::Sub": "rds.${AWS::Region}.amazonaws.com"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "DBInstance": {
+            "Type": "AWS::RDS::DBInstance",
+            "Properties": {
+                "MasterUsername": {
+                    "Ref": "DBUsername"
+                },
+                "MasterUserPassword": {
+                    "Ref": "DBPassword"
+                },
+                "CopyTagsToSnapshot": true,
+                "DBInstanceClass": {
+                    "Ref": "DBInstanceClass"
+                },
+                "Engine": "postgres",
+                "EngineVersion": {
+                    "Ref": "DBEngineVersion"
+                },
+                "AllocatedStorage": {
+                    "Ref": "AllocatedStorage"
+                },
+                "StorageType": "gp2",
+                "KmsKeyId": {
+                    "Ref": "DbEncryptionKey"
+                },
+                "StorageEncrypted": true,
+                "PubliclyAccessible": false,
+                "DBSubnetGroupName": {
+                    "Ref": "PrivateSubnetGroup"
+                },
+                "VPCSecurityGroups": [
+                    {
+                        "Ref": "DbSecurityGroup"
+                    }
+                ],
+                "MultiAZ": {
+                    "Ref": "MultiAZ"
+                }
+            }
+        },
+        "DBReadReplica": {
+            "Type": "AWS::RDS::DBInstance",
+            "Condition": "ReadReplica",
+            "Properties": {
+                "SourceDBInstanceIdentifier": {
+                    "Ref": "DBInstance"
+                },
+                "DBInstanceClass": {
+                    "Ref": "DBInstanceClass"
+                }
+            }
+        },
+        "RDSSecret": {
+            "Type": "AWS::SecretsManager::Secret",
+            "Condition": "EnableRDSProxy",
+            "Properties": {
+                "Description": "This is a Secrets Manager secret for an RDS DB instance",
+                "SecretString": {
+                    "Fn::Sub": "{\"username\":\"${DBUsername}\",\"password\":\"${DBPassword}\"}"
+                }
+            }
+        },
+        "RDSProxy": {
+            "Type": "AWS::RDS::DBProxy",
+            "Condition": "EnableRDSProxy",
+            "Properties": {
+                "DebugLogging": true,
+                "DBProxyName": {
+                    "Ref": "ProxyName"
+                },
+                "EngineFamily": "POSTGRESQL",
+                "IdleClientTimeout": 120,
+                "RequireTLS": true,
+                "RoleArn": {
+                    "Fn::GetAtt": [
+                        "SecretReaderRole",
+                        "Arn"
+                    ]
+                },
+                "Auth": [
+                    {
+                        "AuthScheme": "SECRETS",
+                        "SecretArn": {
+                            "Ref": "RDSSecret"
+                        },
+                        "IAMAuth": "REQUIRED"
+                    }
+                ],
+                "VpcSecurityGroupIds": [
+                    {
+                        "Ref": "DbSecurityGroup"
+                    }
+                ],
+                "VpcSubnetIds": [
+                    {
+                        "Ref": "Subnet1Id"
+                    },
+                    {
+                        "Ref": "Subnet2Id"
+                    }
+                ]
+            }
+        },
+        "ProxyTargetGroup": {
+            "Type": "AWS::RDS::DBProxyTargetGroup",
+            "Condition": "EnableRDSProxy",
+            "Properties": {
+                "DBProxyName": {
+                    "Ref": "RDSProxy"
+                },
+                "DBInstanceIdentifiers": [
+                    {
+                        "Ref": "DBInstance"
+                    }
+                ],
+                "TargetGroupName": "default",
+                "ConnectionPoolConfigurationInfo": {
+                    "MaxConnectionsPercent": 100,
+                    "MaxIdleConnectionsPercent": 50,
+                    "ConnectionBorrowTimeout": 120
+                }
+            }
+        },
+        "SecretReaderRole": {
+            "Type": "AWS::IAM::Role",
+            "Condition": "EnableRDSProxy",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "rds.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "rdsProxyPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "secretsmanager:*",
+                                    "Resource": {
+                                        "Ref": "RDSSecret"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "DBEndpoint": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "DBInstance",
+                    "Endpoint.Address"
+                ]
+            }
+        },
+        "DBReadReplicaEndpoint": {
+            "Value": {
+                "Fn::If": [
+                    "ReadReplica",
+                    {
+                        "Fn::GetAtt": [
+                            "DBReadReplica",
+                            "Endpoint.Address"
+                        ]
+                    },
+                    ""
+                ]
+            }
+        }
+    }
+}

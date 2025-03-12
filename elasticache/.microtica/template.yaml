@@ -1,0 +1,80 @@
+name: AWS ElastiCache
+description: Infrastructure component for AWS ElastiCache managed Redis in-memory data store.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/elasticache.svg
+repo: https://github.com/microtica/templates/tree/master/elasticache
+
+inputs:
+  properties:
+    engine:
+      type: string
+      default: "redis"
+      enum: ["redis"]
+      description: The cache engine to be used for this cluster
+    instanceType:
+      type: string
+      default: "cache.t2.micro"
+      description: The compute and memory capacity of the nodes in the node group (shard)
+      enum:
+        [
+          "cache.t2.micro",
+          "cache.t2.small",
+          "cache.t2.medium",
+          "cache.t3.micro",
+          "cache.t3.small",
+          "cache.t3.medium",
+          "cache.m5.large",
+          "cache.m5.xlarge",
+          "cache.m5.2xlarge",
+          "cache.m5.4xlarge",
+          "cache.m5.12xlarge",
+          "cache.m5.24xlarge",
+          "cache.r7g.large",
+          "cache.r7g.xlarge",
+          "cache.r7g.2xlarge",
+          "cache.r6g.large",
+          "cache.r6g.xlarge",
+          "cache.r6g.2xlarge",
+        ]
+    numberOfNodes:
+      type: string
+      default: "1"
+      pattern: "^([1-9]|1[0-9]|20)$"
+      description: The number of cache nodes that the cache cluster should have
+    keyspaceEvents:
+      type: string
+      default: "KEx"
+      pattern: "^(?!.*([KEg$lshzxeA]).*\\1)[KEg$lshzxeA]+$"
+      description: "The types of keyspace events that Redis can notify clients of. Each event type is represented by a single letter. https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/ParameterGroups.Redis.html#ParameterGroups.Redis.2-8-19"
+    AppName:
+      type: string
+      description: Unique name for your application
+      maxLength: 20
+      pattern: ^[A-Za-z]*$
+      patternErrorMessage: The app name can only contain letters
+  required:
+    - AppName
+    - engine
+    - instanceType
+    - numberOfNodes
+    - keyspaceEvents
+
+infrastructure:
+  resources:
+    "{{AppName}}":
+      source: git
+      componentType: database
+      properties:
+        - key: vpcId
+          reference: "{{VPC_RESOURCE_NAME}}.vpcId"
+        - key: subnet1Id
+          reference: "{{VPC_RESOURCE_NAME}}.privateSubnet1"
+        - key: subnet2Id
+          reference: "{{VPC_RESOURCE_NAME}}.privateSubnet2"
+        - key: engine
+          value: "{{engine}}"
+        - key: instanceType
+          value: "{{instanceType}}"
+        - key: numberOfNodes
+          value: "{{numberOfNodes}}"
+        - key: keyspaceEvents
+          value: "{{keyspaceEvents}}"

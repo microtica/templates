@@ -1,0 +1,149 @@
+name: Amazon RDS for PostgreSQL
+description: Managed and scalable PostgreSQL servers in minutes with cost-efficient and resizable hardware capacity managing time-consuming database administration tasks including backups, software patching, monitoring, scaling and replication.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/postgresql.svg
+repo: https://github.com/microtica/templates/tree/master/rds-postgres
+
+inputs:
+  properties:
+    DBUsername:
+      type: string
+      pattern: "[a-zA-Z][a-zA-Z0-9]*"
+      minimum: 1
+      maximum: 16
+      description: Database admin username. Must begin with a letter and contain only alphanumeric characters.
+    DBPassword:
+      type: string
+      pattern: "[a-zA-Z0-9]*"
+      minimum: 8
+      maximum: 41
+      sensitive: true
+      description: Database admin password. Must contain only alphanumeric characters.
+    MultiAZ:
+      type: string
+      enum: ["true", "false"]
+      default: "false"
+      description: Specifies whether the database instance is a multiple Availability Zone deployment.
+    DBInstanceClass:
+      type: string
+      enum:
+        [
+          "db.t1.micro",
+          "db.m1.small",
+          "db.m1.medium",
+          "db.m1.large",
+          "db.m1.xlarge",
+          "db.m3.medium",
+          "db.m3.large",
+          "db.m3.xlarge",
+          "db.m3.2xlarge",
+          "db.m4.large",
+          "db.m4.xlarge",
+          "db.m4.2xlarge",
+          "db.m4.4xlarge",
+          "db.m4.10xlarge",
+          "db.r3.large",
+          "db.r3.xlarge",
+          "db.r3.2xlarge",
+          "db.r3.4xlarge",
+          "db.r3.8xlarge",
+          "db.m2.xlarge",
+          "db.m2.2xlarge",
+          "db.m2.4xlarge",
+          "db.cr1.8xlarge",
+          "db.t3.micro",
+          "db.t3.small",
+          "db.t3.medium",
+          "db.t3.large",
+          "db.t3.xlarge",
+          "db.t3.2xlarge",
+        ]
+      default: "db.t3.micro"
+      description: The compute and memory capacity of the DB instance, for example, db.m4.large. Not all DB instance classes are available in all AWS Regions, or for all database engines.
+    AllocatedStorage:
+      type: string
+      default: "20"
+      description: The amount of storage (in gigabytes) to be initially allocated for the database instance.
+    ReadReplica:
+      type: string
+      enum: ["true", "false"]
+      default: "false"
+      description: DB instance the read replica.
+    DBEngineVersion:
+      type: string
+      enum:
+        [
+          "11.22",
+          "12.15",
+          "12.16",
+          "12.17",
+          "12.18",
+          "12.19",
+          "12.20",
+          "12.21",
+          "12.22",
+          "13.15",
+          "13.16",
+          "13.17",
+          "13.18",
+          "13.19",
+          "14.12",
+          "14.13",
+          "14.14",
+          "14.15",
+          "14.16",
+          "15.7",
+          "15.8",
+          "15.9",
+          "15.10",
+          "15.11",
+          "16.3",
+          "16.4",
+          "16.5",
+          "16.6",
+          "16.7",
+          "17.1",
+          "17.2",
+          "17.3"
+        ]
+      default: "11.22"
+      description: Database Engine Version.
+    AppName:
+      type: string
+      description: Unique name for your application
+      maxLength: 20
+      pattern: ^[A-Za-z]*$
+      patternErrorMessage: "The app name can only contain letters."
+  required:
+    - AppName
+    - DBUsername
+    - DBPassword
+    - MultiAZ
+    - DBEngineVersion
+    - DBInstanceClass
+    - AllocatedStorage
+    - ReadReplica
+
+infrastructure:
+  resources:
+    "{{AppName}}":
+      source: git
+      componentType: database
+      properties:
+        - key: VpcId
+          reference: "{{VPC_RESOURCE_NAME}}.vpcId"
+        - key: Subnet1Id
+          reference: "{{VPC_RESOURCE_NAME}}.privateSubnet1"
+        - key: Subnet2Id
+          reference: "{{VPC_RESOURCE_NAME}}.privateSubnet2"
+        - key: DBUsername
+          value: "{{DBUsername}}"
+        - key: DBPassword
+          value: "{{DBPassword}}"
+        - key: MultiAZ
+          value: "{{MultiAZ}}"
+        - key: DBEngineVersion
+          value: "{{DBEngineVersion}}"
+        - key: DBInstanceClass
+          value: "{{DBInstanceClass}}"
+        - key: AllocatedStorage
+          value: "{{AllocatedStorage}}"

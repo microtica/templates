@@ -1,0 +1,105 @@
+name: AWS DynamoDB
+description: Infrastructure component for AWS DynamoDB table setup on AWS Cloud.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/dynamodb.svg
+repo: https://github.com/microtica/templates/tree/master/dynamodb
+
+inputs:
+  properties:
+    partitionKey:
+      type: string
+      description: "Name of the partition key."
+    partitionKeyType:
+      type: string
+      description: "Type of the partition key."
+    sortKey:
+      type: string
+      description: "Name of the sort key. The default type is string. You can specify the key type by specifying the key name followed by the type identifier split with colon (e.g. _date:N or date:S). Avaliable types S - for String type, N - Number type and B - Binary type. WARNING: changing the key name or the type would replace the table with a new table."
+    sortKeyType:
+      type: string
+      description: Type of the sort key.
+    gsiPartitionKey:
+      type: string
+      description: "Global Secondary Index primary key. The default type is string. You can specify the key type by specifying the key name followed by the type identifier split with colon (e.g. _id:N or _id:S). Avaliable types S - for String type, N - Number type and B - Binary type."
+    gsiSortKey:
+      type: string
+      description: "Global Secondary Index sort key. The default type is string. You can specify the key type by specifying the key name followed by the type identifier split with colon (e.g. _date:N or date:S). Avaliable types S - for String type, N - Number type and B - Binary type."
+    gsiSortKeyType:
+      type: string
+      description: Type of Global Secondary Index sort key.
+    gsiProjectionType:
+      type: string
+      enum: ["KEYS_ONLY", "ALL"]
+      default: "ALL"
+      description: "The set of attributes that are projected into the GSI"
+    TTLAttributeName:
+      type: string
+      description: "The name of the TTL attribute used to store the expiration time for items in the table."
+    readCapacityUnits:
+      type: string
+      default: "5"
+      pattern: "^[0-9]*$"
+      description: "The maximum number of strongly consistent reads consumed per second before DynamoDB returns a ThrottlingException."
+    writeCapacityUnits:
+      type: string
+      default: "5"
+      pattern: "^[0-9]*$"
+      description: "The maximum number of writes consumed per second before DynamoDB returns a ThrottlingException."
+    backupScheduleExpression:
+      type: string
+      description: "A CRON expression (in UTC timezone) specifying when AWS Backup initiates a backup job. If not provided, the backup will be disabled. E.g. cron(0 12 * * ? *)"
+    billingMode:
+      type: string
+      enum: ["PROVISIONED", "PAY_PER_REQUEST"]
+      default: "PROVISIONED"
+      description: "Specify how you are charged for read and write throughput and how you manage capacity."
+    deletionProtectionEnabled:
+      type: string
+      enum: ["true", "false"]
+      default: "true"
+      description: "Determines if a table is protected from deletion. When enabled, the table cannot be deleted by any user or process."
+    AppName:
+      type: string
+      description: Unique name for your application
+      maxLength: 20
+      pattern: ^[A-Za-z]*$
+      patternErrorMessage: "The app name can only contain letters."
+  required:
+    - AppName
+    - partitionKey
+    - readCapacityUnits
+    - writeCapacityUnits
+
+infrastructure:
+  resources:
+    "{{AppName}}":
+      source: git
+      componentType: database
+      properties:
+        - key: partitionKey
+          value: "{{partitionKey}}"
+        - key: readCapacityUnits
+          value: "{{readCapacityUnits}}"
+        - key: writeCapacityUnits
+          value: "{{writeCapacityUnits}}"
+        - key: sortKey
+          value: "{{sortKey}}"
+        - key: gsiPartitionKey
+          value: "{{gsiPartitionKey}}"
+        - key: gsiSortKey
+          value: "{{gsiSortKey}}"
+        - key: gsiProjectionType
+          value: "{{gsiProjectionType}}"
+        - key: TTLAttributeName
+          value: "{{TTLAttributeName}}"
+        - key: backupScheduleExpression
+          value: "{{backupScheduleExpression}}"
+        - key: billingMode
+          value: "{{billingMode}}"
+        - key: deletionProtectionEnabled
+          value: "{{deletionProtectionEnabled}}"
+        - key: gsiSortKeyType
+          value: "{{gsiSortKeyType}}"
+        - key: sortKeyType
+          value: "{{sortKeyType}}"
+        - key: partitionKeyType
+          value: "{{partitionKeyType}}"

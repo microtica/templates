@@ -1,0 +1,98 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Transform": "AWS::Serverless-2016-10-31",
+    "Description": "Image converter Lambda@Edge",
+    "Parameters": {
+        "ImageConverterLambdaBucket": {
+            "Type": "String"
+        },
+        "ImageConverterLambdaBucketKey": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "ImageConverterLambda": {
+            "Type": "AWS::Serverless::Function",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "Handler": "dst/index.handler",
+                "Runtime": "nodejs16.x",
+                "Timeout": 30,
+                "MemorySize": 1024,
+                "CodeUri": {
+                    "Bucket": {
+                        "Ref": "ImageConverterLambdaBucket"
+                    },
+                    "Key": {
+                        "Ref": "ImageConverterLambdaBucketKey"
+                    }
+                },
+                "AutoPublishAlias": "ImageConverter",
+                "Policies": [
+                    "AWSLambdaBasicExecutionRole",
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "secretsmanager:ListSecrets",
+                                    "secretsmanager:GetSecretValue",
+                                    "lambda:ListTags"
+                                ],
+                                "Resource": "*"
+                            }
+                        ]
+                    },
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "s3:PutObject",
+                                    "s3:GetObject"
+                                ],
+                                "Resource": "*"
+                            }
+                        ]
+                    }
+                ],
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "edgelambda.amazonaws.com",
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        "ImageConverterLambdaPermission": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "Action": "lambda:GetFunction",
+                "FunctionName": {
+                    "Ref": "ImageConverterLambda"
+                },
+                "Principal": "replicator.lambda.amazonaws.com"
+            }
+        }
+    },
+    "Outputs": {
+        "Version": {
+            "Value": {
+                "Ref": "ImageConverterLambda.Version"
+            }
+        }
+    }
+}

@@ -1,0 +1,183 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "AWS ElastiCache infrastructure setup",
+    "Parameters": {
+        "vpcId": {
+            "Type": "String",
+            "Description": "ID of the VPC"
+        },
+        "subnet1Id": {
+            "Type": "String",
+            "Description": "ID of the Subnet 1"
+        },
+        "subnet2Id": {
+            "Type": "String",
+            "Description": "ID of the Subnet 2"
+        },
+        "numberOfNodes": {
+            "Type": "String",
+            "Description": "Number of nodes to start in the cluster",
+            "Default": "1"
+        },
+        "instanceType": {
+            "Description": "How large of a box to run your cluster on",
+            "Type": "String",
+            "Default": "cache.t2.micro",
+            "AllowedValues": [
+                "cache.t2.micro",
+                "cache.t2.small",
+                "cache.t2.medium",
+                "cache.t3.micro",
+                "cache.t3.small",
+                "cache.t3.medium",
+                "cache.m5.large",
+                "cache.m5.xlarge",
+                "cache.m5.2xlarge",
+                "cache.m5.4xlarge",
+                "cache.m5.12xlarge",
+                "cache.m5.24xlarge",
+                "cache.r7g.large",
+                "cache.r7g.xlarge",
+                "cache.r7g.2xlarge",
+                "cache.r6g.large",
+                "cache.r6g.xlarge",
+                "cache.r6g.2xlarge"
+            ]
+        },
+        "keyspaceEvents": {
+            "Type": "String",
+            "Default": "KEx",
+            "Description": "The types of keyspace events that Redis can notify clients of. Each event type is represented by a single letter. https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/ParameterGroups.Redis.html#ParameterGroups.Redis.2-8-19"
+        }
+    },
+    "Resources": {
+        "SecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Redis port from anywhere",
+                "VpcId": {
+                    "Ref": "vpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 6379,
+                        "ToPort": 6379,
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "SubnetGroup": {
+            "Type": "AWS::ElastiCache::SubnetGroup",
+            "Properties": {
+                "Description": "Cache Subnet Group",
+                "SubnetIds": [
+                    {
+                        "Ref": "subnet1Id"
+                    },
+                    {
+                        "Ref": "subnet2Id"
+                    }
+                ]
+            }
+        },
+        "ElastiCacheCluster": {
+            "Type": "AWS::ElastiCache::CacheCluster",
+            "Properties": {
+                "Engine": "redis",
+                "EngineVersion": "7.0",
+                "NumCacheNodes": {
+                    "Ref": "numberOfNodes"
+                },
+                "CacheNodeType": {
+                    "Ref": "instanceType"
+                },
+                "CacheParameterGroupName": {
+                    "Ref": "ElastiCacheParameterGroup"
+                },
+                "AutoMinorVersionUpgrade": "true",
+                "CacheSubnetGroupName": {
+                    "Ref": "SubnetGroup"
+                },
+                "VpcSecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "SecurityGroup",
+                            "GroupId"
+                        ]
+                    }
+                ],
+                "SnapshotRetentionLimit": 7,
+                "SnapshotWindow": "00:00-02:00"
+            }
+        },
+        "ElastiCacheParameterGroup": {
+            "Type": "AWS::ElastiCache::ParameterGroup",
+            "Properties": {
+                "CacheParameterGroupFamily": "redis7",
+                "Description": "Redis parameter group",
+                "Properties": {
+                    "notify-keyspace-events": {
+                        "Ref": "keyspaceEvents"
+                    }
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "MetricRedisCachedItems": {
+            "Value": {
+                "Fn::Sub": "Name:Redis cached items|Namespace:AWS/ElastiCache|MetricName:CurrItems|Statistics:Average|Unit:Count|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisConnections": {
+            "Value": {
+                "Fn::Sub": "Name:Redis connections|Namespace:AWS/ElastiCache|MetricName:CurrConnections|Statistics:Average|Unit:Count|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisCPUUtilization": {
+            "Value": {
+                "Fn::Sub": "Name:Redis CPU utilization|Namespace:AWS/ElastiCache|MetricName:CPUUtilization|Statistics:Average|Unit:Percent|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisAvailableMemory": {
+            "Value": {
+                "Fn::Sub": "Name:Redis available memory|Namespace:AWS/ElastiCache|MetricName:FreeableMemory|Statistics:Average|Unit:Bytes|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisMemoryUsagePercentage": {
+            "Value": {
+                "Fn::Sub": "Name:Redis memory usage|Namespace:AWS/ElastiCache|MetricName:DatabaseMemoryUsagePercentage|Statistics:Average|Unit:Percent|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisCacheHits": {
+            "Value": {
+                "Fn::Sub": "Name:Redis cache hits|Namespace:AWS/ElastiCache|MetricName:CacheHits|Statistics:Sum|Unit:Count|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisCacheMisses": {
+            "Value": {
+                "Fn::Sub": "Name:Redis cache misses|Namespace:AWS/ElastiCache|MetricName:CacheMisses|Statistics:Sum|Unit:Count|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "accessDomain": {
+            "Description": "The DNS address of the primary read-write cache node.",
+            "Value": {
+                "Fn::GetAtt": [
+                    "ElastiCacheCluster",
+                    "RedisEndpoint.Address"
+                ]
+            }
+        },
+        "accessPort": {
+            "Description": "The number of the port that the primary read-write cache engine is listening on.",
+            "Value": {
+                "Fn::GetAtt": [
+                    "ElastiCacheCluster",
+                    "RedisEndpoint.Port"
+                ]
+            }
+        }
+    }
+}

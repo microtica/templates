@@ -1,0 +1,133 @@
+name: Amazon RDS for MySQL
+description: Managed and scalable MySQL servers in minutes with cost-efficient and resizable hardware capacity managing time-consuming database administration tasks including backups, software patching, monitoring, scaling and replication.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/mysql.svg
+repo: https://github.com/microtica/templates/tree/master/mysql
+
+inputs:
+  properties:
+    DBUsername:
+      type: string
+      pattern: "[a-zA-Z][a-zA-Z0-9]*"
+      minimum: 1
+      maximum: 16
+      description: Database admin username. Must begin with a letter and contain only alphanumeric characters.
+    DBPassword:
+      type: string
+      pattern: "[a-zA-Z0-9]*"
+      minimum: 8
+      maximum: 41
+      sensitive: true
+      description: Database admin password. Must contain only alphanumeric characters.
+    MultiAZ:
+      type: string
+      enum: ["true", "false"]
+      default: "false"
+      description: Specifies whether the database instance is a multiple Availability Zone deployment.
+    DBInstanceClass:
+      type: string
+      enum:
+        [
+          "db.t1.micro",
+          "db.m1.small",
+          "db.m1.medium",
+          "db.m1.large",
+          "db.m1.xlarge",
+          "db.m3.medium",
+          "db.m3.large",
+          "db.m3.xlarge",
+          "db.m3.2xlarge",
+          "db.m4.large",
+          "db.m4.xlarge",
+          "db.m4.2xlarge",
+          "db.m4.4xlarge",
+          "db.m4.10xlarge",
+          "db.r3.large",
+          "db.r3.xlarge",
+          "db.r3.2xlarge",
+          "db.r3.4xlarge",
+          "db.r3.8xlarge",
+          "db.m2.xlarge",
+          "db.m2.2xlarge",
+          "db.m2.4xlarge",
+          "db.cr1.8xlarge",
+          "db.t3.micro",
+          "db.t3.small",
+          "db.t3.medium",
+          "db.t3.large",
+          "db.t3.xlarge",
+          "db.t3.2xlarge",
+        ]
+      default: "db.t3.micro"
+      description: The compute and memory capacity of the DB instance, for example, db.m4.large. Not all DB instance classes are available in all AWS Regions, or for all database engines.
+    AllocatedStorage:
+      type: string
+      default: "20"
+      description: The amount of storage (in gigabytes) to be initially allocated for the database instance.
+    ReadReplica:
+      type: string
+      enum: ["true", "false"]
+      default: "false"
+      description: DB instance the read replica.
+    DBEngineVersion:
+      type: string
+      enum:
+        [
+          "5.7.44",
+          "5.7.44-rds.20240408",
+          "5.7.44-rds.20240529",
+          "5.7.44-rds.20240808",
+          "5.7.44-rds.20250103",
+          "8.0.32",
+          "8.0.33",
+          "8.0.34",
+          "8.0.35",
+          "8.0.36",
+          "8.0.37",
+          "8.0.39",
+          "8.0.40",
+          "8.0.41",
+          "8.4.3",
+          "8.4.4",
+        ]
+      default: "8.0.32"
+      description: Database Engine Version.
+    AppName:
+      type: string
+      description: Unique name for your application
+      maxLength: 20
+      pattern: ^[A-Za-z]*$
+      patternErrorMessage: "The app name can only contain letters."
+  required:
+    - AppName
+    - DBUsername
+    - DBPassword
+    - MultiAZ
+    - DBEngineVersion
+    - DBInstanceClass
+    - AllocatedStorage
+    - ReadReplica
+
+infrastructure:
+  resources:
+    "{{AppName}}":
+      source: git
+      componentType: database
+      properties:
+        - key: VpcId
+          reference: "{{VPC_RESOURCE_NAME}}.vpcId"
+        - key: Subnet1Id
+          reference: "{{VPC_RESOURCE_NAME}}.privateSubnet1"
+        - key: Subnet2Id
+          reference: "{{VPC_RESOURCE_NAME}}.privateSubnet2"
+        - key: DBUsername
+          value: "{{DBUsername}}"
+        - key: DBPassword
+          value: "{{DBPassword}}"
+        - key: MultiAZ
+          value: "{{MultiAZ}}"
+        - key: DBEngineVersion
+          value: "{{DBEngineVersion}}"
+        - key: DBInstanceClass
+          value: "{{DBInstanceClass}}"
+        - key: AllocatedStorage
+          value: "{{AllocatedStorage}}"
