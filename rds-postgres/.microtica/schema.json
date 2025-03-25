@@ -133,7 +133,7 @@
                 "ReadReplica": {
                     "type": "string",
                     "default": "false",
-                    "description": " ",
+                    "description": "DB instance the read replica.",
                     "enum": [
                         "true",
                         "false"
@@ -143,7 +143,7 @@
                 "EnableRDSProxy": {
                     "type": "string",
                     "default": "false",
-                    "description": " ",
+                    "description": "Determines whether to enable RDS Proxy for the database.",
                     "enum": [
                         "true",
                         "false"
@@ -153,7 +153,7 @@
                 "ProxyName": {
                     "type": "string",
                     "default": "RdsProxy",
-                    "description": " ",
+                    "description": "Specifies the name of the RDS Proxy.",
                     "sensitive": false
                 }
             },
@@ -168,8 +168,7 @@
                 "DBInstanceClass",
                 "AllocatedStorage",
                 "ReadReplica",
-                "EnableRDSProxy",
-                "ProxyName"
+                "EnableRDSProxy"
             ],
             "additionalProperties": false
         },

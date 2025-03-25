@@ -11,9 +11,17 @@
                     "type": "string",
                     "description": "Name of the partition key. The default type is string. You can specify the key type by specifying the key name followed by the type identifier split with colon (e.g. _id:N or _id:S). Avaliable types S - for String type, N - Number type and B - Binary type. WARNING: changing the key name or the type would replace the table with a new table."
                 },
+                "partitionKeyType": {
+                    "type": "string",
+                    "description": "Type of the partition key."
+                },
                 "sortKey": {
                     "type": "string",
                     "description": "Name of the sort key. The default type is string. You can specify the key type by specifying the key name followed by the type identifier split with colon (e.g. _date:N or date:S). Avaliable types S - for String type, N - Number type and B - Binary type. WARNING: changing the key name or the type would replace the table with a new table."
+                },
+                "sortKeyType": {
+                    "type": "string",
+                    "description": "Type of the sort key."
                 },
                 "gsiPartitionKey": {
                     "type": "string",

@@ -68,6 +68,14 @@ inputs:
       enum: ["true", "false"]
       default: "false"
       description: DB instance the read replica.
+    EnableRDSProxy:
+      type: string
+      enum: ["true", "false"]
+      default: "false"
+      description: Determines whether to enable RDS Proxy for the database.
+    ProxyName:
+      type: string
+      description: Specifies the name of the RDS Proxy.
     DBEngineVersion:
       type: string
       enum:
@@ -122,6 +130,7 @@ inputs:
     - DBInstanceClass
     - AllocatedStorage
     - ReadReplica
+    - EnableRDSProxy
 
 infrastructure:
   resources:
@@ -147,3 +156,9 @@ infrastructure:
           value: "{{DBInstanceClass}}"
         - key: AllocatedStorage
           value: "{{AllocatedStorage}}"
+        - key: ReadReplica
+          value: "{{ReadReplica}}"
+        - key: EnableRDSProxy
+          value: "{{EnableRDSProxy}}"
+        - key: ProxyName
+          value: "{{ProxyName}}"
