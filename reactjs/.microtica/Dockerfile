@@ -17,6 +17,7 @@ FROM public.ecr.aws/nginx/nginx
 RUN apt-get update && apt-get install -y gettext-base
 
 COPY --from=build-stage /app/build/ /usr/share/nginx/html
+COPY ./.microtica/nginx.conf /etc/nginx/conf.d/default.conf
 
 COPY ./.microtica/nginx.conf /etc/nginx/conf.d/default.template
 
