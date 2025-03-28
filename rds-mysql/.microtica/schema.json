@@ -1,0 +1,193 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "schema://microtica/component-schema.json",
+    "title": "Component Schema",
+    "type": "object",
+    "properties": {
+        "inputs": {
+            "type": "object",
+            "properties": {
+                "VpcId": {
+                    "type": "string",
+                    "description": "VPC ID ",
+                    "sensitive": false
+                },
+                "Subnet1Id": {
+                    "type": "string",
+                    "description": "Subnet 1 ID ",
+                    "sensitive": false
+                },
+                "Subnet2Id": {
+                    "type": "string",
+                    "description": "Subnet 2 ID ",
+                    "sensitive": false
+                },
+                "MultiAZ": {
+                    "type": "string",
+                    "default": "false",
+                    "description": "Specifies whether the database instance is a multiple Availability Zone deployment. ",
+                    "enum": [
+                        "true",
+                        "false"
+                    ],
+                    "sensitive": false
+                },
+                "DBUsername": {
+                    "type": "string",
+                    "description": "Database admin username. Must begin with a letter and contain only alphanumeric characters.",
+                    "sensitive": false
+                },
+                "DBPassword": {
+                    "type": "string",
+                    "description": "Database admin password. Must contain only alphanumeric characters.",
+                    "sensitive": true
+                },
+                "DBEngineVersion": {
+                    "type": "string",
+                    "default": "8.0.21",
+                    "description": "Database Engine Version ",
+                    "enum": [
+                        "5.7.44",
+                        "5.7.44-rds.20240408",
+                        "5.7.44-rds.20240529",
+                        "5.7.44-rds.20240808",
+                        "5.7.44-rds.20250103",
+                        "8.0.32",
+                        "8.0.33",
+                        "8.0.34",
+                        "8.0.35",
+                        "8.0.36",
+                        "8.0.37",
+                        "8.0.39",
+                        "8.0.40",
+                        "8.0.41",
+                        "8.4.3",
+                        "8.4.4"
+                    ],
+                    "sensitive": false
+                },
+                "DBInstanceClass": {
+                    "type": "string",
+                    "default": "db.t3.micro",
+                    "description": "The compute and memory capacity of the DB instance, for example, db.m4.large. Not all DB instance classes are available in all AWS Regions, or for all database engines ",
+                    "enum": [
+                        "db.t1.micro",
+                        "db.m1.small",
+                        "db.m1.medium",
+                        "db.m1.large",
+                        "db.m1.xlarge",
+                        "db.m3.medium",
+                        "db.m3.large",
+                        "db.m3.xlarge",
+                        "db.m3.2xlarge",
+                        "db.m4.large",
+                        "db.m4.xlarge",
+                        "db.m4.2xlarge",
+                        "db.m4.4xlarge",
+                        "db.m4.10xlarge",
+                        "db.r3.large",
+                        "db.r3.xlarge",
+                        "db.r3.2xlarge",
+                        "db.r3.4xlarge",
+                        "db.r3.8xlarge",
+                        "db.m2.xlarge",
+                        "db.m2.2xlarge",
+                        "db.m2.4xlarge",
+                        "db.cr1.8xlarge",
+                        "db.t3.micro",
+                        "db.t3.small",
+                        "db.t3.medium",
+                        "db.t3.large",
+                        "db.t3.xlarge",
+                        "db.t3.2xlarge"
+                    ],
+                    "sensitive": false
+                },
+                "AllocatedStorage": {
+                    "type": "string",
+                    "default": "20",
+                    "description": "The amount of storage (in gigabytes) to be initially allocated for the database instance ",
+                    "sensitive": false
+                },
+                "ReadReplica": {
+                    "type": "string",
+                    "default": "false",
+                    "description": " ",
+                    "enum": [
+                        "true",
+                        "false"
+                    ],
+                    "sensitive": false
+                }
+            },
+            "required": [
+                "VpcId",
+                "Subnet1Id",
+                "Subnet2Id",
+                "MultiAZ",
+                "DBUsername",
+                "DBPassword",
+                "DBEngineVersion",
+                "DBInstanceClass",
+                "AllocatedStorage",
+                "ReadReplica"
+            ],
+            "additionalProperties": false
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "VpcId": {
+                    "type": "string",
+                    "description": "VPC ID"
+                },
+                "Subnet1Id": {
+                    "type": "string",
+                    "description": "Subnet 1 ID"
+                },
+                "Subnet2Id": {
+                    "type": "string",
+                    "description": "Subnet 2 ID"
+                },
+                "MultiAZ": {
+                    "type": "string",
+                    "description": "Specifies whether the database instance is a multiple Availability Zone deployment."
+                },
+                "DBUsername": {
+                    "type": "string",
+                    "description": "Database admin username."
+                },
+                "DBPassword": {
+                    "type": "string",
+                    "description": "Database admin password."
+                },
+                "DBEngineVersion": {
+                    "type": "string",
+                    "description": "Database Engine Version"
+                },
+                "DBInstanceClass": {
+                    "type": "string",
+                    "description": "The compute and memory capacity of the DB instance, for example, db.m4.large. Not all DB instance classes are available in all AWS Regions, or for all database engines"
+                },
+                "AllocatedStorage": {
+                    "type": "string",
+                    "description": "The amount of storage (in gigabytes) to be initially allocated for the database instance"
+                },
+                "ReadReplica": {
+                    "type": "string"
+                }
+            }
+        },
+        "outputs": {
+            "type": "object",
+            "properties": {
+                "DBEndpoint": {
+                    "type": "string"
+                },
+                "DBReadReplicaEndpoint": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

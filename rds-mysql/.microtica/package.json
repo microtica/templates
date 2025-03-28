@@ -1,0 +1,48 @@
+{
+    "name": "@microtica/component-postgres",
+    "version": "0.0.1",
+    "description": "RDS MySql database component",
+    "main": "execute.js",
+    "scripts": {
+        "test": "npm run mocha",
+        "mocha": "./node_modules/.bin/nyc --reporter=lcov --reporter=text-summary node_modules/.bin/mocha --timeout 5000 --recursive test",
+        "build": "./node_modules/.bin/component-build"
+    },
+    "nyc": {
+        "check-coverage": true,
+        "lines": 50,
+        "statements": 50,
+        "functions": 40,
+        "watermarks": {
+            "branches": [
+                10,
+                50
+            ],
+            "lines": [
+                90,
+                100
+            ],
+            "functions": [
+                90,
+                100
+            ],
+            "statements": [
+                90,
+                100
+            ]
+        }
+    },
+    "author": "Microtica",
+    "license": "ISC",
+    "dependencies": {
+        "@microtica/component": "^4.0.1"
+    },
+    "devDependencies": {
+        "@types/chai": "^4.1.7",
+        "@types/mocha": "^5.2.5",
+        "aws-sdk": "^2.423.0",
+        "chai": "^4.2.0",
+        "mocha": "^5.2.0",
+        "nyc": "^13.1.0"
+    }
+}

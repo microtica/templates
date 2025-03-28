@@ -1,0 +1,63 @@
+name: CloudFront + S3
+description: Infrastructure using CloudFront as a CDN and S3 as a content storage. This component allows you to configure visibility of the content to be private or public.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/cloudfront.svg
+repo: https://github.com/microtica/templates/tree/master/cloudfront-s3
+
+inputs:
+  properties:
+    DomainName:
+      type: string
+      default: " "
+      description: "Domain name to be associated with this CDN."
+    CertificateARN:
+      type: string
+      default: " "
+      description: "ARN of the custom certificate configure with this distribution. The certificate should cover the provided domain name."
+    RestrictAccess:
+      type: string
+      default: "false"
+      enum: ["true", "false"]
+      description: "If set to 'true' the content will only be available with pre-signed URLs or cookies. The private RSA key and the Key Id will be stored in Secret Manager. Use the 'KeysSecret' output parameter to get the secret ARN and access the keys in your app."
+    ExcludedRestrictedPath:
+      type: string
+      default: " "
+      description: "When RestrictAccess is set to true, this path pattern will be excluded from access restrictions, applicable exclusively to GET requests. For example, /static/*"
+    RetainContent:
+      type: string
+      default: "true"
+      enum: ["true", "false"]
+      description: "If enabled, the S3 bucket and the content stored in the bucket will be retained."
+    AllowOrigins:
+      type: string
+      default: "*"
+      description: "Comma delimited list of origins. E.g. http://example.com,https://mydomain.com"
+    AppName:
+      type: string
+      description: Unique name for your application
+      maxLength: 20
+      pattern: ^[A-Za-z]*$
+      patternErrorMessage: "The app name can only contain letters."
+  required:
+    - AppName
+    - RestrictAccess
+    - RetainContent
+    - AllowOrigins
+
+infrastructure:
+  resources:
+    "{{AppName}}":
+      source: git
+      componentType: other
+      properties:
+        - key: DomainName
+          value: "{{DomainName}}"
+        - key: CertificateARN
+          value: "{{CertificateARN}}"
+        - key: RestrictAccess
+          value: "{{RestrictAccess}}"
+        - key: ExcludedRestrictedPath
+          value: "{{ExcludedRestrictedPath}}"
+        - key: RetainContent
+          value: "{{RetainContent}}"
+        - key: AllowOrigins
+          value: "{{AllowOrigins}}"

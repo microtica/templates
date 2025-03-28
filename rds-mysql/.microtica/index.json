@@ -1,0 +1,284 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "RDS Aurora PostgreSQL database component",
+    "Parameters": {
+        "VpcId": {
+            "Description": "VPC ID",
+            "Type": "String"
+        },
+        "Subnet1Id": {
+            "Description": "Subnet 1 ID",
+            "Type": "String"
+        },
+        "Subnet2Id": {
+            "Description": "Subnet 2 ID",
+            "Type": "String"
+        },
+        "MultiAZ": {
+            "Type": "String",
+            "Default": "false",
+            "Description": "Specifies whether the database instance is a multiple Availability Zone deployment.",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
+        },
+        "DBUsername": {
+            "Description": "Database admin username.",
+            "Type": "String",
+            "MinLength": "1",
+            "MaxLength": "16",
+            "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+            "ConstraintDescription": "Must begin with a letter and contain only alphanumeric characters."
+        },
+        "DBPassword": {
+            "Description": "Database admin password.",
+            "Type": "String",
+            "MinLength": "8",
+            "MaxLength": "41",
+            "AllowedPattern": "[a-zA-Z0-9]*",
+            "ConstraintDescription": "Must contain only alphanumeric characters.",
+            "NoEcho": "true"
+        },
+        "DBEngineVersion": {
+            "Description": "Database Engine Version",
+            "Type": "String",
+            "Default": "8.0.32",
+            "AllowedValues": [
+                "5.7.44",
+                "5.7.44-rds.20240408",
+                "5.7.44-rds.20240529",
+                "5.7.44-rds.20240808",
+                "5.7.44-rds.20250103",
+                "8.0.32",
+                "8.0.33",
+                "8.0.34",
+                "8.0.35",
+                "8.0.36",
+                "8.0.37",
+                "8.0.39",
+                "8.0.40",
+                "8.0.41",
+                "8.4.3",
+                "8.4.4"
+            ]
+        },
+        "DBInstanceClass": {
+            "Default": "db.t3.micro",
+            "Description": "The compute and memory capacity of the DB instance, for example, db.m4.large. Not all DB instance classes are available in all AWS Regions, or for all database engines",
+            "Type": "String",
+            "AllowedValues": [
+                "db.t1.micro",
+                "db.m1.small",
+                "db.m1.medium",
+                "db.m1.large",
+                "db.m1.xlarge",
+                "db.m3.medium",
+                "db.m3.large",
+                "db.m3.xlarge",
+                "db.m3.2xlarge",
+                "db.m4.large",
+                "db.m4.xlarge",
+                "db.m4.2xlarge",
+                "db.m4.4xlarge",
+                "db.m4.10xlarge",
+                "db.r3.large",
+                "db.r3.xlarge",
+                "db.r3.2xlarge",
+                "db.r3.4xlarge",
+                "db.r3.8xlarge",
+                "db.m2.xlarge",
+                "db.m2.2xlarge",
+                "db.m2.4xlarge",
+                "db.cr1.8xlarge",
+                "db.t3.micro",
+                "db.t3.small",
+                "db.t3.medium",
+                "db.t3.large",
+                "db.t3.xlarge",
+                "db.t3.2xlarge"
+            ]
+        },
+        "AllocatedStorage": {
+            "Type": "String",
+            "Default": "20",
+            "Description": "The amount of storage (in gigabytes) to be initially allocated for the database instance"
+        },
+        "ReadReplica": {
+            "Type": "String",
+            "Default": "false",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
+        }
+    },
+    "Conditions": {
+        "ReadReplica": {
+            "Fn::Equals": [
+                {
+                    "Ref": "ReadReplica"
+                },
+                "true"
+            ]
+        }
+    },
+    "Resources": {
+        "PrivateSubnetGroup": {
+            "Type": "AWS::RDS::DBSubnetGroup",
+            "Properties": {
+                "DBSubnetGroupDescription": "private-subnet-group",
+                "SubnetIds": [
+                    {
+                        "Ref": "Subnet1Id"
+                    },
+                    {
+                        "Ref": "Subnet2Id"
+                    }
+                ]
+            }
+        },
+        "DbSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": {
+                    "Fn::Sub": "DB Cluster Security Group"
+                },
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "3306",
+                        "ToPort": "3306",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "DbEncryptionKey": {
+            "Type": "AWS::KMS::Key",
+            "Properties": {
+                "Description": "DB encyption key",
+                "EnableKeyRotation": "True",
+                "KeyPolicy": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": {
+                                    "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
+                                }
+                            },
+                            "Action": "kms:*",
+                            "Resource": "*"
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": "*"
+                            },
+                            "Action": [
+                                "kms:Encrypt",
+                                "kms:Decrypt",
+                                "kms:ReEncrypt*",
+                                "kms:GenerateDataKey*",
+                                "kms:CreateGrant",
+                                "kms:ListGrants",
+                                "kms:DescribeKey"
+                            ],
+                            "Resource": "*",
+                            "Condition": {
+                                "StringEquals": {
+                                    "kms:CallerAccount": {
+                                        "Ref": "AWS::AccountId"
+                                    },
+                                    "kms:ViaService": {
+                                        "Fn::Sub": "rds.${AWS::Region}.amazonaws.com"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "DBInstance": {
+            "Type": "AWS::RDS::DBInstance",
+            "Properties": {
+                "MasterUsername": {
+                    "Ref": "DBUsername"
+                },
+                "MasterUserPassword": {
+                    "Ref": "DBPassword"
+                },
+                "CopyTagsToSnapshot": true,
+                "DBInstanceClass": {
+                    "Ref": "DBInstanceClass"
+                },
+                "Engine": "mysql",
+                "EngineVersion": {
+                    "Ref": "DBEngineVersion"
+                },
+                "AllocatedStorage": {
+                    "Ref": "AllocatedStorage"
+                },
+                "StorageType": "gp2",
+                "KmsKeyId": {
+                    "Ref": "DbEncryptionKey"
+                },
+                "StorageEncrypted": true,
+                "PubliclyAccessible": false,
+                "DBSubnetGroupName": {
+                    "Ref": "PrivateSubnetGroup"
+                },
+                "VPCSecurityGroups": [
+                    {
+                        "Ref": "DbSecurityGroup"
+                    }
+                ],
+                "MultiAZ": {
+                    "Ref": "MultiAZ"
+                }
+            }
+        },
+        "DBReadReplica": {
+            "Type": "AWS::RDS::DBInstance",
+            "Condition": "ReadReplica",
+            "Properties": {
+                "SourceDBInstanceIdentifier": {
+                    "Ref": "DBInstance"
+                },
+                "DBInstanceClass": {
+                    "Ref": "DBInstanceClass"
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "DBEndpoint": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "DBInstance",
+                    "Endpoint.Address"
+                ]
+            }
+        },
+        "DBReadReplicaEndpoint": {
+            "Value": {
+                "Fn::If": [
+                    "ReadReplica",
+                    {
+                        "Fn::GetAtt": [
+                            "DBReadReplica",
+                            "Endpoint.Address"
+                        ]
+                    },
+                    ""
+                ]
+            }
+        }
+    }
+}

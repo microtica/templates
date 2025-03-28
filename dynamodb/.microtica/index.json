@@ -1,0 +1,489 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "AWS DynamoDB Component",
+    "Parameters": {
+        "partitionKey": {
+            "Type": "String",
+            "Description": "Name of the partition key"
+        },
+        "partitionKeyType": {
+            "Type": "String",
+            "Default": "S",
+            "Description": "Type of the partition key"
+        },
+        "sortKey": {
+            "Type": "String",
+            "Default": "",
+            "Description": "Name of the sort key"
+        },
+        "sortKeyType": {
+            "Type": "String",
+            "Default": "S",
+            "Description": "Type of the sort key"
+        },
+        "gsiPartitionKey": {
+            "Type": "String",
+            "Default": "",
+            "Description": "Global Secondary Index primary key"
+        },
+        "gsiPartitionKeyType": {
+            "Type": "String",
+            "Default": "S",
+            "Description": "Type of Global Secondary Index primary key"
+        },
+        "gsiSortKey": {
+            "Type": "String",
+            "Default": "",
+            "Description": "Global Secondary Index sort key"
+        },
+        "gsiSortKeyType": {
+            "Type": "String",
+            "Default": "S",
+            "Description": "Type of Global Secondary Index sort key"
+        },
+        "gsiProjectionType": {
+            "Type": "String",
+            "Description": "The set of attributes that are projected into the GSI"
+        },
+        "TTLAttributeName": {
+            "Type": "String",
+            "Default": "",
+            "Description": "The name of the TTL attribute used to store the expiration time for items in the table."
+        },
+        "readCapacityUnits": {
+            "Type": "String",
+            "Default": "5",
+            "Description": "The maximum number of strongly consistent reads consumed per second before DynamoDB returns a ThrottlingException."
+        },
+        "writeCapacityUnits": {
+            "Type": "String",
+            "Default": "5",
+            "Description": "The maximum number of writes consumed per second before DynamoDB returns a ThrottlingException."
+        },
+        "backupScheduleExpression": {
+            "Type": "String",
+            "Default": "",
+            "Description": "A CRON expression specifying when AWS Backup initiates a backup job. If not provided, the backup will be disabled."
+        },
+        "billingMode": {
+            "Type": "String",
+            "Default": "PROVISIONED",
+            "Description": "Specify how you are charged for read and write throughput and how you manage capacity."
+        },
+        "deletionProtectionEnabled": {
+            "Type": "String",
+            "Default": "true",
+            "Description": "Determines if a table is protected from deletion. When enabled, the table cannot be deleted by any user or process."
+        },
+        "resourcePrefix": {
+            "Type": "String"
+        }
+    },
+    "Conditions": {
+        "ShouldCreateSortKey": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "sortKey"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "ShouldCreateGSI": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "gsiPartitionKey"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "ShouldCreateGSISortKey": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "gsiSortKey"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "ShouldEnableTTL": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "TTLAttributeName"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "ShouldBackup": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "backupScheduleExpression"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "ShouldEnableOnDemandBilling": {
+            "Fn::Equals": [
+                {
+                    "Ref": "billingMode"
+                },
+                "PAY_PER_REQUEST"
+            ]
+        },
+        "ShouldEnableDeletionProtection": {
+            "Fn::Equals": [
+                {
+                    "Ref": "deletionProtectionEnabled"
+                },
+                "true"
+            ]
+        }
+    },
+    "Resources": {
+        "DynamoDBTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "DeletionPolicy": {
+                "Fn::If": [
+                    "ShouldEnableDeletionProtection",
+                    "Retain",
+                    "Delete"
+                ]
+            },
+            "Properties": {
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": {
+                            "Ref": "partitionKey"
+                        },
+                        "AttributeType": {
+                            "Ref": "partitionKeyType"
+                        }
+                    },
+                    {
+                        "Fn::If": [
+                            "ShouldCreateSortKey",
+                            {
+                                "AttributeName": {
+                                    "Ref": "sortKey"
+                                },
+                                "AttributeType": {
+                                    "Ref": "sortKeyType"
+                                }
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    },
+                    {
+                        "Fn::If": [
+                            "ShouldCreateGSI",
+                            {
+                                "AttributeName": {
+                                    "Ref": "gsiPartitionKey"
+                                },
+                                "AttributeType": {
+                                    "Ref": "gsiPartitionKeyType"
+                                }
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    },
+                    {
+                        "Fn::If": [
+                            "ShouldCreateGSISortKey",
+                            {
+                                "AttributeName": {
+                                    "Ref": "gsiSortKey"
+                                },
+                                "AttributeType": {
+                                    "Ref": "gsiSortKeyType"
+                                }
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": {
+                            "Ref": "partitionKey"
+                        },
+                        "KeyType": "HASH"
+                    },
+                    {
+                        "Fn::If": [
+                            "ShouldCreateSortKey",
+                            {
+                                "AttributeName": {
+                                    "Ref": "sortKey"
+                                },
+                                "KeyType": "RANGE"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "GlobalSecondaryIndexes": {
+                    "Fn::If": [
+                        "ShouldCreateGSI",
+                        [
+                            {
+                                "IndexName": "GSI",
+                                "KeySchema": [
+                                    {
+                                        "AttributeName": {
+                                            "Ref": "gsiPartitionKey"
+                                        },
+                                        "KeyType": "HASH"
+                                    },
+                                    {
+                                        "Fn::If": [
+                                            "ShouldCreateGSISortKey",
+                                            {
+                                                "AttributeName": {
+                                                    "Ref": "gsiSortKey"
+                                                },
+                                                "KeyType": "RANGE"
+                                            },
+                                            {
+                                                "Ref": "AWS::NoValue"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "Projection": {
+                                    "ProjectionType": {
+                                        "Ref": "gsiProjectionType"
+                                    }
+                                },
+                                "ProvisionedThroughput": {
+                                    "Fn::If": [
+                                        "ShouldEnableOnDemandBilling",
+                                        {
+                                            "Ref": "AWS::NoValue"
+                                        },
+                                        {
+                                            "ReadCapacityUnits": {
+                                                "Ref": "readCapacityUnits"
+                                            },
+                                            "WriteCapacityUnits": {
+                                                "Ref": "writeCapacityUnits"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        {
+                            "Ref": "AWS::NoValue"
+                        }
+                    ]
+                },
+                "TimeToLiveSpecification": {
+                    "Fn::If": [
+                        "ShouldEnableTTL",
+                        {
+                            "AttributeName": {
+                                "Ref": "TTLAttributeName"
+                            },
+                            "Enabled": true
+                        },
+                        {
+                            "Ref": "AWS::NoValue"
+                        }
+                    ]
+                },
+                "BillingMode": {
+                    "Ref": "billingMode"
+                },
+                "ProvisionedThroughput": {
+                    "Fn::If": [
+                        "ShouldEnableOnDemandBilling",
+                        {
+                            "Ref": "AWS::NoValue"
+                        },
+                        {
+                            "ReadCapacityUnits": {
+                                "Ref": "readCapacityUnits"
+                            },
+                            "WriteCapacityUnits": {
+                                "Ref": "writeCapacityUnits"
+                            }
+                        }
+                    ]
+                },
+                "StreamSpecification": {
+                    "StreamViewType": "NEW_AND_OLD_IMAGES"
+                },
+                "SSESpecification": {
+                    "SSEEnabled": true
+                },
+                "PointInTimeRecoverySpecification": {
+                    "PointInTimeRecoveryEnabled": true
+                },
+                "DeletionProtectionEnabled": {
+                    "Ref": "deletionProtectionEnabled"
+                }
+            }
+        },
+        "BackupVault": {
+            "Type": "AWS::Backup::BackupVault",
+            "Condition": "ShouldBackup",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "BackupVaultName": {
+                    "Fn::Sub": "${resourcePrefix}-vault"
+                }
+            }
+        },
+        "BackupPlan": {
+            "Type": "AWS::Backup::BackupPlan",
+            "Condition": "ShouldBackup",
+            "Properties": {
+                "BackupPlan": {
+                    "BackupPlanName": {
+                        "Fn::Sub": "${resourcePrefix}-plan"
+                    },
+                    "BackupPlanRule": [
+                        {
+                            "RuleName": {
+                                "Fn::Sub": "${resourcePrefix}-rule"
+                            },
+                            "TargetBackupVault": {
+                                "Ref": "BackupVault"
+                            },
+                            "ScheduleExpression": {
+                                "Ref": "backupScheduleExpression"
+                            },
+                            "StartWindowMinutes": 60,
+                            "CompletionWindowMinutes": 1440,
+                            "Lifecycle": {
+                                "DeleteAfterDays": 7
+                            },
+                            "RecoveryPointTags": {
+                                "DynamoDBTableName": {
+                                    "Ref": "DynamoDBTable"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "BackupSelection": {
+            "Type": "AWS::Backup::BackupSelection",
+            "Condition": "ShouldBackup",
+            "Properties": {
+                "BackupPlanId": {
+                    "Ref": "BackupPlan"
+                },
+                "BackupSelection": {
+                    "SelectionName": {
+                        "Fn::Sub": "${resourcePrefix}-selection"
+                    },
+                    "Resources": [
+                        {
+                            "Fn::GetAtt": "DynamoDBTable.Arn"
+                        }
+                    ],
+                    "IamRoleArn": {
+                        "Fn::GetAtt": "BackupSelectionRole.Arn"
+                    }
+                }
+            }
+        },
+        "BackupSelectionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "backup.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Path": "/",
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup",
+                    "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores"
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "tableName": {
+            "Value": {
+                "Ref": "DynamoDBTable"
+            },
+            "Description": "Name of the DynamoDB table"
+        },
+        "tableArn": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "DynamoDBTable",
+                    "Arn"
+                ]
+            },
+            "Description": "ARN of the DynamoDB table"
+        },
+        "streamArn": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "DynamoDBTable",
+                    "StreamArn"
+                ]
+            },
+            "Description": "Event source ARN"
+        },
+        "gsiArn": {
+            "Value": {
+                "Fn::If": [
+                    "ShouldCreateGSI",
+                    {
+                        "Fn::Join": [
+                            "/",
+                            [
+                                {
+                                    "Fn::GetAtt": "DynamoDBTable.Arn"
+                                },
+                                "index",
+                                "GSI"
+                            ]
+                        ]
+                    },
+                    "n/a"
+                ]
+            }
+        }
+    }
+}

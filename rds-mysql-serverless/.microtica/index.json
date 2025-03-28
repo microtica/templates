@@ -1,0 +1,163 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Serverless MySql database component",
+    "Parameters": {
+        "vpcId": {
+            "Description": "VPC ID",
+            "Type": "String"
+        },
+        "subnet1Id": {
+            "Description": "Subnet 1 ID",
+            "Type": "String"
+        },
+        "subnet2Id": {
+            "Description": "Subnet 2 ID",
+            "Type": "String"
+        },
+        "dbUsername": {
+            "Description": "Database admin username.",
+            "Type": "String",
+            "MinLength": "1",
+            "MaxLength": "16",
+            "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+            "ConstraintDescription": "Must begin with a letter and contain only alphanumeric characters."
+        },
+        "dbPassword": {
+            "Description": "Database admin password.",
+            "Type": "String",
+            "MinLength": "8",
+            "MaxLength": "41",
+            "AllowedPattern": "[a-zA-Z0-9]*",
+            "ConstraintDescription": "Must contain only alphanumeric characters.",
+            "NoEcho": "true"
+        },
+        "minCapacity": {
+            "Type": "String",
+            "Description": "The minimum capacity for an Aurora DB cluster in serverless DB engine mode"
+        },
+        "maxCapacity": {
+            "Type": "String",
+            "Description": "The maximum capacity for an Aurora DB cluster in serverless DB engine mode"
+        }
+    },
+    "Resources": {
+        "PrivateSubnetGroup": {
+            "Type": "AWS::RDS::DBSubnetGroup",
+            "Properties": {
+                "DBSubnetGroupDescription": "private-subnet-group",
+                "SubnetIds": [
+                    {
+                        "Ref": "subnet1Id"
+                    },
+                    {
+                        "Ref": "subnet2Id"
+                    }
+                ]
+            }
+        },
+        "DbSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": {
+                    "Fn::Sub": "DB Cluster Security Group"
+                },
+                "VpcId": {
+                    "Ref": "vpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "3306",
+                        "ToPort": "3306",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "DbEncryptionKey": {
+            "Type": "AWS::KMS::Key",
+            "Properties": {
+                "Description": "MySql Serverless DB encyption key",
+                "EnableKeyRotation": "True",
+                "KeyPolicy": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "Allow use of the key",
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Action": [
+                                "kms:*"
+                            ],
+                            "Resource": "*"
+                        }
+                    ]
+                }
+            }
+        },
+        "MySqlCluster": {
+            "Type": "AWS::RDS::DBCluster",
+            "Properties": {
+                "MasterUsername": {
+                    "Ref": "dbUsername"
+                },
+                "MasterUserPassword": {
+                    "Ref": "dbPassword"
+                },
+                "Engine": "aurora-mysql",
+                "EngineMode": "provisioned",
+                "ServerlessV2ScalingConfiguration": {
+                    "MaxCapacity": {
+                        "Ref": "maxCapacity"
+                    },
+                    "MinCapacity": {
+                        "Ref": "minCapacity"
+                    }
+                },
+                "DBSubnetGroupName": {
+                    "Ref": "PrivateSubnetGroup"
+                },
+                "VpcSecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "DbSecurityGroup",
+                            "GroupId"
+                        ]
+                    }
+                ],
+                "KmsKeyId": {
+                    "Ref": "DbEncryptionKey"
+                },
+                "StorageEncrypted": "True",
+                "BackupRetentionPeriod": 7,
+                "DeletionProtection": true
+            }
+        },
+        "DBInstance": {
+            "Type": "AWS::RDS::DBInstance",
+            "Properties": {
+                "Engine": "aurora-mysql",
+                "DBInstanceClass": "db.serverless",
+                "DBClusterIdentifier": {
+                    "Ref": "MySqlCluster"
+                },
+                "EnablePerformanceInsights": true
+            }
+        }
+    },
+    "Outputs": {
+        "dbEndpoint": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "MySqlCluster",
+                    "Endpoint.Address"
+                ]
+            }
+        },
+        "dbUser": {
+            "Value": {
+                "Ref": "dbUsername"
+            }
+        }
+    }
+}

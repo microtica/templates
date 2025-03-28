@@ -1,0 +1,8 @@
+# Microtica component spec
+
+name: component-aws-postgres-serverless
+description: Microtica custom component
+spec:
+  cfn_path: index.json
+  schema_path: schema.json
+  auto_generate_schema: true

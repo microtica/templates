@@ -1,0 +1,883 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Transform": "AWS::Serverless-2016-10-31",
+    "Description": "Microtica CDN infrastructure (CloudFront + S3)",
+    "Parameters": {
+        "DomainName": {
+            "Type": "String",
+            "Default": "",
+            "Description": "The full domain name e.g. portal.microtica.io"
+        },
+        "StaticDomainName": {
+            "Type": "String",
+            "Default": "",
+            "Description": "The static domain name e.g. portal-static.microtica.io"
+        },
+        "CertificateARN": {
+            "Type": "String",
+            "Default": "",
+            "Description": "Public SSL certificate ARN"
+        },
+        "RestrictAccess": {
+            "Type": "String",
+            "Default": "false",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
+        },
+        "ExcludedRestrictedPath": {
+            "Type": "String",
+            "Default": ""
+        },
+        "RetainContent": {
+            "Type": "String",
+            "Default": "true",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
+        },
+        "AllowOrigins": {
+            "Type": "String",
+            "Default": "*"
+        },
+        "KeyName": {
+            "Type": "String",
+            "Default": ""
+        },
+        "CloudfrontKeyLambdaBucket": {
+            "Type": "String"
+        },
+        "CloudfrontKeyLambdaBucketKey": {
+            "Type": "String"
+        },
+        "OriginRequestLambdaArn": {
+            "Type": "String"
+        },
+        "ResourcePrefix": {
+            "Type": "String"
+        }
+    },
+    "Conditions": {
+        "HasCertificate": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "CertificateARN"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "HasDomain": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "DomainName"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "ShouldRestrictAccess": {
+            "Fn::Equals": [
+                {
+                    "Ref": "RestrictAccess"
+                },
+                "true"
+            ]
+        },
+        "EmptyWebsiteBucket": {
+            "Fn::Equals": [
+                {
+                    "Ref": "RetainContent"
+                },
+                "false"
+            ]
+        },
+        "ShouldProvisionStaticDistribution": {
+            "Fn::And": [
+                {
+                    "Fn::Not": [
+                        {
+                            "Fn::Equals": [
+                                {
+                                    "Ref": "ExcludedRestrictedPath"
+                                },
+                                ""
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Condition": "ShouldRestrictAccess"
+                }
+            ]
+        }
+    },
+    "Resources": {
+        "WebsiteBucket": {
+            "Type": "AWS::S3::Bucket",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AccessControl": "Private",
+                "WebsiteConfiguration": {
+                    "IndexDocument": "index.html",
+                    "ErrorDocument": "index.html"
+                },
+                "PublicAccessBlockConfiguration": {
+                    "BlockPublicAcls": true,
+                    "BlockPublicPolicy": true,
+                    "IgnorePublicAcls": true,
+                    "RestrictPublicBuckets": true
+                },
+                "OwnershipControls": {
+                    "Rules": [
+                        {
+                            "ObjectOwnership": "BucketOwnerEnforced"
+                        }
+                    ]
+                },
+                "BucketEncryption": {
+                    "ServerSideEncryptionConfiguration": [
+                        {
+                            "ServerSideEncryptionByDefault": {
+                                "SSEAlgorithm": "AES256"
+                            }
+                        }
+                    ]
+                },
+                "LifecycleConfiguration": {
+                    "Rules": [
+                        {
+                            "Status": "Enabled",
+                            "Prefix": ".temp/",
+                            "ExpirationInDays": 1
+                        }
+                    ]
+                },
+                "CorsConfiguration": {
+                    "Fn::If": [
+                        "ShouldRestrictAccess",
+                        {
+                            "CorsRules": [
+                                {
+                                    "AllowedHeaders": [
+                                        "*"
+                                    ],
+                                    "AllowedMethods": [
+                                        "GET",
+                                        "HEAD",
+                                        "POST",
+                                        "PUT"
+                                    ],
+                                    "AllowedOrigins": [
+                                        "*"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Ref": "AWS::NoValue"
+                        }
+                    ]
+                }
+            }
+        },
+        "WebsiteBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+                "Bucket": {
+                    "Ref": "WebsiteBucket"
+                },
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "cloudfront.amazonaws.com"
+                            },
+                            "Action": {
+                                "Fn::If": [
+                                    "ShouldRestrictAccess",
+                                    [
+                                        "s3:PutObject",
+                                        "s3:PutObjectAcl",
+                                        "s3:GetObject"
+                                    ],
+                                    [
+                                        "s3:GetObject"
+                                    ]
+                                ]
+                            },
+                            "Resource": {
+                                "Fn::Sub": "arn:aws:s3:::${WebsiteBucket}/*"
+                            },
+                            "Condition": {
+                                "StringEquals": {
+                                    "AWS:SourceArn": {
+                                        "Fn::If": [
+                                            "ShouldProvisionStaticDistribution",
+                                            [
+                                                {
+                                                    "Fn::Sub": "arn:aws:cloudfront::${AWS::AccountId}:distribution/${WebsiteCloudfront}"
+                                                },
+                                                {
+                                                    "Fn::Sub": "arn:aws:cloudfront::${AWS::AccountId}:distribution/${StaticCloudfront}"
+                                                }
+                                            ],
+                                            {
+                                                "Fn::Sub": "arn:aws:cloudfront::${AWS::AccountId}:distribution/${WebsiteCloudfront}"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "WebsiteCloudfront": {
+            "Type": "AWS::CloudFront::Distribution",
+            "DependsOn": [
+                "WebsiteBucket"
+            ],
+            "Properties": {
+                "DistributionConfig": {
+                    "Comment": "Cloudfront Distribution pointing to S3 bucket",
+                    "Origins": [
+                        {
+                            "DomainName": {
+                                "Fn::Sub": "${WebsiteBucket}.s3.${AWS::Region}.amazonaws.com"
+                            },
+                            "Id": "S3Origin",
+                            "OriginAccessControlId": {
+                                "Fn::GetAtt": "DistributionOriginAccessControl.Id"
+                            },
+                            "S3OriginConfig": {}
+                        }
+                    ],
+                    "Enabled": true,
+                    "HttpVersion": "http2",
+                    "DefaultRootObject": "index.html",
+                    "Aliases": {
+                        "Fn::If": [
+                            "HasDomain",
+                            [
+                                {
+                                    "Ref": "DomainName"
+                                }
+                            ],
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    },
+                    "DefaultCacheBehavior": {
+                        "AllowedMethods": {
+                            "Fn::If": [
+                                "ShouldRestrictAccess",
+                                [
+                                    "GET",
+                                    "HEAD",
+                                    "OPTIONS",
+                                    "PUT",
+                                    "PATCH",
+                                    "POST",
+                                    "DELETE"
+                                ],
+                                [
+                                    "GET",
+                                    "HEAD"
+                                ]
+                            ]
+                        },
+                        "Compress": true,
+                        "TargetOriginId": "S3Origin",
+                        "ViewerProtocolPolicy": "redirect-to-https",
+                        "CachePolicyId": {
+                            "Ref": "DistributionCachePolicy"
+                        },
+                        "TrustedKeyGroups": {
+                            "Fn::If": [
+                                "ShouldRestrictAccess",
+                                [
+                                    {
+                                        "Ref": "WebsiteKeyGroup"
+                                    }
+                                ],
+                                {
+                                    "Ref": "AWS::NoValue"
+                                }
+                            ]
+                        },
+                        "FunctionAssociations": [
+                            {
+                                "EventType": "viewer-response",
+                                "FunctionARN": {
+                                    "Fn::GetAtt": "WebsiteSecurityHeadersFunction.FunctionARN"
+                                }
+                            }
+                        ],
+                        "LambdaFunctionAssociations": [
+                            {
+                                "EventType": "origin-request",
+                                "LambdaFunctionARN": {
+                                    "Ref": "OriginRequestLambdaArn"
+                                }
+                            }
+                        ]
+                    },
+                    "PriceClass": "PriceClass_All",
+                    "ViewerCertificate": {
+                        "Fn::If": [
+                            "HasCertificate",
+                            {
+                                "AcmCertificateArn": {
+                                    "Ref": "CertificateARN"
+                                },
+                                "SslSupportMethod": "sni-only",
+                                "MinimumProtocolVersion": "TLSv1.2_2021"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "StaticCloudfront": {
+            "Type": "AWS::CloudFront::Distribution",
+            "DependsOn": [
+                "WebsiteBucket"
+            ],
+            "Condition": "ShouldProvisionStaticDistribution",
+            "Properties": {
+                "DistributionConfig": {
+                    "Comment": "Static Cloudfront Distribution pointing to S3 bucket",
+                    "Origins": [
+                        {
+                            "DomainName": {
+                                "Fn::Sub": "${WebsiteBucket}.s3.${AWS::Region}.amazonaws.com"
+                            },
+                            "Id": "S3Origin",
+                            "OriginAccessControlId": {
+                                "Fn::GetAtt": "DistributionOriginAccessControl.Id"
+                            },
+                            "S3OriginConfig": {}
+                        }
+                    ],
+                    "Enabled": true,
+                    "HttpVersion": "http2",
+                    "DefaultRootObject": "index.html",
+                    "Aliases": {
+                        "Fn::If": [
+                            "HasDomain",
+                            [
+                                {
+                                    "Ref": "StaticDomainName"
+                                }
+                            ],
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    },
+                    "DefaultCacheBehavior": {
+                        "AllowedMethods": [
+                            "GET",
+                            "HEAD"
+                        ],
+                        "Compress": true,
+                        "TargetOriginId": "S3Origin",
+                        "ViewerProtocolPolicy": "redirect-to-https",
+                        "CachePolicyId": {
+                            "Ref": "DistributionCachePolicy"
+                        },
+                        "TrustedKeyGroups": {
+                            "Fn::If": [
+                                "ShouldRestrictAccess",
+                                [
+                                    {
+                                        "Ref": "WebsiteKeyGroup"
+                                    }
+                                ],
+                                {
+                                    "Ref": "AWS::NoValue"
+                                }
+                            ]
+                        }
+                    },
+                    "CacheBehaviors": [
+                        {
+                            "AllowedMethods": [
+                                "GET",
+                                "HEAD"
+                            ],
+                            "Compress": true,
+                            "TargetOriginId": "S3Origin",
+                            "ViewerProtocolPolicy": "redirect-to-https",
+                            "CachePolicyId": {
+                                "Ref": "DistributionCachePolicy"
+                            },
+                            "PathPattern": {
+                                "Ref": "ExcludedRestrictedPath"
+                            }
+                        }
+                    ],
+                    "PriceClass": "PriceClass_All",
+                    "ViewerCertificate": {
+                        "Fn::If": [
+                            "HasCertificate",
+                            {
+                                "AcmCertificateArn": {
+                                    "Ref": "CertificateARN"
+                                },
+                                "SslSupportMethod": "sni-only",
+                                "MinimumProtocolVersion": "TLSv1.2_2021"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "DistributionOriginAccessControl": {
+            "Type": "AWS::CloudFront::OriginAccessControl",
+            "Properties": {
+                "OriginAccessControlConfig": {
+                    "Name": {
+                        "Fn::Sub": "${ResourcePrefix}-origin-access-control"
+                    },
+                    "OriginAccessControlOriginType": "s3",
+                    "SigningBehavior": "no-override",
+                    "SigningProtocol": "sigv4"
+                }
+            }
+        },
+        "DistributionCachePolicy": {
+            "Type": "AWS::CloudFront::CachePolicy",
+            "Properties": {
+                "CachePolicyConfig": {
+                    "Name": {
+                        "Fn::Sub": "${ResourcePrefix}-cache-policy"
+                    },
+                    "Comment": "Cache requests based on query string parameters",
+                    "DefaultTTL": 3600,
+                    "MaxTTL": 86400,
+                    "MinTTL": 1800,
+                    "ParametersInCacheKeyAndForwardedToOrigin": {
+                        "CookiesConfig": {
+                            "CookieBehavior": "none"
+                        },
+                        "EnableAcceptEncodingGzip": true,
+                        "HeadersConfig": {
+                            "HeaderBehavior": "whitelist",
+                            "Headers": [
+                                "Origin",
+                                "Access-Control-Request-Method",
+                                "Access-Control-Request-Headers"
+                            ]
+                        },
+                        "QueryStringsConfig": {
+                            "QueryStringBehavior": "whitelist",
+                            "QueryStrings": [
+                                "width",
+                                "height",
+                                "convert"
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "WebsiteSecurityHeadersFunction": {
+            "Type": "AWS::CloudFront::Function",
+            "Properties": {
+                "AutoPublish": true,
+                "FunctionCode": {
+                    "Fn::Join": [
+                        "\n",
+                        [
+                            "function handler(event) {",
+                            "    var request = event.request;",
+                            "    var response = event.response;",
+                            "    var headers = response.headers;",
+                            {
+                                "Fn::Sub": "    var allowOrigins = '${AllowOrigins}';"
+                            },
+                            "    // Set HTTP security headers",
+                            "    // Since JavaScript doesn't allow for hyphens in variable names, we use the dict[\"key\"] notation",
+                            "    headers['strict-transport-security'] = { value: 'max-age=31536000; includeSubDomains'};",
+                            "    headers['x-content-type-options'] = { value: 'nosniff'};",
+                            "    headers['x-xss-protection'] = {value: '1; mode=block'};",
+                            "    headers['referrer-policy'] = {value: 'strict-origin-when-cross-origin'};",
+                            "    headers['permissions-policy'] = {value: \"microphone 'self'; geolocation 'self'; autoplay 'self'; autoplay 'self'; camera: 'self'; fullscreen: 'self'; layout-animations: 'self'; gyroscope 'self'; payment 'self'; web-share 'self'\"};",
+                            "    if(request.headers.origin && allowOrigins.split(',').includes(request.headers.origin.value)) {",
+                            "       headers['access-control-allow-origin'] = {value: request.headers.origin.value};",
+                            "       headers['x-frame-options'] = {value: `ALLOW-FROM ${allowOrigins.split(' ')}`};",
+                            "    } else if (allowOrigins === '*') {",
+                            "       headers['access-control-allow-origin'] = {value: '*'};",
+                            "    }",
+                            "    // Set HTTP cache headers",
+                            "    headers['cache-control'] = { value: 'private, max-age=2147483647'};",
+                            "    // Return the response to viewers",
+                            "    return response;",
+                            "}"
+                        ]
+                    ]
+                },
+                "FunctionConfig": {
+                    "Comment": "This function adds security headers",
+                    "Runtime": "cloudfront-js-1.0"
+                },
+                "Name": {
+                    "Ref": "KeyName"
+                }
+            }
+        },
+        "WebsitePublicKey": {
+            "Type": "AWS::CloudFront::PublicKey",
+            "Condition": "ShouldRestrictAccess",
+            "Properties": {
+                "PublicKeyConfig": {
+                    "CallerReference": {
+                        "Ref": "KeyName"
+                    },
+                    "EncodedKey": {
+                        "Fn::GetAtt": "CloudfrontKeyCustom.publicKey"
+                    },
+                    "Name": {
+                        "Ref": "KeyName"
+                    }
+                }
+            }
+        },
+        "WebsiteKeyGroup": {
+            "Type": "AWS::CloudFront::KeyGroup",
+            "Condition": "ShouldRestrictAccess",
+            "Properties": {
+                "KeyGroupConfig": {
+                    "Items": [
+                        {
+                            "Ref": "WebsitePublicKey"
+                        }
+                    ],
+                    "Name": {
+                        "Ref": "KeyName"
+                    }
+                }
+            }
+        },
+        "WebsiteBucketCleaner": {
+            "Type": "AWS::Lambda::Function",
+            "Condition": "EmptyWebsiteBucket",
+            "Properties": {
+                "Code": {
+                    "ZipFile": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "const response = require('cfn-response');\n",
+                                "const { S3 } = require('aws-sdk');\n",
+                                "exports.handler = function (event, context) {\n",
+                                "    const bucket = event.ResourceProperties.s3Bucket;\n",
+                                "    if (event.RequestType === 'Delete') {\n",
+                                "        purgeOutputBucket(bucket).then(() => {\n",
+                                "            response.send(event, context, response.SUCCESS, {});\n",
+                                "        }).catch((err) => {\n",
+                                "            console.log('ERR', err);\n",
+                                "            response.send(event, context, response.FAILED, { err });\n",
+                                "        });\n",
+                                "    } else {\n",
+                                "        response.send(event, context, response.SUCCESS, {});\n",
+                                "    }\n",
+                                "};\n",
+                                "async function purgeOutputBucket(bucket) {\n",
+                                "    let objects = null;\n",
+                                "    try {\n",
+                                "        objects = await new S3().listObjects({\n",
+                                "            Bucket: bucket\n",
+                                "        }).promise();\n",
+                                "    } catch (e) {\n",
+                                "        if (e.code !== 'NoSuchBucket') {\n",
+                                "            throw e;\n",
+                                "        }\n",
+                                "    }\n",
+                                "    if (objects) {\n",
+                                "        if (objects.Contents.length === 0) {\n",
+                                "            return;\n",
+                                "        }\n",
+                                "        const keys = objects.Contents.map(c => ({ Key: c.Key }));\n",
+                                "        const deleteRequest = {\n",
+                                "            Bucket: bucket,\n",
+                                "            Delete: {\n",
+                                "                Objects: keys\n",
+                                "            }\n",
+                                "        };\n",
+                                "        await new S3().deleteObjects(deleteRequest).promise();\n",
+                                "        if (objects.IsTruncated) {\n",
+                                "            await purgeOutputBucket(bucket);\n",
+                                "        }\n",
+                                "    }\n",
+                                "}"
+                            ]
+                        ]
+                    }
+                },
+                "Role": {
+                    "Fn::GetAtt": [
+                        "WebsiteBucketCleanerRole",
+                        "Arn"
+                    ]
+                },
+                "Handler": "index.handler",
+                "Runtime": "nodejs16.x",
+                "Timeout": 30
+            }
+        },
+        "WebsiteBucketCleanerCustom": {
+            "Type": "AWS::CloudFormation::CustomResource",
+            "Condition": "EmptyWebsiteBucket",
+            "Properties": {
+                "ServiceToken": {
+                    "Fn::GetAtt": [
+                        "WebsiteBucketCleaner",
+                        "Arn"
+                    ]
+                },
+                "s3Bucket": {
+                    "Ref": "WebsiteBucket"
+                }
+            }
+        },
+        "WebsiteBucketCleanerRole": {
+            "Type": "AWS::IAM::Role",
+            "Condition": "EmptyWebsiteBucket",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "ExecutionPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:DeleteObject",
+                                        "s3:ListBucket"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${WebsiteBucket}"
+                                        },
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${WebsiteBucket}/*"
+                                        }
+                                    ],
+                                    "Effect": "Allow"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "CloudfrontKeyLambda": {
+            "Type": "AWS::Serverless::Function",
+            "Condition": "ShouldRestrictAccess",
+            "Properties": {
+                "Handler": "dst/index.handler",
+                "Runtime": "nodejs16.x",
+                "Timeout": 30,
+                "CodeUri": {
+                    "Bucket": {
+                        "Ref": "CloudfrontKeyLambdaBucket"
+                    },
+                    "Key": {
+                        "Ref": "CloudfrontKeyLambdaBucketKey"
+                    }
+                },
+                "Policies": [
+                    "AWSLambdaVPCAccessExecutionRole"
+                ]
+            }
+        },
+        "CloudfrontKeyCustom": {
+            "Type": "AWS::CloudFormation::CustomResource",
+            "Condition": "ShouldRestrictAccess",
+            "Properties": {
+                "ServiceToken": {
+                    "Fn::GetAtt": [
+                        "CloudfrontKeyLambda",
+                        "Arn"
+                    ]
+                }
+            }
+        },
+        "KeysSecret": {
+            "Type": "AWS::SecretsManager::Secret",
+            "Condition": "ShouldRestrictAccess",
+            "Properties": {
+                "SecretString": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "{",
+                            "\"privateKey\":",
+                            "\"",
+                            {
+                                "Fn::GetAtt": "CloudfrontKeyCustom.privateKeyBase64"
+                            },
+                            "\",",
+                            "\"publicKey\":",
+                            "\"",
+                            {
+                                "Fn::GetAtt": "CloudfrontKeyCustom.publicKeyBase64"
+                            },
+                            "\",",
+                            "\"keyId\":",
+                            "\"",
+                            {
+                                "Ref": "WebsitePublicKey"
+                            },
+                            "\"",
+                            "}"
+                        ]
+                    ]
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "AccessUrl": {
+            "Value": {
+                "Fn::If": [
+                    "HasDomain",
+                    {
+                        "Fn::Sub": "https://${DomainName}"
+                    },
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "https://",
+                                {
+                                    "Fn::GetAtt": "WebsiteCloudfront.DomainName"
+                                }
+                            ]
+                        ]
+                    }
+                ]
+            },
+            "Description": "Website domain name"
+        },
+        "StaticAccessUrl": {
+            "Value": {
+                "Fn::If": [
+                    "ShouldProvisionStaticDistribution",
+                    {
+                        "Fn::If": [
+                            "HasDomain",
+                            {
+                                "Fn::Sub": "https://${StaticDomainName}"
+                            },
+                            {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "https://",
+                                        {
+                                            "Fn::GetAtt": "StaticCloudfront.DomainName"
+                                        }
+                                    ]
+                                ]
+                            }
+                        ]
+                    },
+                    ""
+                ]
+            },
+            "Description": "Static CDN domain name"
+        },
+        "CNAME": {
+            "Value": {
+                "Fn::GetAtt": "WebsiteCloudfront.DomainName"
+            },
+            "Description": "CloudFront distribution Domain"
+        },
+        "StaticCNAME": {
+            "Value": {
+                "Fn::If": [
+                    "ShouldProvisionStaticDistribution",
+                    {
+                        "Fn::GetAtt": "StaticCloudfront.DomainName"
+                    },
+                    ""
+                ]
+            },
+            "Description": "CloudFront distribution Domain"
+        },
+        "CloudFrontID": {
+            "Value": {
+                "Ref": "WebsiteCloudfront"
+            },
+            "Description": "CloudFront distribution ID"
+        },
+        "StorageBucketName": {
+            "Value": {
+                "Ref": "WebsiteBucket"
+            },
+            "Description": "Name of the S3 bucket where the content is stored"
+        },
+        "PublicKeyId": {
+            "Value": {
+                "Fn::If": [
+                    "ShouldRestrictAccess",
+                    {
+                        "Ref": "WebsitePublicKey"
+                    },
+                    ""
+                ]
+            },
+            "Description": "CloudFront public key used for signing URLs/Cookies. Available if restricted access is enabled"
+        },
+        "KeysSecret": {
+            "Value": {
+                "Fn::If": [
+                    "ShouldRestrictAccess",
+                    {
+                        "Ref": "KeysSecret"
+                    },
+                    ""
+                ]
+            },
+            "Description": "Secret Manager ARN where the public/private keys and CloudFront public key are stored"
+        }
+    }
+}
