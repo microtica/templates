@@ -1,0 +1,198 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "schema://microtica/comp.json",
+    "title": "Component Schema",
+    "type": "object",
+    "properties": {
+        "inputs": {
+            "type": "object",
+            "properties": {
+                "VpcId": {
+                    "type": "string",
+                    "label": "VPC ID",
+                    "category": "advanced"
+                },
+                "PrivateSubnet1Id": {
+                    "type": "string",
+                    "label": "Primary Private Subnet ID",
+                    "category": "advanced"
+                },
+                "PrivateSubnet2Id": {
+                    "type": "string",
+                    "label": "Secondary Private Subnet ID",
+                    "category": "advanced"
+                },
+                "PublicSubnet1Id": {
+                    "type": "string",
+                    "label": "Primary Public Subnet ID",
+                    "category": "advanced"
+                },
+                "PublicSubnet2Id": {
+                    "type": "string",
+                    "label": "Secondary Public Subnet ID",
+                    "category": "advanced"
+                },
+                "ImageUrl": {
+                    "type": "string",
+                    "category": "advanced"
+                },
+                "AdminEmail": {
+                    "type": "string",
+                    "label": "Admin Dashboard Email",
+                    "description": "The initial login email for Medusa Admin Dashboard.",
+                    "category": "advanced"
+                },
+                "AdminPassword": {
+                    "type": "string",
+                    "label": "Admin Dashboard Password",
+                    "description": "The initial login password for Medusa Admin Dashboard.",
+                    "sensitive": true,
+                    "category": "advanced"
+                },
+                "InstanceType": {
+                    "type": "string",
+                    "label": "Instance type",
+                    "default": "Large - 1 Core - 2GB Memory",
+                    "enum": [
+                        "Small - .25 Core - 512MB Memory",
+                        "Medium - .5 Core - 1GB Memory",
+                        "Large - 1 Core - 2GB Memory",
+                        "XLarge - 2 Core - 4GB Memory",
+                        "2XLarge - 4 Core - 8GB Memory",
+                        "3XLarge - 4 Core - 16GB Memory"
+                    ],
+                    "description": "The number of cpu and memory units reserved for the container.",
+                    "category": "allocation"
+                },
+                "DesiredReplicas": {
+                    "type": "string",
+                    "dataType": "number",
+                    "label": "Replicas",
+                    "default": "1",
+                    "minimum": 0,
+                    "description": "The number of application instances running at any given time.",
+                    "category": "scaling",
+                    "subcategory": "replicas"
+                },
+                "MinReplicas": {
+                    "type": "string",
+                    "dataType": "number",
+                    "label": "Minimum replicas",
+                    "default": "1",
+                    "minimum": 0,
+                    "description": "The minimum number of application instances running at any given time.",
+                    "category": "autoscaling",
+                    "subcategory": "replicas"
+                },
+                "MaxReplicas": {
+                    "type": "string",
+                    "dataType": "number",
+                    "label": "Maximum replicas",
+                    "default": "1",
+                    "minimum": 0,
+                    "description": "The maximum number of application instances running at any given time.",
+                    "category": "autoscaling",
+                    "subcategory": "replicas"
+                },
+                "RequestsThreshold": {
+                    "type": "string",
+                    "dataType": "number",
+                    "label": "Requests per minute",
+                    "default": "2000",
+                    "minimum": 0,
+                    "description": "Automated scaling will be triggered once the number of requests per minute exceeds this threshold.",
+                    "category": "autoscaling"
+                },
+                "EnvironmentVariables": {
+                    "type": "string",
+                    "label": "Environment variables",
+                    "description": "Comma-delimited environment variables provided in the app runtime (e.g. KEY=value,KEY=value).",
+                    "category": "variables"
+                },
+                "DomainName": {
+                    "type": "string",
+                    "label": "Admin Domain name",
+                    "description": "A custom domain name on which the Strapi application will be exposed.",
+                    "category": "domain"
+                },
+                "CertificateArn": {
+                    "type": "string",
+                    "label": "Admin Certificate ARN",
+                    "description": "A custom domain certificate (AWS Certificate Manager).",
+                    "category": "domain"
+                },
+                "APIDomainName": {
+                    "type": "string",
+                    "label": "API Domain name",
+                    "description": "A custom domain name on which the Strapi application will be exposed.",
+                    "category": "domain"
+                },
+                "APICertificateArn": {
+                    "type": "string",
+                    "label": "API Certificate ARN",
+                    "description": "A custom domain certificate (AWS Certificate Manager).",
+                    "category": "domain"
+                },
+                "Mode": {
+                    "type": "string",
+                    "label": "Mode",
+                    "description": "The mode of the MedusaJS application.",
+                    "category": "advanced",
+                    "default": "Shared",
+                    "enum": [
+                        "Shared",
+                        "Server & Worker"
+                    ]
+                },
+                "NumberOfWorkers": {
+                    "type": "string",
+                    "label": "Number of Workers",
+                    "description": "The number of workers to run in the application.",
+                    "default": "1",
+                    "enum": [
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10"
+                    ],
+                    "category": "advanced"
+                },
+                "StoreCors": {
+                    "type": "string",
+                    "label": "STORE_CORS",
+                    "description": "The CORS configuration for the store.",
+                    "category": "advanced"
+                },
+                "ExternalDatabaseUrl": {
+                    "type": "string",
+                    "label": "External Database URL",
+                    "description": "The connection string for the external database.",
+                    "category": "storage",
+                    "sensitive": true
+                }
+            },
+            "required": [
+                "VpcId",
+                "PrivateSubnet1Id",
+                "PrivateSubnet2Id",
+                "PublicSubnet1Id",
+                "PublicSubnet2Id",
+                "ImageUrl",
+                "DesiredReplicas",
+                "MinReplicas",
+                "MaxReplicas",
+                "AdminEmail",
+                "AdminPassword",
+                "Mode",
+                "NumberOfWorkers"
+            ]
+        }
+    },
+    "additionalProperties": false
+}

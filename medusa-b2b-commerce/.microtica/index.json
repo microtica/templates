@@ -1,0 +1,2698 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Transform": "AWS::Serverless-2016-10-31",
+    "Description": "Medusa is a composable engine that combines an amazing developer experience with endless customizations for merchants to scale.",
+    "Parameters": {
+        "componentVersion": {
+            "Type": "String",
+            "Description": "A component version"
+        },
+        "VpcId": {
+            "Type": "String"
+        },
+        "PrivateSubnet1Id": {
+            "Type": "String"
+        },
+        "PrivateSubnet2Id": {
+            "Type": "String"
+        },
+        "PublicSubnet1Id": {
+            "Type": "String"
+        },
+        "PublicSubnet2Id": {
+            "Type": "String"
+        },
+        "CPU": {
+            "Type": "String",
+            "Default": "256",
+            "AllowedValues": [
+                "256",
+                "512",
+                "1024",
+                "2048",
+                "4096"
+            ]
+        },
+        "Memory": {
+            "Type": "String",
+            "Default": "512",
+            "AllowedValues": [
+                "512",
+                "1024",
+                "2048",
+                "3072",
+                "4096",
+                "5120",
+                "6144",
+                "7168",
+                "8192",
+                "16384",
+                "30720"
+            ]
+        },
+        "DesiredReplicas": {
+            "Type": "String",
+            "Default": "1"
+        },
+        "MinReplicas": {
+            "Type": "String",
+            "Default": "1"
+        },
+        "MaxReplicas": {
+            "Type": "String",
+            "Default": "1"
+        },
+        "RequestsThreshold": {
+            "Type": "String",
+            "Default": "5000"
+        },
+        "DomainName": {
+            "Type": "String",
+            "Default": ""
+        },
+        "CertificateArn": {
+            "Type": "String",
+            "Default": ""
+        },
+        "APIDomainName": {
+            "Type": "String",
+            "Default": ""
+        },
+        "APICertificateArn": {
+            "Type": "String",
+            "Default": ""
+        },
+        "ImageUrl": {
+            "Type": "String"
+        },
+        "AdminEmail": {
+            "Type": "String"
+        },
+        "AdminPassword": {
+            "Type": "String"
+        },
+        "DbInitS3Bucket": {
+            "Type": "String"
+        },
+        "DbInitS3Key": {
+            "Type": "String"
+        },
+        "AdminSourceBucket": {
+            "Type": "String"
+        },
+        "AdminSourceLocation": {
+            "Type": "String"
+        },
+        "DeploymentFunctionBucket": {
+            "Type": "String"
+        },
+        "DeploymentFunctionLocation": {
+            "Type": "String"
+        },
+        "CookieSecret": {
+            "Type": "String"
+        },
+        "JWTSecret": {
+            "Type": "String"
+        },
+        "ProjectId": {
+            "Type": "String"
+        },
+        "EnvironmentId": {
+            "Type": "String"
+        },
+        "ResourceId": {
+            "Type": "String"
+        },
+        "MedusaWorkerMode": {
+            "Type": "String",
+            "Default": "Shared"
+        },
+        "NumberOfWorkers": {
+            "Type": "String",
+            "Default": "1"
+        },
+        "StoreCors": {
+            "Type": "String",
+            "Default": ""
+        },
+        "ExternalDatabaseUrl": {
+            "Type": "String",
+            "Default": ""
+        }
+    },
+    "Conditions": {
+        "EnableSharedMode": {
+            "Fn::Equals": [
+                {
+                    "Ref": "MedusaWorkerMode"
+                },
+                "Shared"
+            ]
+        },
+        "EnableServerAndWorkerMode": {
+            "Fn::Equals": [
+                {
+                    "Ref": "MedusaWorkerMode"
+                },
+                "Server & Worker"
+            ]
+        },
+        "EnableHTTP": {
+            "Fn::Or": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "CertificateArn"
+                        },
+                        ""
+                    ]
+                },
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "DomainName"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "EnableHTTPS": {
+            "Fn::Not": [
+                {
+                    "Condition": "EnableHTTP"
+                }
+            ]
+        },
+        "APIEnableHTTP": {
+            "Fn::Or": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "APICertificateArn"
+                        },
+                        ""
+                    ]
+                },
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "APIDomainName"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "APIEnableHTTPS": {
+            "Fn::Not": [
+                {
+                    "Condition": "APIEnableHTTP"
+                }
+            ]
+        },
+        "ShouldDisableRequestsAlarm": {
+            "Fn::Equals": [
+                {
+                    "Ref": "RequestsThreshold"
+                },
+                "0"
+            ]
+        },
+        "ShouldCreateDatabase": {
+            "Fn::Equals": [
+                {
+                    "Ref": "ExternalDatabaseUrl"
+                },
+                ""
+            ]
+        }
+    },
+    "Mappings": {
+        "RegionMap": {
+            "us-west-1": {
+                "ELBZoneId": "Z368ELLRRE2KJ0"
+            },
+            "us-west-2": {
+                "ELBZoneId": "Z1H1FL5HABSF5"
+            },
+            "us-east-1": {
+                "ELBZoneId": "Z35SXDOTRQ7X7K"
+            },
+            "us-east-2": {
+                "ELBZoneId": "Z3AADJGX6KTTL2"
+            },
+            "eu-central-1": {
+                "ELBZoneId": "Z215JYRZR1TBD5"
+            },
+            "eu-north-1": {
+                "ELBZoneId": "Z23TAZ6LKFMNIO"
+            },
+            "eu-west-1": {
+                "ELBZoneId": "Z32O12XQLNTSW2"
+            },
+            "eu-west-2": {
+                "ELBZoneId": "ZHURV8PSTC4K8"
+            },
+            "eu-west-3": {
+                "ELBZoneId": "Z3Q77PNBQS71R4"
+            },
+            "ap-northeast-1": {
+                "ELBZoneId": "Z14GRHDCWA56QT"
+            },
+            "ap-northeast-2": {
+                "ELBZoneId": "ZWKZPGTI48KDX"
+            },
+            "ap-south-1": {
+                "ELBZoneId": "ZP97RAFLXTNZK"
+            },
+            "ap-southeast-1": {
+                "ELBZoneId": "Z1LMS91P8CMLE5"
+            },
+            "ap-southeast-2": {
+                "ELBZoneId": "Z1GM3OXH4ZPM65"
+            }
+        }
+    },
+    "Resources": {
+        "MediaBucket": {
+            "Type": "AWS::S3::Bucket",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "PublicAccessBlockConfiguration": {
+                    "BlockPublicAcls": false,
+                    "BlockPublicPolicy": false,
+                    "IgnorePublicAcls": false,
+                    "RestrictPublicBuckets": false
+                },
+                "OwnershipControls": {
+                    "Rules": [
+                        {
+                            "ObjectOwnership": "BucketOwnerPreferred"
+                        }
+                    ]
+                },
+                "BucketEncryption": {
+                    "ServerSideEncryptionConfiguration": [
+                        {
+                            "ServerSideEncryptionByDefault": {
+                                "SSEAlgorithm": "AES256"
+                            }
+                        }
+                    ]
+                },
+                "CorsConfiguration": {
+                    "CorsRules": [
+                        {
+                            "AllowedHeaders": [
+                                "*"
+                            ],
+                            "AllowedMethods": [
+                                "GET",
+                                "HEAD"
+                            ],
+                            "AllowedOrigins": [
+                                "*"
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        "LoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "Scheme": "internet-facing",
+                "LoadBalancerAttributes": [
+                    {
+                        "Key": "idle_timeout.timeout_seconds",
+                        "Value": "30"
+                    }
+                ],
+                "Subnets": [
+                    {
+                        "Ref": "PublicSubnet1Id"
+                    },
+                    {
+                        "Ref": "PublicSubnet2Id"
+                    }
+                ],
+                "SecurityGroups": [
+                    {
+                        "Ref": "LoadBalancerSG"
+                    }
+                ]
+            }
+        },
+        "LoadBalancerRule": {
+            "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+            "Properties": {
+                "Actions": [
+                    {
+                        "TargetGroupArn": {
+                            "Ref": "TargetGroup"
+                        },
+                        "Type": "forward"
+                    }
+                ],
+                "Conditions": [
+                    {
+                        "Field": "path-pattern",
+                        "Values": [
+                            "*"
+                        ]
+                    }
+                ],
+                "ListenerArn": {
+                    "Fn::If": [
+                        "APIEnableHTTPS",
+                        {
+                            "Ref": "HTTPSListener"
+                        },
+                        {
+                            "Ref": "HTTPListener"
+                        }
+                    ]
+                },
+                "Priority": 1
+            }
+        },
+        "TargetGroup": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties": {
+                "HealthCheckIntervalSeconds": 10,
+                "HealthCheckPath": "/",
+                "HealthCheckProtocol": "HTTP",
+                "HealthCheckTimeoutSeconds": 5,
+                "HealthyThresholdCount": 2,
+                "UnhealthyThresholdCount": 5,
+                "TargetType": "ip",
+                "Port": 9000,
+                "Protocol": "HTTP",
+                "Matcher": {
+                    "HttpCode": "404"
+                },
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "TargetGroupAttributes": [
+                    {
+                        "Key": "deregistration_delay.timeout_seconds",
+                        "Value": 30
+                    }
+                ]
+            }
+        },
+        "LoadBalancerSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Access to the public facing load balancer",
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "IpProtocol": -1
+                    }
+                ]
+            }
+        },
+        "HTTPListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "DefaultActions": {
+                    "Fn::If": [
+                        "APIEnableHTTP",
+                        [
+                            {
+                                "TargetGroupArn": {
+                                    "Ref": "TargetGroup"
+                                },
+                                "Type": "forward"
+                            }
+                        ],
+                        [
+                            {
+                                "RedirectConfig": {
+                                    "Host": "#{host}",
+                                    "Path": "/#{path}",
+                                    "Port": "443",
+                                    "Protocol": "HTTPS",
+                                    "Query": "#{query}",
+                                    "StatusCode": "HTTP_301"
+                                },
+                                "Type": "redirect"
+                            }
+                        ]
+                    ]
+                },
+                "LoadBalancerArn": {
+                    "Ref": "LoadBalancer"
+                },
+                "Port": 80,
+                "Protocol": "HTTP"
+            }
+        },
+        "HTTPSListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Condition": "APIEnableHTTPS",
+            "Properties": {
+                "DefaultActions": [
+                    {
+                        "TargetGroupArn": {
+                            "Ref": "TargetGroup"
+                        },
+                        "Type": "forward"
+                    }
+                ],
+                "LoadBalancerArn": {
+                    "Ref": "LoadBalancer"
+                },
+                "Port": 443,
+                "Protocol": "HTTPS",
+                "Certificates": [
+                    {
+                        "CertificateArn": {
+                            "Ref": "APICertificateArn"
+                        }
+                    }
+                ]
+            }
+        },
+        "ClusterKey": {
+            "Type": "AWS::KMS::Key",
+            "Properties": {
+                "Description": "Fargate Cluster Key",
+                "KeyPolicy": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": {
+                                    "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
+                                }
+                            },
+                            "Action": "kms:*",
+                            "Resource": "*"
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": "*"
+                            },
+                            "Action": [
+                                "kms:Encrypt",
+                                "kms:Decrypt",
+                                "kms:ReEncrypt*",
+                                "kms:GenerateDataKey*",
+                                "kms:CreateGrant",
+                                "kms:ListGrants",
+                                "kms:DescribeKey"
+                            ],
+                            "Resource": "*"
+                        }
+                    ]
+                }
+            }
+        },
+        "ECSCluster": {
+            "Type": "AWS::ECS::Cluster",
+            "Properties": {
+                "Configuration": {
+                    "ExecuteCommandConfiguration": {
+                        "KmsKeyId": {
+                            "Fn::GetAtt": "ClusterKey.Arn"
+                        }
+                    }
+                }
+            }
+        },
+        "FargateService": {
+            "Type": "AWS::ECS::Service",
+            "DependsOn": "LoadBalancerRule",
+            "Properties": {
+                "Cluster": {
+                    "Ref": "ECSCluster"
+                },
+                "LaunchType": "FARGATE",
+                "EnableExecuteCommand": true,
+                "DeploymentConfiguration": {
+                    "MaximumPercent": 200,
+                    "MinimumHealthyPercent": 75,
+                    "DeploymentCircuitBreaker": {
+                        "Enable": true,
+                        "Rollback": true
+                    }
+                },
+                "DesiredCount": {
+                    "Ref": "DesiredReplicas"
+                },
+                "NetworkConfiguration": {
+                    "AwsvpcConfiguration": {
+                        "SecurityGroups": [
+                            {
+                                "Ref": "FargateServiceSG"
+                            }
+                        ],
+                        "Subnets": [
+                            {
+                                "Ref": "PrivateSubnet1Id"
+                            },
+                            {
+                                "Ref": "PrivateSubnet2Id"
+                            }
+                        ]
+                    }
+                },
+                "TaskDefinition": {
+                    "Ref": "TaskDefinition"
+                },
+                "LoadBalancers": [
+                    {
+                        "ContainerName": "service",
+                        "ContainerPort": 9000,
+                        "TargetGroupArn": {
+                            "Ref": "TargetGroup"
+                        }
+                    }
+                ]
+            }
+        },
+        "WorkerFargateService": {
+            "Type": "AWS::ECS::Service",
+            "Condition": "EnableServerAndWorkerMode",
+            "Properties": {
+                "Cluster": {
+                    "Ref": "ECSCluster"
+                },
+                "LaunchType": "FARGATE",
+                "EnableExecuteCommand": true,
+                "DeploymentConfiguration": {
+                    "MaximumPercent": 200,
+                    "MinimumHealthyPercent": 75,
+                    "DeploymentCircuitBreaker": {
+                        "Enable": true,
+                        "Rollback": true
+                    }
+                },
+                "DesiredCount": {
+                    "Ref": "NumberOfWorkers"
+                },
+                "NetworkConfiguration": {
+                    "AwsvpcConfiguration": {
+                        "SecurityGroups": [
+                            {
+                                "Ref": "FargateServiceSG"
+                            }
+                        ],
+                        "Subnets": [
+                            {
+                                "Ref": "PrivateSubnet1Id"
+                            },
+                            {
+                                "Ref": "PrivateSubnet2Id"
+                            }
+                        ]
+                    }
+                },
+                "TaskDefinition": {
+                    "Ref": "WorkerTaskDefinition"
+                }
+            }
+        },
+        "AutoScalingRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ecs-tasks.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "ScalingPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ecs:DescribeServices",
+                                        "ecs:UpdateService",
+                                        "cloudwatch:DeleteAlarms",
+                                        "cloudwatch:DescribeAlarms",
+                                        "cloudwatch:PutMetricAlarm"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "AutoScalingTarget": {
+            "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
+            "Properties": {
+                "MinCapacity": {
+                    "Ref": "MinReplicas"
+                },
+                "MaxCapacity": {
+                    "Ref": "MaxReplicas"
+                },
+                "ResourceId": {
+                    "Fn::Join": [
+                        "/",
+                        [
+                            "service",
+                            {
+                                "Ref": "ECSCluster"
+                            },
+                            {
+                                "Fn::GetAtt": "FargateService.Name"
+                            }
+                        ]
+                    ]
+                },
+                "ScalableDimension": "ecs:service:DesiredCount",
+                "ServiceNamespace": "ecs",
+                "RoleARN": {
+                    "Fn::GetAtt": [
+                        "AutoScalingRole",
+                        "Arn"
+                    ]
+                }
+            }
+        },
+        "ScaleUpPolicy": {
+            "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+            "Properties": {
+                "PolicyName": {
+                    "Fn::Sub": "${FargateService}ScaleUpPolicy"
+                },
+                "PolicyType": "StepScaling",
+                "ScalingTargetId": {
+                    "Ref": "AutoScalingTarget"
+                },
+                "StepScalingPolicyConfiguration": {
+                    "AdjustmentType": "ChangeInCapacity",
+                    "Cooldown": 60,
+                    "MetricAggregationType": "Average",
+                    "StepAdjustments": [
+                        {
+                            "MetricIntervalLowerBound": 0,
+                            "ScalingAdjustment": 1
+                        }
+                    ]
+                }
+            }
+        },
+        "ScaleDownPolicy": {
+            "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+            "Properties": {
+                "PolicyName": {
+                    "Fn::Sub": "${FargateService}ScaleDownPolicy"
+                },
+                "PolicyType": "StepScaling",
+                "ScalingTargetId": {
+                    "Ref": "AutoScalingTarget"
+                },
+                "StepScalingPolicyConfiguration": {
+                    "AdjustmentType": "ChangeInCapacity",
+                    "Cooldown": 60,
+                    "MetricAggregationType": "Average",
+                    "StepAdjustments": [
+                        {
+                            "MetricIntervalUpperBound": 0,
+                            "ScalingAdjustment": -1
+                        }
+                    ]
+                }
+            }
+        },
+        "AlarmHighRequests": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "ActionsEnabled": {
+                    "Fn::If": [
+                        "ShouldDisableRequestsAlarm",
+                        false,
+                        true
+                    ]
+                },
+                "AlarmActions": [
+                    {
+                        "Ref": "ScaleUpPolicy"
+                    }
+                ],
+                "ComparisonOperator": "GreaterThanThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "TargetGroup",
+                        "Value": {
+                            "Fn::GetAtt": [
+                                "TargetGroup",
+                                "TargetGroupFullName"
+                            ]
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 3,
+                "MetricName": "RequestCountPerTarget",
+                "Namespace": "AWS/ApplicationELB",
+                "OKActions": [
+                    {
+                        "Ref": "ScaleDownPolicy"
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Sum",
+                "Threshold": {
+                    "Ref": "RequestsThreshold"
+                },
+                "TreatMissingData": "ignore",
+                "Unit": "None"
+            }
+        },
+        "AlarmCPUUtilization": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "ActionsEnabled": true,
+                "AlarmActions": [
+                    {
+                        "Ref": "ScaleUpPolicy"
+                    }
+                ],
+                "ComparisonOperator": "GreaterThanThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "ClusterName",
+                        "Value": {
+                            "Ref": "ECSCluster"
+                        }
+                    },
+                    {
+                        "Name": "ServiceName",
+                        "Value": {
+                            "Fn::GetAtt": "FargateService.Name"
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 3,
+                "MetricName": "CPUUtilization",
+                "Namespace": "AWS/ECS",
+                "OKActions": [
+                    {
+                        "Ref": "ScaleDownPolicy"
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Average",
+                "Threshold": 80,
+                "TreatMissingData": "ignore"
+            }
+        },
+        "AlarmMemoryUtilization": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "ActionsEnabled": true,
+                "AlarmActions": [
+                    {
+                        "Ref": "ScaleUpPolicy"
+                    }
+                ],
+                "ComparisonOperator": "GreaterThanThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "ClusterName",
+                        "Value": {
+                            "Ref": "ECSCluster"
+                        }
+                    },
+                    {
+                        "Name": "ServiceName",
+                        "Value": {
+                            "Fn::GetAtt": "FargateService.Name"
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 3,
+                "MetricName": "MemoryUtilization",
+                "Namespace": "AWS/ECS",
+                "OKActions": [
+                    {
+                        "Ref": "ScaleDownPolicy"
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Average",
+                "Threshold": 80,
+                "TreatMissingData": "ignore"
+            }
+        },
+        "S3User": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+                ]
+            }
+        },
+        "S3AccessKey": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {
+                "UserName": {
+                    "Ref": "S3User"
+                }
+            }
+        },
+        "TaskRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ecs-tasks.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "AmazonECSTaskRolePolicy",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:PutObject",
+                                        "s3:GetObject",
+                                        "s3:ListBucket",
+                                        "s3:DeleteObject",
+                                        "s3:PutObjectAcl"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${MediaBucket}"
+                                        },
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${MediaBucket}/*"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Fn::If": [
+                                        "ShouldCreateDatabase",
+                                        {
+                                            "Effect": "Allow",
+                                            "Action": [
+                                                "secretsmanager:GetSecretValue"
+                                            ],
+                                            "Resource": {
+                                                "Ref": "DbInstanceRotationSecret"
+                                            }
+                                        },
+                                        {
+                                            "Ref": "AWS::NoValue"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ssmmessages:CreateControlChannel",
+                                        "ssmmessages:CreateDataChannel",
+                                        "ssmmessages:OpenControlChannel",
+                                        "ssmmessages:OpenDataChannel"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ecs:ExecuteCommand"
+                                    ],
+                                    "Resource": {
+                                        "Fn::GetAtt": "ECSCluster.Arn"
+                                    }
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "kms:Decrypt"
+                                    ],
+                                    "Resource": {
+                                        "Fn::GetAtt": "ClusterKey.Arn"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "TaskDefinition": {
+            "Type": "AWS::ECS::TaskDefinition",
+            "Properties": {
+                "Cpu": {
+                    "Ref": "CPU"
+                },
+                "Memory": {
+                    "Ref": "Memory"
+                },
+                "NetworkMode": "awsvpc",
+                "RequiresCompatibilities": [
+                    "FARGATE"
+                ],
+                "ExecutionRoleArn": {
+                    "Ref": "ExecutionRole"
+                },
+                "TaskRoleArn": {
+                    "Ref": "TaskRole"
+                },
+                "Volumes": [
+                    {
+                        "Name": "uploads-persistent-volume",
+                        "EFSVolumeConfiguration": {
+                            "FilesystemId": {
+                                "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                            },
+                            "TransitEncryption": "ENABLED",
+                            "AuthorizationConfig": {
+                                "AccessPointId": {
+                                    "Fn::GetAtt": "UploadsStorageAccessPoint.AccessPointId"
+                                },
+                                "IAM": "DISABLED"
+                            }
+                        }
+                    }
+                ],
+                "ContainerDefinitions": [
+                    {
+                        "Name": "service",
+                        "Cpu": {
+                            "Ref": "CPU"
+                        },
+                        "Memory": {
+                            "Ref": "Memory"
+                        },
+                        "Image": {
+                            "Fn::Sub": "${ImageUrl}"
+                        },
+                        "PortMappings": [
+                            {
+                                "ContainerPort": 9000
+                            }
+                        ],
+                        "Environment": [
+                            {
+                                "Name": "S3_URL",
+                                "Value": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "https://",
+                                            {
+                                                "Fn::GetAtt": "MediaBucket.RegionalDomainName"
+                                            }
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "S3_ENDPOINT",
+                                "Value": {
+                                    "Fn::Sub": "https://s3.${AWS::Region}.amazonaws.com"
+                                }
+                            },
+                            {
+                                "Name": "S3_BUCKET",
+                                "Value": {
+                                    "Ref": "MediaBucket"
+                                }
+                            },
+                            {
+                                "Name": "S3_REGION",
+                                "Value": {
+                                    "Ref": "AWS::Region"
+                                }
+                            },
+                            {
+                                "Name": "S3_ACCESS_KEY_ID",
+                                "Value": {
+                                    "Ref": "S3AccessKey"
+                                }
+                            },
+                            {
+                                "Name": "S3_SECRET_ACCESS_KEY",
+                                "Value": {
+                                    "Fn::GetAtt": [
+                                        "S3AccessKey",
+                                        "SecretAccessKey"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "DATABASE_URL",
+                                "Value": {
+                                    "Fn::If": [
+                                        "ShouldCreateDatabase",
+                                        {
+                                            "Fn::Join": [
+                                                "",
+                                                [
+                                                    "postgres://",
+                                                    {
+                                                        "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::username}}"
+                                                    },
+                                                    ":",
+                                                    {
+                                                        "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::password}}"
+                                                    },
+                                                    "@",
+                                                    {
+                                                        "Fn::GetAtt": [
+                                                            "PostgresInstance",
+                                                            "Endpoint.Address"
+                                                        ]
+                                                    },
+                                                    ":",
+                                                    {
+                                                        "Fn::GetAtt": [
+                                                            "PostgresInstance",
+                                                            "Endpoint.Port"
+                                                        ]
+                                                    },
+                                                    "/medusa"
+                                                ]
+                                            ]
+                                        },
+                                        {
+                                            "Ref": "ExternalDatabaseUrl"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "REDIS_URL",
+                                "Value": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "redis://",
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "ElastiCacheCluster",
+                                                    "RedisEndpoint.Address"
+                                                ]
+                                            },
+                                            ":",
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "ElastiCacheCluster",
+                                                    "RedisEndpoint.Port"
+                                                ]
+                                            }
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "COOKIE_SECRET",
+                                "Value": {
+                                    "Ref": "CookieSecret"
+                                }
+                            },
+                            {
+                                "Name": "JWT_SECRET",
+                                "Value": {
+                                    "Ref": "JWTSecret"
+                                }
+                            },
+                            {
+                                "Name": "MEDUSA_WORKER_MODE",
+                                "Value": {
+                                    "Fn::If": [
+                                        "EnableSharedMode",
+                                        "shared",
+                                        "server"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "STORE_CORS",
+                                "Value": {
+                                    "Ref": "StoreCors"
+                                }
+                            },
+                            {
+                                "Name": "ADMIN_CORS",
+                                "Value": {
+                                    "Fn::If": [
+                                        "EnableHTTPS",
+                                        {
+                                            "Fn::Sub": "https://${DomainName}"
+                                        },
+                                        {
+                                            "Fn::Sub": "http://${WebsiteCloudfront.DomainName}"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "AUTH_CORS",
+                                "Value": {
+                                    "Fn::If": [
+                                        "EnableHTTPS",
+                                        {
+                                            "Fn::Sub": "https://${DomainName}"
+                                        },
+                                        {
+                                            "Fn::Sub": "http://${WebsiteCloudfront.DomainName}"
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        "MountPoints": [
+                            {
+                                "ContainerPath": "/medusa/uploads",
+                                "SourceVolume": "uploads-persistent-volume"
+                            }
+                        ],
+                        "LogConfiguration": {
+                            "LogDriver": "awslogs",
+                            "Options": {
+                                "awslogs-group": {
+                                    "Ref": "ServiceLogs"
+                                },
+                                "awslogs-region": {
+                                    "Ref": "AWS::Region"
+                                },
+                                "awslogs-stream-prefix": "container-logs"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "WorkerTaskDefinition": {
+            "Type": "AWS::ECS::TaskDefinition",
+            "Condition": "EnableServerAndWorkerMode",
+            "Properties": {
+                "Cpu": {
+                    "Ref": "CPU"
+                },
+                "Memory": {
+                    "Ref": "Memory"
+                },
+                "NetworkMode": "awsvpc",
+                "RequiresCompatibilities": [
+                    "FARGATE"
+                ],
+                "ExecutionRoleArn": {
+                    "Ref": "ExecutionRole"
+                },
+                "TaskRoleArn": {
+                    "Ref": "TaskRole"
+                },
+                "Volumes": [
+                    {
+                        "Name": "uploads-persistent-volume",
+                        "EFSVolumeConfiguration": {
+                            "FilesystemId": {
+                                "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                            },
+                            "TransitEncryption": "ENABLED",
+                            "AuthorizationConfig": {
+                                "AccessPointId": {
+                                    "Fn::GetAtt": "UploadsStorageAccessPoint.AccessPointId"
+                                },
+                                "IAM": "DISABLED"
+                            }
+                        }
+                    }
+                ],
+                "ContainerDefinitions": [
+                    {
+                        "Name": "service",
+                        "Cpu": {
+                            "Ref": "CPU"
+                        },
+                        "Memory": {
+                            "Ref": "Memory"
+                        },
+                        "Image": {
+                            "Fn::Sub": "${ImageUrl}"
+                        },
+                        "Environment": [
+                            {
+                                "Name": "S3_URL",
+                                "Value": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "https://",
+                                            {
+                                                "Fn::GetAtt": "MediaBucket.RegionalDomainName"
+                                            }
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "S3_ENDPOINT",
+                                "Value": {
+                                    "Fn::Sub": "https://s3.${AWS::Region}.amazonaws.com"
+                                }
+                            },
+                            {
+                                "Name": "S3_BUCKET",
+                                "Value": {
+                                    "Ref": "MediaBucket"
+                                }
+                            },
+                            {
+                                "Name": "S3_REGION",
+                                "Value": {
+                                    "Ref": "AWS::Region"
+                                }
+                            },
+                            {
+                                "Name": "S3_ACCESS_KEY_ID",
+                                "Value": {
+                                    "Ref": "S3AccessKey"
+                                }
+                            },
+                            {
+                                "Name": "S3_SECRET_ACCESS_KEY",
+                                "Value": {
+                                    "Fn::GetAtt": [
+                                        "S3AccessKey",
+                                        "SecretAccessKey"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "DATABASE_URL",
+                                "Value": {
+                                    "Fn::If": [
+                                        "ShouldCreateDatabase",
+                                        {
+                                            "Fn::Join": [
+                                                "",
+                                                [
+                                                    "postgres://",
+                                                    {
+                                                        "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::username}}"
+                                                    },
+                                                    ":",
+                                                    {
+                                                        "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::password}}"
+                                                    },
+                                                    "@",
+                                                    {
+                                                        "Fn::GetAtt": [
+                                                            "PostgresInstance",
+                                                            "Endpoint.Address"
+                                                        ]
+                                                    },
+                                                    ":",
+                                                    {
+                                                        "Fn::GetAtt": [
+                                                            "PostgresInstance",
+                                                            "Endpoint.Port"
+                                                        ]
+                                                    },
+                                                    "/medusa"
+                                                ]
+                                            ]
+                                        },
+                                        {
+                                            "Ref": "ExternalDatabaseUrl"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "REDIS_URL",
+                                "Value": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "redis://",
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "ElastiCacheCluster",
+                                                    "RedisEndpoint.Address"
+                                                ]
+                                            },
+                                            ":",
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "ElastiCacheCluster",
+                                                    "RedisEndpoint.Port"
+                                                ]
+                                            }
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "COOKIE_SECRET",
+                                "Value": {
+                                    "Ref": "CookieSecret"
+                                }
+                            },
+                            {
+                                "Name": "JWT_SECRET",
+                                "Value": {
+                                    "Ref": "JWTSecret"
+                                }
+                            },
+                            {
+                                "Name": "MEDUSA_WORKER_MODE",
+                                "Value": "worker"
+                            }
+                        ],
+                        "MountPoints": [
+                            {
+                                "ContainerPath": "/medusa/uploads",
+                                "SourceVolume": "uploads-persistent-volume"
+                            }
+                        ],
+                        "LogConfiguration": {
+                            "LogDriver": "awslogs",
+                            "Options": {
+                                "awslogs-group": {
+                                    "Ref": "ServiceLogs"
+                                },
+                                "awslogs-region": {
+                                    "Ref": "AWS::Region"
+                                },
+                                "awslogs-stream-prefix": "container-logs"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "ServiceLogs": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "RetentionInDays": 90
+            }
+        },
+        "FargateServiceSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Access to the public facing load balancer",
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "SourceSecurityGroupId": {
+                            "Ref": "LoadBalancerSG"
+                        },
+                        "IpProtocol": -1
+                    }
+                ]
+            }
+        },
+        "ExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ecs-tasks.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "AmazonECSTaskExecutionRolePolicy",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ecr:GetAuthorizationToken",
+                                        "ecr:BatchCheckLayerAvailability",
+                                        "ecr:GetDownloadUrlForLayer",
+                                        "ecr:BatchGetImage",
+                                        "logs:CreateLogStream",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "PostgresInstance": {
+            "Type": "AWS::RDS::DBInstance",
+            "Condition": "ShouldCreateDatabase",
+            "Properties": {
+                "MasterUsername": {
+                    "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::username}}"
+                },
+                "MasterUserPassword": {
+                    "Fn::Sub": "{{resolve:secretsmanager:${DbInstanceRotationSecret}::password}}"
+                },
+                "DBName": "medusa",
+                "CopyTagsToSnapshot": true,
+                "DBInstanceClass": "db.t3.small",
+                "Engine": "postgres",
+                "EngineVersion": "15.13",
+                "AllocatedStorage": "20",
+                "StorageType": "gp2",
+                "KmsKeyId": {
+                    "Ref": "DbEncryptionKey"
+                },
+                "StorageEncrypted": true,
+                "PubliclyAccessible": false,
+                "DBSubnetGroupName": {
+                    "Ref": "PrivateSubnetGroup"
+                },
+                "VPCSecurityGroups": [
+                    {
+                        "Ref": "DbSecurityGroup"
+                    }
+                ],
+                "MultiAZ": false,
+                "EnablePerformanceInsights": false
+            }
+        },
+        "PrivateSubnetGroup": {
+            "Type": "AWS::RDS::DBSubnetGroup",
+            "Condition": "ShouldCreateDatabase",
+            "Properties": {
+                "DBSubnetGroupDescription": "private-subnet-group",
+                "SubnetIds": [
+                    {
+                        "Ref": "PrivateSubnet1Id"
+                    },
+                    {
+                        "Ref": "PrivateSubnet2Id"
+                    }
+                ]
+            }
+        },
+        "DbSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Condition": "ShouldCreateDatabase",
+            "Properties": {
+                "GroupDescription": {
+                    "Fn::Sub": "DB Cluster Security Group"
+                },
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "5432",
+                        "ToPort": "5432",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "DbEncryptionKey": {
+            "Type": "AWS::KMS::Key",
+            "Condition": "ShouldCreateDatabase",
+            "Properties": {
+                "Description": "DB encyption key",
+                "EnableKeyRotation": "True",
+                "KeyPolicy": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": {
+                                    "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
+                                }
+                            },
+                            "Action": "kms:*",
+                            "Resource": "*"
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": "*"
+                            },
+                            "Action": [
+                                "kms:Encrypt",
+                                "kms:Decrypt",
+                                "kms:ReEncrypt*",
+                                "kms:GenerateDataKey*",
+                                "kms:CreateGrant",
+                                "kms:ListGrants",
+                                "kms:DescribeKey"
+                            ],
+                            "Resource": "*",
+                            "Condition": {
+                                "StringEquals": {
+                                    "kms:CallerAccount": {
+                                        "Ref": "AWS::AccountId"
+                                    },
+                                    "kms:ViaService": {
+                                        "Fn::Sub": "rds.${AWS::Region}.amazonaws.com"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "DbInstanceRotationSecret": {
+            "Type": "AWS::SecretsManager::Secret",
+            "Condition": "ShouldCreateDatabase",
+            "Properties": {
+                "Description": "RDS instance secret",
+                "GenerateSecretString": {
+                    "SecretStringTemplate": "{\"username\": \"dbuser\"}",
+                    "GenerateStringKey": "password",
+                    "PasswordLength": 16,
+                    "ExcludePunctuation": true
+                }
+            }
+        },
+        "DbInstanceAttachment": {
+            "Type": "AWS::SecretsManager::SecretTargetAttachment",
+            "Condition": "ShouldCreateDatabase",
+            "Properties": {
+                "SecretId": {
+                    "Ref": "DbInstanceRotationSecret"
+                },
+                "TargetId": {
+                    "Ref": "PostgresInstance"
+                },
+                "TargetType": "AWS::RDS::DBInstance"
+            }
+        },
+        "DBInitLambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {
+                        "Ref": "DbInitS3Bucket"
+                    },
+                    "S3Key": {
+                        "Ref": "DbInitS3Key"
+                    }
+                },
+                "Role": {
+                    "Fn::GetAtt": [
+                        "DBInitRole",
+                        "Arn"
+                    ]
+                },
+                "Handler": "index.handler",
+                "Runtime": "nodejs16.x",
+                "Timeout": 300
+            }
+        },
+        "DBInitCustom": {
+            "Type": "AWS::CloudFormation::CustomResource",
+            "Properties": {
+                "ServiceToken": {
+                    "Fn::GetAtt": [
+                        "DBInitLambda",
+                        "Arn"
+                    ]
+                },
+                "adminEmail": {
+                    "Ref": "AdminEmail"
+                },
+                "adminPassword": {
+                    "Ref": "AdminPassword"
+                },
+                "cluster": {
+                    "Ref": "ECSCluster"
+                },
+                "serviceName": {
+                    "Fn::GetAtt": "FargateService.Name"
+                },
+                "databaseSource": {
+                    "Fn::If": [
+                        "ShouldCreateDatabase",
+                        "internal",
+                        "external"
+                    ]
+                }
+            }
+        },
+        "DBInitRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+                ],
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "AmazonECSTaskRolePolicy",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ecs:ListTasks",
+                                        "ecs:DescribeTasks",
+                                        "ecs:DescribeServices"
+                                    ],
+                                    "Resource": "*",
+                                    "Condition": {
+                                        "ArnEquals": {
+                                            "ecs:cluster": {
+                                                "Fn::GetAtt": "ECSCluster.Arn"
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ecs:ExecuteCommand"
+                                    ],
+                                    "Resource": {
+                                        "Fn::Join": [
+                                            "",
+                                            [
+                                                {
+                                                    "Fn::GetAtt": "ECSCluster.Arn"
+                                                },
+                                                "/*"
+                                            ]
+                                        ]
+                                    }
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ssm:StartSession"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "RedisSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Redis port from anywhere",
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 6379,
+                        "ToPort": 6379,
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "RedisSubnetGroup": {
+            "Type": "AWS::ElastiCache::SubnetGroup",
+            "Properties": {
+                "Description": "Cache Subnet Group",
+                "SubnetIds": [
+                    {
+                        "Ref": "PrivateSubnet1Id"
+                    },
+                    {
+                        "Ref": "PrivateSubnet2Id"
+                    }
+                ]
+            }
+        },
+        "ElastiCacheCluster": {
+            "Type": "AWS::ElastiCache::CacheCluster",
+            "Properties": {
+                "Engine": "redis",
+                "NumCacheNodes": 1,
+                "CacheNodeType": "cache.t3.micro",
+                "AutoMinorVersionUpgrade": "true",
+                "CacheSubnetGroupName": {
+                    "Ref": "RedisSubnetGroup"
+                },
+                "VpcSecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "RedisSecurityGroup",
+                            "GroupId"
+                        ]
+                    }
+                ]
+            }
+        },
+        "PersistentStorage": {
+            "Type": "AWS::EFS::FileSystem",
+            "Properties": {
+                "Encrypted": true,
+                "PerformanceMode": "generalPurpose",
+                "ThroughputMode": "bursting",
+                "BackupPolicy": {
+                    "Status": "ENABLED"
+                }
+            }
+        },
+        "UploadsStorageAccessPoint": {
+            "Type": "AWS::EFS::AccessPoint",
+            "Properties": {
+                "FileSystemId": {
+                    "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                },
+                "PosixUser": {
+                    "Uid": "1001",
+                    "Gid": "1001",
+                    "SecondaryGids": [
+                        "0"
+                    ]
+                },
+                "RootDirectory": {
+                    "CreationInfo": {
+                        "OwnerGid": "1001",
+                        "OwnerUid": "1001",
+                        "Permissions": "755"
+                    },
+                    "Path": "/medusa/uploads"
+                }
+            }
+        },
+        "PersistentStorageMountTargetResource1": {
+            "Type": "AWS::EFS::MountTarget",
+            "Properties": {
+                "FileSystemId": {
+                    "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                },
+                "SubnetId": {
+                    "Ref": "PrivateSubnet1Id"
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "PersistentStorageSG"
+                    }
+                ]
+            }
+        },
+        "PersistentStorageMountTargetResource2": {
+            "Type": "AWS::EFS::MountTarget",
+            "Properties": {
+                "FileSystemId": {
+                    "Fn::GetAtt": "PersistentStorage.FileSystemId"
+                },
+                "SubnetId": {
+                    "Ref": "PrivateSubnet2Id"
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "PersistentStorageSG"
+                    }
+                ]
+            }
+        },
+        "PersistentStorageSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Access to the EFS persistent storage",
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "IpProtocol": "tcp",
+                        "FromPort": 2049,
+                        "ToPort": 2049
+                    }
+                ]
+            }
+        },
+        "WebsiteBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "PublicAccessBlockConfiguration": {
+                    "BlockPublicAcls": false,
+                    "BlockPublicPolicy": false,
+                    "IgnorePublicAcls": false,
+                    "RestrictPublicBuckets": false
+                },
+                "OwnershipControls": {
+                    "Rules": [
+                        {
+                            "ObjectOwnership": "BucketOwnerPreferred"
+                        }
+                    ]
+                },
+                "WebsiteConfiguration": {
+                    "IndexDocument": "index.html",
+                    "ErrorDocument": "index.html"
+                }
+            }
+        },
+        "WebsiteBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+                "Bucket": {
+                    "Ref": "WebsiteBucket"
+                },
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Sid": "PublicReadForGetBucketObjects",
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Action": "s3:GetObject",
+                            "Resource": {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "arn:aws:s3:::",
+                                        {
+                                            "Ref": "WebsiteBucket"
+                                        },
+                                        "/*"
+                                    ]
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "DeploymentLambda": {
+            "Type": "AWS::Serverless::Function",
+            "Properties": {
+                "Handler": "dst/index.handler",
+                "Runtime": "nodejs16.x",
+                "Timeout": 200,
+                "CodeUri": {
+                    "Bucket": {
+                        "Ref": "DeploymentFunctionBucket"
+                    },
+                    "Key": {
+                        "Ref": "DeploymentFunctionLocation"
+                    }
+                },
+                "DeadLetterQueue": {
+                    "Type": "SQS",
+                    "TargetArn": {
+                        "Fn::GetAtt": "LambdaDLQ.Arn"
+                    }
+                },
+                "Policies": [
+                    "AWSLambdaVPCAccessExecutionRole",
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": {
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:GetObject"
+                            ],
+                            "Resource": {
+                                "Fn::Sub": "arn:aws:s3:::${AdminSourceBucket}/*"
+                            }
+                        }
+                    },
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": {
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:PutObject"
+                            ],
+                            "Resource": {
+                                "Fn::Sub": "arn:aws:s3:::${WebsiteBucket}/*"
+                            }
+                        }
+                    },
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": {
+                            "Effect": "Allow",
+                            "Action": [
+                                "cloudfront:CreateInvalidation"
+                            ],
+                            "Resource": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        "DeploymentCustom": {
+            "Type": "AWS::CloudFormation::CustomResource",
+            "Properties": {
+                "ServiceToken": {
+                    "Fn::GetAtt": "DeploymentLambda.Arn"
+                },
+                "ComponentVersion": {
+                    "Ref": "componentVersion"
+                },
+                "SourceBucket": {
+                    "Ref": "AdminSourceBucket"
+                },
+                "SourceLocation": {
+                    "Ref": "AdminSourceLocation"
+                },
+                "DestinationBucket": {
+                    "Ref": "WebsiteBucket"
+                },
+                "CdnId": {
+                    "Ref": "WebsiteCloudfront"
+                },
+                "BackendEndpoint": {
+                    "Fn::If": [
+                        "EnableHTTPS",
+                        {
+                            "Fn::Sub": "https://${DomainName}"
+                        },
+                        {
+                            "Fn::Sub": "http://${LoadBalancer.DNSName}"
+                        }
+                    ]
+                }
+            }
+        },
+        "PathRewriteFunction": {
+            "Type": "AWS::CloudFront::Function",
+            "Properties": {
+                "Name": {
+                    "Fn::Sub": "${AWS::StackName}-PathRewrite"
+                },
+                "AutoPublish": true,
+                "FunctionConfig": {
+                    "Comment": "Function to rewrite /app paths for S3 static website",
+                    "Runtime": "cloudfront-js-1.0"
+                },
+                "FunctionCode": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "function handler(event) {\n",
+                            "  var request = event.request;\n",
+                            "  var uri = request.uri;\n\n",
+                            "  // Strip /app prefix from the URI\n",
+                            "  if (uri === '/app' || uri === '/app/') {\n",
+                            "    request.uri = '/';\n",
+                            "  } else {\n",
+                            "    request.uri = uri.slice(4); // Remove /app prefix\n",
+                            "  }\n\n",
+                            "  return request;\n",
+                            "}\n"
+                        ]
+                    ]
+                }
+            }
+        },
+        "APICachingDisabledPolicy": {
+            "Type": "AWS::CloudFront::CachePolicy",
+            "Properties": {
+                "CachePolicyConfig": {
+                    "Name": {
+                        "Fn::Sub": "${AWS::StackName}-API_CP"
+                    },
+                    "DefaultTTL": 0,
+                    "MaxTTL": 0,
+                    "MinTTL": 0,
+                    "ParametersInCacheKeyAndForwardedToOrigin": {
+                        "EnableAcceptEncodingBrotli": false,
+                        "EnableAcceptEncodingGzip": false,
+                        "HeadersConfig": {
+                            "HeaderBehavior": "none"
+                        },
+                        "CookiesConfig": {
+                            "CookieBehavior": "none"
+                        },
+                        "QueryStringsConfig": {
+                            "QueryStringBehavior": "none"
+                        }
+                    }
+                }
+            }
+        },
+        "AdminCachingEnabledPolicy": {
+            "Type": "AWS::CloudFront::CachePolicy",
+            "Properties": {
+                "CachePolicyConfig": {
+                    "Name": {
+                        "Fn::Sub": "${AWS::StackName}-Admin-CP"
+                    },
+                    "DefaultTTL": 86400,
+                    "MaxTTL": 31536000,
+                    "MinTTL": 1,
+                    "ParametersInCacheKeyAndForwardedToOrigin": {
+                        "EnableAcceptEncodingBrotli": true,
+                        "EnableAcceptEncodingGzip": true,
+                        "HeadersConfig": {
+                            "HeaderBehavior": "none"
+                        },
+                        "CookiesConfig": {
+                            "CookieBehavior": "none"
+                        },
+                        "QueryStringsConfig": {
+                            "QueryStringBehavior": "none"
+                        }
+                    }
+                }
+            }
+        },
+        "AllViewerOriginRequestPolicy": {
+            "Type": "AWS::CloudFront::OriginRequestPolicy",
+            "Properties": {
+                "OriginRequestPolicyConfig": {
+                    "Name": {
+                        "Fn::Sub": "${AWS::StackName}-ORP"
+                    },
+                    "CookiesConfig": {
+                        "CookieBehavior": "all"
+                    },
+                    "HeadersConfig": {
+                        "HeaderBehavior": "allViewer"
+                    },
+                    "QueryStringsConfig": {
+                        "QueryStringBehavior": "all"
+                    },
+                    "Comment": "Forward all headers, cookies, and query strings for Medusa admin/backend auth"
+                }
+            }
+        },
+        "WebsiteCloudfront": {
+            "Type": "AWS::CloudFront::Distribution",
+            "DependsOn": [
+                "WebsiteBucket"
+            ],
+            "Properties": {
+                "DistributionConfig": {
+                    "Comment": "Cloudfront Distribution pointing to S3 bucket",
+                    "Origins": [
+                        {
+                            "DomainName": {
+                                "Fn::Select": [
+                                    2,
+                                    {
+                                        "Fn::Split": [
+                                            "/",
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "WebsiteBucket",
+                                                    "WebsiteURL"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "Id": "S3Origin",
+                            "CustomOriginConfig": {
+                                "HTTPPort": "80",
+                                "HTTPSPort": "443",
+                                "OriginProtocolPolicy": "http-only"
+                            }
+                        },
+                        {
+                            "DomainName": {
+                                "Fn::If": [
+                                    "APIEnableHTTPS",
+                                    {
+                                        "Ref": "APIDomainName"
+                                    },
+                                    {
+                                        "Fn::GetAtt": "LoadBalancer.DNSName"
+                                    }
+                                ]
+                            },
+                            "Id": "LoadBalancerOrigin",
+                            "CustomOriginConfig": {
+                                "HTTPPort": "80",
+                                "HTTPSPort": "443",
+                                "OriginProtocolPolicy": {
+                                    "Fn::If": [
+                                        "APIEnableHTTPS",
+                                        "https-only",
+                                        "http-only"
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    "Enabled": true,
+                    "HttpVersion": "http2",
+                    "DefaultRootObject": "index.html",
+                    "Aliases": [
+                        {
+                            "Fn::If": [
+                                "EnableHTTP",
+                                {
+                                    "Ref": "AWS::NoValue"
+                                },
+                                {
+                                    "Ref": "DomainName"
+                                }
+                            ]
+                        }
+                    ],
+                    "CacheBehaviors": [
+                        {
+                            "PathPattern": "/app*",
+                            "AllowedMethods": [
+                                "GET",
+                                "HEAD",
+                                "OPTIONS"
+                            ],
+                            "Compress": true,
+                            "TargetOriginId": "S3Origin",
+                            "CachePolicyId": {
+                                "Ref": "AdminCachingEnabledPolicy"
+                            },
+                            "ForwardedValues": {
+                                "QueryString": false,
+                                "Cookies": {
+                                    "Forward": "none"
+                                }
+                            },
+                            "ViewerProtocolPolicy": "redirect-to-https",
+                            "DefaultTTL": 86400,
+                            "MinTTL": 0,
+                            "MaxTTL": 31536000,
+                            "FunctionAssociations": [
+                                {
+                                    "EventType": "viewer-request",
+                                    "FunctionARN": {
+                                        "Fn::GetAtt": [
+                                            "PathRewriteFunction",
+                                            "FunctionARN"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "DefaultCacheBehavior": {
+                        "AllowedMethods": [
+                            "DELETE",
+                            "GET",
+                            "HEAD",
+                            "OPTIONS",
+                            "PATCH",
+                            "POST",
+                            "PUT"
+                        ],
+                        "Compress": true,
+                        "TargetOriginId": "LoadBalancerOrigin",
+                        "CachePolicyId": {
+                            "Ref": "APICachingDisabledPolicy"
+                        },
+                        "OriginRequestPolicyId": {
+                            "Ref": "AllViewerOriginRequestPolicy"
+                        },
+                        "ViewerProtocolPolicy": "redirect-to-https",
+                        "DefaultTTL": 0,
+                        "MinTTL": 0,
+                        "MaxTTL": 0
+                    },
+                    "PriceClass": "PriceClass_All",
+                    "ViewerCertificate": {
+                        "Fn::If": [
+                            "EnableHTTP",
+                            {
+                                "Ref": "AWS::NoValue"
+                            },
+                            {
+                                "AcmCertificateArn": {
+                                    "Ref": "CertificateArn"
+                                },
+                                "SslSupportMethod": "sni-only"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "LambdaDLQ": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {}
+        },
+        "LambdaDLQPolicy": {
+            "Type": "AWS::SQS::QueuePolicy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Action": [
+                                "sqs:SendMessage"
+                            ],
+                            "Resource": "*"
+                        }
+                    ]
+                },
+                "Queues": [
+                    {
+                        "Ref": "LambdaDLQ"
+                    }
+                ]
+            }
+        },
+        "LambdaDLQCleaner": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "ZipFile": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "const response = require(\"cfn-response\");\n\nfunction handler(event, context) {\n    try {\n        const originalEvent = JSON.parse(event.Records[0].body);\n        const responseBody = {\n            message: \"Custom resource lambda failed to to process the event\",\n            originalEvent,\n        };\n        response.send(originalEvent, context, response.FAILED, responseBody);\n    } catch (e) {\n        console.error(e);\n    }\n}\n\nexports.handler = handler;"
+                            ]
+                        ]
+                    }
+                },
+                "Role": {
+                    "Fn::GetAtt": "DLQLambdaExecutionRole.Arn"
+                },
+                "Handler": "index.handler",
+                "Runtime": "nodejs16.x",
+                "Timeout": 30
+            }
+        },
+        "LambdaDLQCleanerSourceMapping": {
+            "Type": "AWS::Lambda::EventSourceMapping",
+            "Properties": {
+                "EventSourceArn": {
+                    "Fn::GetAtt": "LambdaDLQ.Arn"
+                },
+                "FunctionName": {
+                    "Ref": "LambdaDLQCleaner"
+                }
+            }
+        },
+        "DLQLambdaExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+                ],
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "LambdaExecutionPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "sqs:SendMessage",
+                                        "sqs:ReceiveMessage",
+                                        "sqs:DeleteMessage",
+                                        "sqs:GetQueueAttributes"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "WebsiteBucketCleaner": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "ZipFile": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "const response = require('cfn-response');\n",
+                                "const { S3 } = require('aws-sdk');\n",
+                                "exports.handler = function (event, context) {\n",
+                                "    const bucket = event.ResourceProperties.s3Bucket;\n",
+                                "    if (event.RequestType === 'Delete') {\n",
+                                "        purgeOutputBucket(bucket).then(() => {\n",
+                                "            response.send(event, context, response.SUCCESS, {});\n",
+                                "        }).catch((err) => {\n",
+                                "            console.log('ERR', err);\n",
+                                "            response.send(event, context, response.FAILED, { err });\n",
+                                "        });\n",
+                                "    } else {\n",
+                                "        response.send(event, context, response.SUCCESS, {});\n",
+                                "    }\n",
+                                "};\n",
+                                "async function purgeOutputBucket(bucket) {\n",
+                                "    let objects = null;\n",
+                                "    try {\n",
+                                "        objects = await new S3().listObjects({\n",
+                                "            Bucket: bucket\n",
+                                "        }).promise();\n",
+                                "    } catch (e) {\n",
+                                "        if (e.code !== 'NoSuchBucket') {\n",
+                                "            throw e;\n",
+                                "        }\n",
+                                "    }\n",
+                                "    if (objects) {\n",
+                                "        if (objects.Contents.length === 0) {\n",
+                                "            return;\n",
+                                "        }\n",
+                                "        const keys = objects.Contents.map(c => ({ Key: c.Key }));\n",
+                                "        const deleteRequest = {\n",
+                                "            Bucket: bucket,\n",
+                                "            Delete: {\n",
+                                "                Objects: keys\n",
+                                "            }\n",
+                                "        };\n",
+                                "        await new S3().deleteObjects(deleteRequest).promise();\n",
+                                "        if (objects.IsTruncated) {\n",
+                                "            await purgeOutputBucket(bucket);\n",
+                                "        }\n",
+                                "    }\n",
+                                "}"
+                            ]
+                        ]
+                    }
+                },
+                "Role": {
+                    "Fn::GetAtt": [
+                        "WebsiteBucketCleanerRole",
+                        "Arn"
+                    ]
+                },
+                "Handler": "index.handler",
+                "Runtime": "nodejs16.x",
+                "Timeout": 30
+            }
+        },
+        "WebsiteBucketCleanerCustom": {
+            "Type": "AWS::CloudFormation::CustomResource",
+            "Properties": {
+                "ServiceToken": {
+                    "Fn::GetAtt": [
+                        "WebsiteBucketCleaner",
+                        "Arn"
+                    ]
+                },
+                "s3Bucket": {
+                    "Ref": "WebsiteBucket"
+                }
+            }
+        },
+        "WebsiteBucketCleanerRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "ExecutionPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:DeleteObject",
+                                        "s3:ListBucket"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${WebsiteBucket}"
+                                        },
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${WebsiteBucket}/*"
+                                        }
+                                    ],
+                                    "Effect": "Allow"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "ApplicationLogs": {
+            "Value": {
+                "Fn::Sub": "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#logEventViewer:group=${ServiceLogs}"
+            }
+        },
+        "AccessUrl": {
+            "Value": {
+                "Fn::If": [
+                    "EnableHTTPS",
+                    {
+                        "Fn::Sub": "https://${DomainName}"
+                    },
+                    {
+                        "Fn::Sub": "http://${WebsiteCloudfront.DomainName}"
+                    }
+                ]
+            },
+            "Description": "The domain name on which the Admin app is accessible."
+        },
+        "CNAME": {
+            "Value": {
+                "Fn::GetAtt": "WebsiteCloudfront.DomainName"
+            }
+        },
+        "APIAccessUrl": {
+            "Value": {
+                "Fn::If": [
+                    "APIEnableHTTPS",
+                    {
+                        "Fn::Sub": "https://${APIDomainName}"
+                    },
+                    {
+                        "Fn::Sub": "http://${LoadBalancer.DNSName}"
+                    }
+                ]
+            },
+            "Description": "The domain name on which the Admin app is accessible."
+        },
+        "APICNAME": {
+            "Value": {
+                "Fn::GetAtt": "LoadBalancer.DNSName"
+            }
+        },
+        "DatabaseEndpointAddress": {
+            "Condition": "ShouldCreateDatabase",
+            "Value": {
+                "Fn::GetAtt": "PostgresInstance.Endpoint.Address"
+            }
+        },
+        "DatabaseEndpointPort": {
+            "Condition": "ShouldCreateDatabase",
+            "Value": {
+                "Fn::GetAtt": "PostgresInstance.Endpoint.Port"
+            }
+        },
+        "DatabaseUsername": {
+            "Condition": "ShouldCreateDatabase",
+            "Value": "dbuser"
+        },
+        "DatabaseSecret": {
+            "Condition": "ShouldCreateDatabase",
+            "Value": {
+                "Ref": "DbInstanceRotationSecret"
+            }
+        },
+        "MediaBucket": {
+            "Value": {
+                "Ref": "MediaBucket"
+            }
+        },
+        "ImageUrl": {
+            "Value": {
+                "Ref": "ImageUrl"
+            }
+        },
+        "MetricCpuUsage": {
+            "Value": {
+                "Fn::Sub": "Name:CPU|Namespace:AWS/ECS|MetricName:CPUUtilization|Statistics:Average|Unit:Percent|Dimensions:ClusterName=${ECSCluster},ServiceName=${FargateService.Name}"
+            }
+        },
+        "MetricMemoryUsage": {
+            "Value": {
+                "Fn::Sub": "Name:Memory|Namespace:AWS/ECS|MetricName:MemoryUtilization|Statistics:Average|Unit:Percent|Dimensions:ClusterName=${ECSCluster},ServiceName=${FargateService.Name}"
+            }
+        },
+        "Metric2xxCount": {
+            "Value": {
+                "Fn::Sub": "Name:Success requests|Namespace:AWS/ApplicationELB|MetricName:HTTPCode_Target_2XX_Count|Statistics:Sum|Unit:Count|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
+            }
+        },
+        "Metric4xxCount": {
+            "Value": {
+                "Fn::Sub": "Name:4xx errors|Namespace:AWS/ApplicationELB|MetricName:HTTPCode_Target_4XX_Count|Statistics:Sum|Unit:Count|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
+            }
+        },
+        "Metric5xxCount": {
+            "Value": {
+                "Fn::Sub": "Name:5xx errors|Namespace:AWS/ApplicationELB|MetricName:HTTPCode_Target_5XX_Count|Statistics:Sum|Unit:Count|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
+            }
+        },
+        "Metric503Count": {
+            "Value": {
+                "Fn::Sub": "Name:503 errors|Namespace:AWS/ApplicationELB|MetricName:HTTPCode_ELB_503_Count|Statistics:Sum|Unit:Count|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
+            }
+        },
+        "MetricNetworkTraffic": {
+            "Value": {
+                "Fn::Sub": "Name:Network traffic|Namespace:AWS/ApplicationELB|MetricName:ProcessedBytes|Statistics:Sum|Unit:Bytes|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
+            }
+        },
+        "MetricResponseTime": {
+            "Value": {
+                "Fn::Sub": "Name:Response time|Namespace:AWS/ApplicationELB|MetricName:TargetResponseTime|Statistics:Average|Unit:Seconds|Dimensions:LoadBalancer=${LoadBalancer.LoadBalancerFullName}"
+            }
+        },
+        "MetricPostgresCPUUtilization": {
+            "Condition": "ShouldCreateDatabase",
+            "Value": {
+                "Fn::Sub": "Name:PostgreSQL CPU utilization|Namespace:AWS/RDS|MetricName:CPUUtilization|Statistics:Average|Unit:Percent|Dimensions:DBInstanceIdentifier=${PostgresInstance}"
+            }
+        },
+        "MetricPostgresAvailableMemory": {
+            "Condition": "ShouldCreateDatabase",
+            "Value": {
+                "Fn::Sub": "Name:PostgreSQL available memory|Namespace:AWS/RDS|MetricName:FreeableMemory|Statistics:Average|Unit:Bytes|Dimensions:DBInstanceIdentifier=${PostgresInstance}"
+            }
+        },
+        "MetricPostgresFreeStorageSpace": {
+            "Condition": "ShouldCreateDatabase",
+            "Value": {
+                "Fn::Sub": "Name:PostgreSQL free storage space|Namespace:AWS/RDS|MetricName:FreeStorageSpace|Statistics:Average|Unit:Bytes|Dimensions:DBInstanceIdentifier=${PostgresInstance}"
+            }
+        },
+        "MetricPostgresDatabaseConnections": {
+            "Condition": "ShouldCreateDatabase",
+            "Value": {
+                "Fn::Sub": "Name:PostgreSQL database connections|Namespace:AWS/RDS|MetricName:DatabaseConnections|Statistics:Average|Unit:Bytes|Dimensions:DBInstanceIdentifier=${PostgresInstance}"
+            }
+        },
+        "MetricRedisCachedItems": {
+            "Value": {
+                "Fn::Sub": "Name:Redis cached items|Namespace:AWS/ElastiCache|MetricName:CurrItems|Statistics:Average|Unit:Count|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisConnections": {
+            "Value": {
+                "Fn::Sub": "Name:Redis connections|Namespace:AWS/ElastiCache|MetricName:CurrConnections|Statistics:Average|Unit:Count|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisCPUUtilization": {
+            "Value": {
+                "Fn::Sub": "Name:Redis CPU utilization|Namespace:AWS/ElastiCache|MetricName:CPUUtilization|Statistics:Average|Unit:Percent|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisAvailableMemory": {
+            "Value": {
+                "Fn::Sub": "Name:Redis available memory|Namespace:AWS/ElastiCache|MetricName:FreeableMemory|Statistics:Average|Unit:Bytes|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisCacheHits": {
+            "Value": {
+                "Fn::Sub": "Name:Redis cache hits|Namespace:AWS/ElastiCache|MetricName:CacheHits|Statistics:Sum|Unit:Count|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        },
+        "MetricRedisCacheMisses": {
+            "Value": {
+                "Fn::Sub": "Name:Redis cache misses|Namespace:AWS/ElastiCache|MetricName:CacheMisses|Statistics:Sum|Unit:Count|Dimensions:CacheClusterId=${ElastiCacheCluster}"
+            }
+        }
+    }
+}

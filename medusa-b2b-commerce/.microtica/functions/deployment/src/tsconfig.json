@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es2017",
+        "noImplicitAny": true,
+        "sourceMap": true,
+        "outDir": "../dst/",
+        "skipLibCheck": true
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}
