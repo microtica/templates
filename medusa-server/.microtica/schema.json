@@ -52,7 +52,7 @@
                 "InstanceType": {
                     "type": "string",
                     "label": "Instance type",
-                    "default": "Small - .25 Core - 512MB Memory",
+                    "default": "Large - 1 Core - 2GB Memory",
                     "enum": [
                         "Small - .25 Core - 512MB Memory",
                         "Medium - .5 Core - 1GB Memory",
@@ -99,7 +99,7 @@
                     "dataType": "number",
                     "label": "Requests per minute",
                     "default": "2000",
-                    "minimum":0,
+                    "minimum": 0,
                     "description": "Automated scaling will be triggered once the number of requests per minute exceeds this threshold.",
                     "category": "autoscaling"
                 },
@@ -111,15 +111,70 @@
                 },
                 "DomainName": {
                     "type": "string",
-                    "label": "Domain name",
+                    "label": "Admin Domain name",
                     "description": "A custom domain name on which the Strapi application will be exposed.",
                     "category": "domain"
                 },
                 "CertificateArn": {
                     "type": "string",
-                    "label": "Certificate ARN",
+                    "label": "Admin Certificate ARN",
                     "description": "A custom domain certificate (AWS Certificate Manager).",
                     "category": "domain"
+                },
+                "APIDomainName": {
+                    "type": "string",
+                    "label": "API Domain name",
+                    "description": "A custom domain name on which the Strapi application will be exposed.",
+                    "category": "domain"
+                },
+                "APICertificateArn": {
+                    "type": "string",
+                    "label": "API Certificate ARN",
+                    "description": "A custom domain certificate (AWS Certificate Manager).",
+                    "category": "domain"
+                },
+                "Mode": {
+                    "type": "string",
+                    "label": "Mode",
+                    "description": "The mode of the MedusaJS application.",
+                    "category": "advanced",
+                    "default": "Shared",
+                    "enum": [
+                        "Shared",
+                        "Server & Worker"
+                    ]
+                },
+                "NumberOfWorkers": {
+                    "type": "string",
+                    "label": "Number of Workers",
+                    "description": "The number of workers to run in the application.",
+                    "default": "1",
+                    "enum": [
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10"
+                    ],
+                    "category": "advanced"
+                },
+                "StoreCors": {
+                    "type": "string",
+                    "label": "STORE_CORS",
+                    "description": "The CORS configuration for the store.",
+                    "category": "advanced"
+                },
+                "ExternalDatabaseUrl": {
+                    "type": "string",
+                    "label": "External Database URL",
+                    "description": "The connection string for the external database.",
+                    "category": "storage",
+                    "sensitive": true
                 }
             },
             "required": [
@@ -133,7 +188,9 @@
                 "MinReplicas",
                 "MaxReplicas",
                 "AdminEmail",
-                "AdminPassword"
+                "AdminPassword",
+                "Mode",
+                "NumberOfWorkers"
             ]
         }
     },

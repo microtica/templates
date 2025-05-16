@@ -10,7 +10,12 @@ const component = new NestedComponent(
 );
 
 async function handleCreate() {
-    const [dbinitPackage] = await uploadPackages();
+    const [
+        dbinitPackage,
+        deploymentPackage,
+        adminPackage
+    ] = await uploadPackages();
+
     const {
         MIC_PROJECT_ID,
         MIC_ENVIRONMENT_ID,
@@ -18,7 +23,9 @@ async function handleCreate() {
         MIC_COMPONENT_VERSION,
         ImageUrl,
         EnvironmentVariables = "",
-        InstanceType
+        InstanceType,
+        Mode,
+        DisableMedusaAdmin
     } = await component.getInputParameters();
 
     transformTemplate(EnvironmentVariables);
@@ -30,17 +37,28 @@ async function handleCreate() {
         ImageUrl: `${ImageUrl}:${MIC_COMPONENT_VERSION}`,
         DbInitS3Bucket: dbinitPackage.s3Bucket,
         DbInitS3Key: dbinitPackage.s3Key,
+        AdminSourceBucket: adminPackage.s3Bucket,
+        AdminSourceLocation: adminPackage.s3Key,
+        DeploymentFunctionBucket: deploymentPackage.s3Bucket,
+        DeploymentFunctionLocation: deploymentPackage.s3Key,
         CookieSecret: cookieSecret,
         JWTSecret: jwtSecret,
         ProjectId: MIC_PROJECT_ID,
         EnvironmentId: MIC_ENVIRONMENT_ID,
         ResourceId: MIC_RESOURCE_ID,
+        MedusaWorkerMode: Mode,
+        DisableMedusaAdmin: DisableMedusaAdmin,
         ...mapInstanceType(InstanceType)
     };
 }
 
 async function handleUpdate() {
-    const [dbinitPackage] = await uploadPackages();
+    const [
+        dbinitPackage,
+        deploymentPackage,
+        adminPackage
+    ] = await uploadPackages();
+
     const {
         MIC_PROJECT_ID,
         MIC_ENVIRONMENT_ID,
@@ -48,7 +66,9 @@ async function handleUpdate() {
         MIC_COMPONENT_VERSION,
         ImageUrl,
         EnvironmentVariables = "",
-        InstanceType
+        InstanceType,
+        Mode,
+        DisableMedusaAdmin
     } = await component.getInputParameters();
 
     transformTemplate(EnvironmentVariables);
@@ -57,9 +77,15 @@ async function handleUpdate() {
         ImageUrl: `${ImageUrl}:${MIC_COMPONENT_VERSION}`,
         DbInitS3Bucket: dbinitPackage.s3Bucket,
         DbInitS3Key: dbinitPackage.s3Key,
+        AdminSourceBucket: adminPackage.s3Bucket,
+        AdminSourceLocation: adminPackage.s3Key,
+        DeploymentFunctionBucket: deploymentPackage.s3Bucket,
+        DeploymentFunctionLocation: deploymentPackage.s3Key,
         ProjectId: MIC_PROJECT_ID,
         EnvironmentId: MIC_ENVIRONMENT_ID,
         ResourceId: MIC_RESOURCE_ID,
+        MedusaWorkerMode: Mode,
+        DisableMedusaAdmin: DisableMedusaAdmin,
         ...mapInstanceType(InstanceType)
     };
 }
@@ -83,7 +109,9 @@ function mapInstanceType(type) {
 
 async function uploadPackages() {
     return Promise.all([
-        component.uploadComponentPackage(path.join(__dirname, "functions/dbinit/package.zip"))
+        component.uploadComponentPackage(path.join(__dirname, "functions/dbinit/package.zip")),
+        component.uploadComponentPackage(path.join(__dirname, "functions/deployment/package.zip")),
+        component.uploadComponentPackage(path.join(__dirname, "admin-package.zip"))
     ]);
 }
 

@@ -2,13 +2,20 @@ steps:
   Package:
     type: build
     title: Build app/resource
+    image: aws/codebuild/standard:7.0
     commands:
-      - cd .microtica
+      - yarn install
+      - npm install @medusajs/medusa-cli -g
+      - yarn build
+      - npx medusa build --admin-only
+      - cd .medusa/admin && zip -r ../../.microtica/admin-package.zip *
+      - cd ../../.microtica
       - npm install
       - npm run build
       - npm test
       - npm prune --production
       - cd functions/dbinit && npm run package
+      - cd ../deployment && npm run package
 
     docker:
         image_name: microtica/medusa-server

@@ -1,7 +1,7 @@
-name: Medusa Server
+name: Medusa B2B Commerce
 description: Medusa is a composable engine that combines an amazing developer experience with endless customizations for merchants to scale.
 logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/medusa.png
-repo: https://github.com/microtica/templates/tree/master/medusa-server
+repo: https://github.com/microtica/templates/tree/master/medusa-b2b-commerce
 
 inputs:
   properties:
@@ -22,6 +22,10 @@ inputs:
       type: string
       label: Admin Dashboard Password
       description: The initial login password for Medusa Admin Dashboard.
+    ExternalDatabaseUrl:
+      type: string
+      label: External Database URL
+      description: The connection string for the external database.
   required:
     - AppName
     - AdminEmail
@@ -44,7 +48,7 @@ infrastructure:
         - key: PublicSubnet2Id
           reference: "{{VPC_RESOURCE_NAME}}.publicSubnet2"
         - key: InstanceType
-          value: "Small - .25 Core - 512MB Memory"
+          value: "Large - 1 Core - 2GB Memory"
         - key: MinReplicas
           value: "1"
         - key: MaxReplicas
@@ -57,4 +61,6 @@ infrastructure:
           value: "{{AdminEmail}}"
         - key: AdminPassword
           value: "{{AdminPassword}}"
+        - key: ExternalDatabaseUrl
+          value: "{{ExternalDatabaseUrl}}"
         

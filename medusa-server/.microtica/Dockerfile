@@ -1,15 +1,8 @@
-FROM public.ecr.aws/docker/library/node:20-slim
+FROM public.ecr.aws/docker/library/node:22-slim
 
 WORKDIR /medusa
 
-COPY package.json ./
-
-RUN yarn install
-
 COPY . .
-
-RUN yarn build
-RUN npm install @medusajs/medusa-cli -g
 
 ENV NODE_ENV production
 
