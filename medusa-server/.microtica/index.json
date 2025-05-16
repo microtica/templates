@@ -2045,7 +2045,7 @@
                 },
                 "AutoPublish": true,
                 "FunctionConfig": {
-                    "Comment": "Function to rewrite /app paths for S3 static website",
+                    "Comment": "Function to rewrite /app paths for S3 static website and redirect root to /app",
                     "Runtime": "cloudfront-js-1.0"
                 },
                 "FunctionCode": {
@@ -2055,10 +2055,20 @@
                             "function handler(event) {\n",
                             "  var request = event.request;\n",
                             "  var uri = request.uri;\n\n",
-                            "  // Strip /app prefix from the URI\n",
+                            "  // Check if this is the root path and redirect to /app\n",
+                            "  if (uri === '/' || uri === '') {\n",
+                            "    return {\n",
+                            "      statusCode: 302,\n",
+                            "      statusDescription: 'Found',\n",
+                            "      headers: {\n",
+                            "        'location': { value: '/app' }\n",
+                            "      }\n",
+                            "    };\n",
+                            "  }\n\n",
+                            "  // Strip /app prefix from the URI for /app paths\n",
                             "  if (uri === '/app' || uri === '/app/') {\n",
                             "    request.uri = '/';\n",
-                            "  } else {\n",
+                            "  } else if (uri.startsWith('/app/')) {\n",
                             "    request.uri = uri.slice(4); // Remove /app prefix\n",
                             "  }\n\n",
                             "  return request;\n",
@@ -2272,7 +2282,18 @@
                         "ViewerProtocolPolicy": "redirect-to-https",
                         "DefaultTTL": 0,
                         "MinTTL": 0,
-                        "MaxTTL": 0
+                        "MaxTTL": 0,
+                        "FunctionAssociations": [
+                            {
+                                "EventType": "viewer-request",
+                                "FunctionARN": {
+                                    "Fn::GetAtt": [
+                                        "PathRewriteFunction",
+                                        "FunctionARN"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     "PriceClass": "PriceClass_All",
                     "ViewerCertificate": {
