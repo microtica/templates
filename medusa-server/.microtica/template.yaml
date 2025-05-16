@@ -1,7 +1,7 @@
-name: Medusa B2B Commerce
+name: Medusa Server
 description: Medusa is a composable engine that combines an amazing developer experience with endless customizations for merchants to scale.
 logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/medusa.png
-repo: https://github.com/microtica/templates/tree/master/medusa-b2b-commerce
+repo: https://github.com/microtica/templates/tree/master/medusa-server
 
 inputs:
   properties:
