@@ -3,6 +3,10 @@ steps:
     type: build
     title: Build app/resource
     image: aws/codebuild/standard:7.0
+    runtime:
+      computeType: SMALL
+      packages:
+        nodejs: 20
     commands:
       - yarn install
       - npm install @medusajs/medusa-cli -g
