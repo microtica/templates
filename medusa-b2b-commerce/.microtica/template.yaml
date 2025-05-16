@@ -22,6 +22,14 @@ inputs:
       type: string
       label: Admin Dashboard Password
       description: The initial login password for Medusa Admin Dashboard.
+    Mode:
+      type: string
+      label: Mode
+      description: The mode of the MedusaJS application.
+      default: Shared
+      enum:
+        - Shared
+        - Server & Worker
     ExternalDatabaseUrl:
       type: string
       label: External Database URL
@@ -31,6 +39,7 @@ inputs:
     - AppName
     - AdminEmail
     - AdminPassword
+    - Mode
 
 infrastructure:
   resources:
@@ -62,6 +71,7 @@ infrastructure:
           value: "{{AdminEmail}}"
         - key: AdminPassword
           value: "{{AdminPassword}}"
+        - key: Mode
+          value: "{{Mode}}"
         - key: ExternalDatabaseUrl
           value: "{{ExternalDatabaseUrl}}"
-        
