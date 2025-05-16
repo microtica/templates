@@ -25,7 +25,7 @@ inputs:
     ExternalDatabaseUrl:
       type: string
       label: External Database URL
-      description: The connection string for the external database.
+      description: "Optional. The connection string for an external PostgreSQL database. If not provided, a new PostgreSQL database will be automatically created in your AWS account. Format: postgresql://username:password@host:port/database"
   required:
     - AppName
     - AdminEmail
