@@ -1,0 +1,44 @@
+<mat-card>
+    <mat-card-title>{{invoice.item}}</mat-card-title>
+    <mat-card-content>
+        <table>
+            <tr>
+                <td class="column-title">Date:</td>
+                <td>{{invoice.date | date}}</td>
+            </tr>
+            <tr>
+                <td class="column-title">Due:</td>
+                <td>{{invoice.due | date}}</td>
+            </tr>
+            <tr>
+                <td class="column-title">Qty:</td>
+                <td>{{invoice.qty}}</td>
+            </tr>
+            <tr>
+                <td class="column-title">Rate:</td>
+                <td>{{invoice.rate}}</td>
+            </tr>
+            <tr>
+                <td class="column-title">Tax:</td>
+                <td>{{invoice.tax}}</td>
+            </tr>
+            <tr>
+                <td class="column-title">ClientName:</td>
+                <td>{{invoice.client.firstName}} {{invoice.client.lastName}}</td>
+            </tr>
+            <tr>
+                <td class="column-title">Client Email:</td>
+                <td>{{invoice.client.email}}</td>
+            </tr>
+            <tr>
+                <td class="column-title">Total:</td>
+                <td>${{ total }}</td>
+            </tr>
+        </table>
+    </mat-card-content>
+    <mat-progress-bar *ngIf="isResultsLoading" mode="indeterminate"></mat-progress-bar>
+    <mat-card-actions>
+        <button mat-flat-button color="primary" [routerLink]="['/dashboard','invoices',invoice._id]">Edit</button>
+        <button mat-flat-button (click)="downloadHandler(invoice._id)">Download</button>
+    </mat-card-actions>
+</mat-card>
