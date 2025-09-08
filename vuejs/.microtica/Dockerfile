@@ -14,9 +14,12 @@ RUN yarn build
 # Stage 2; nginx
 FROM public.ecr.aws/nginx/nginx
 
+RUN apt-get update && apt-get install -y gettext-base
+
 COPY --from=build-stage /app/dist/ /usr/share/nginx/html
 COPY ./.microtica/nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+COPY ./.microtica/nginx.conf /etc/nginx/conf.d/default.template
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD envsubst '$PORT' < /etc/nginx/conf.d/default.template > /etc/nginx/conf.d/default.conf && \
+    nginx -g 'daemon off;'

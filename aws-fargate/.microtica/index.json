@@ -62,6 +62,10 @@
         },
         "ContainerPort": {
             "Type": "String"
+        },
+        "AppType": {
+            "Type": "String",
+            "Description": "Type of application that will be deployed: nodejs, reactjs, ..."
         }
     },
     "Conditions": {
@@ -90,6 +94,14 @@
                 {
                     "Condition": "EnableHTTP"
                 }
+            ]
+        },
+        "Isn8n": {
+            "Fn::Equals": [
+                {
+                    "Ref": "AppType"
+                },
+                "n8n"
             ]
         }
     },
@@ -200,7 +212,13 @@
             "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
             "Properties": {
                 "HealthCheckIntervalSeconds": 10,
-                "HealthCheckPath": "/",
+                "HealthCheckPath": {
+                    "Fn::If": [
+                        "Isn8n",
+                        "/healthz",
+                        "/"
+                    ]
+                },
                 "HealthCheckProtocol": "HTTP",
                 "HealthCheckTimeoutSeconds": 5,
                 "HealthyThresholdCount": 2,
@@ -447,6 +465,26 @@
                                 "Value": {
                                     "Ref": "AWS::Region"
                                 }
+                            },
+                            {
+                                "Name": "PORT",
+                                "Value": {
+                                    "Ref": "ContainerPort"
+                                }
+                            },
+                            {
+                                "Fn::If": [
+                                    "Isn8n",
+                                    {
+                                        "Name": "N8N_PORT",
+                                        "Value": {
+                                            "Ref": "ContainerPort"
+                                        }
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
                             }
                         ],
                         "LogConfiguration": {

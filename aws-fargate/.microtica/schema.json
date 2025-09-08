@@ -75,6 +75,10 @@
                 "CertificateArn": {
                     "type": "string",
                     "description": "A custom domain certificate (AWS Certificate Manager)."
+                },
+                "AppType": {
+                    "type": "string",
+                    "description": "Type of application that will be deployed: nodejs, reactjs, ..."
                 }
             },
             "required": [
@@ -87,7 +91,8 @@
                 "Memory",
                 "DesiredReplicas",
                 "ImageUrl",
-                "ContainerPort"
+                "ContainerPort",
+                "AppType"
             ]
         }
     },
