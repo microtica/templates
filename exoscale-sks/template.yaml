@@ -1,0 +1,29 @@
+name: Exoscale SKS
+description: Exoscale SKS is a managed Kubernetes service for containers and container clusters running on Exoscale infrastructure.
+logo: https://microtica.s3.eu-central-1.amazonaws.com/assets/templates/logos/kubernetes.png
+repo: https://github.com/microtica/templates/tree/master/exoscale-sks
+
+inputs:
+  properties:
+    CLUSTER_NAME:
+      type: string
+      description: Name of the Kubernetes cluster
+    AppName:
+      type: string
+      description: Unique name for your cluster
+      maxLength: 20
+      pattern: ^[A-Za-z]*$
+      patternErrorMessage: "The cluster name can only contain letters."
+  required:
+    - CLUSTER_NAME
+    - AppName
+
+infrastructure:
+  resources:
+    "{{AppName}}":
+      type: microtica-exoscale-sks:latest
+      properties:
+        - key: cluster_name
+          value: "{{CLUSTER_NAME}}"
+        - key: private_network_id
+          reference: "{{VPC_RESOURCE_NAME}}.network_id"
