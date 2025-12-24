@@ -1,0 +1,126 @@
+.form-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-container > * {
+  width: 100%;
+}
+.mat-card {
+  position: absolute;
+  width: 300px;
+  height: 450px;
+  z-index: 10;
+  top: 30%;
+  left: 50%;
+  margin: -100px 0 0 -150px;
+  // background: red;
+}
+.forgot-password {
+  color: rgba(43, 50, 57, 0.45);
+  text-decoration: none;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  width: -webkit-fill-available;
+}
+
+.alternative {
+  margin-top: 20px;
+  padding-top: 20px;
+  text-align: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.limiter {
+  width: 100%;
+  margin: 0 auto;
+}
+.container-login {
+  width: 100%;
+  min-height: 100vh;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  background: #f2f2f2;
+  // background: yellow;
+}
+
+.mat-card > .mat-card-title {
+  color: #dd548d;
+}
+.loading-shade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 56px;
+  right: 0;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-github {
+  color: #fff;
+  background-color: #444;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+.btn-google {
+  color: #fff;
+  background-color: #dd4b39;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+.btn-twitter {
+  color: #fff;
+  background-color: #55acee;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+.btn-block {
+  margin-top: 5px;
+}
+
+.btn-github {
+  color: #fff;
+  background-color: #444;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+.btn-social {
+  position: relative;
+  padding-left: 44px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.btn-block {
+  display: block;
+  width: 100%;
+}
+.btn {
+  display: inline-block;
+  padding: 6px 12px;
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 1.42857143;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  -ms-touch-action: manipulation;
+  touch-action: manipulation;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background-image: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}

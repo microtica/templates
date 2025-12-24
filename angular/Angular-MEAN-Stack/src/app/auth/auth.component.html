@@ -1,0 +1,61 @@
+<div class="limiter">
+    <div class="container-login">
+        <mat-card>
+            <div class="mat-elevation-z8">
+                <div class="loading-shade" *ngIf="resultLoadding" >
+                  <mat-spinner *ngIf="resultLoadding"></mat-spinner>
+                </div>
+              </div>
+            <mat-card-title>{{ title }}</mat-card-title>
+            <mat-card-content>
+                <form class="form-container" [formGroup]="authForm" novalidate (ngSubmit)="onSubmit()">
+                    <mat-form-field *ngIf="title === 'Signup'">
+                        <input matInput type="text" placeholder="Name" formControlName="name" />
+                    </mat-form-field>
+
+                    <mat-form-field>
+                        <input matInput placeholder="Email" formControlName="email" />
+                        <mat-error *ngIf="f['email'].invalid && f['email'].touched">Email is required</mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field>
+                        <input matInput type="password" placeholder="Password" formControlName="password" />
+                        <mat-error *ngIf="f['password'].invalid && f['password'].touched">Password is required
+                        </mat-error>
+                    </mat-form-field>
+
+                    <div>
+                        <button mat-raised-button class="btn-block" [disabled]="!authForm.valid" type="submit" color="primary">
+                            {{ title }}
+                        </button>
+                        <a class="btn btn-block forgot-password" (click)="forgotPassWord()">forgot password</a>
+                        <!-- <button mat-raised-button color="primary" (click)="googleAuthHanler()">
+                            Google
+                        </button> -->
+                        <a href="http://localhost:3000/api/auth/google" class="btn btn-social btn-block btn-google" mat-raised-button>
+                            <i class="fa fa-google">&nbsp;</i>
+                            Log in with Google
+                        </a>
+                        <a href="http://localhost:3000/api/auth/github" class="btn btn-social btn-block btn-github" mat-raised-button>
+                            <i class="fa fa-github">&nbsp;</i>
+                            Log in with Github
+                        </a>
+                        
+                    </div>
+                </form>
+            </mat-card-content>
+            <div class="alternative" *ngIf="title === 'Login'">
+                    <p>Don't have an account?</p>
+                    <button mat-raised-button class="btn-block" color="primary" type="button" [routerLink]="['/signup']">
+                        Signup
+                    </button>
+            </div>
+            <div class="alternative" *ngIf="title === 'Signup'">
+                <p>Already have an account?</p>
+                <button mat-raised-button class="btn-block" color="primary" type="button" [routerLink]="['/login']">
+                    Login
+                </button>
+        </div>
+        </mat-card>
+    </div>
+</div>

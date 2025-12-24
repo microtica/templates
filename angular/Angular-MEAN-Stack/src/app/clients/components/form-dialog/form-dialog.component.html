@@ -1,0 +1,49 @@
+<h1 mat-dialog-title>{{title}}</h1>
+
+<div mat-dialog-content>
+  <form class="form-container" [formGroup]="clientForm">
+    <mat-form-field>
+      <input
+        matInput
+        type="text"
+        formControlName="firstName"
+        placeholder="Firstname"
+      />
+      <mat-error *ngIf="f['firstName'].invalid && f['firstName'].touched"
+        >Firstname is required</mat-error
+      >
+    </mat-form-field>
+    <mat-form-field>
+      <input
+        matInput
+        type="text"
+        formControlName="lastName"
+        placeholder="Lastname"
+      />
+      <mat-error *ngIf="f['lastName'].invalid && f['lastName'].touched"
+        >Lastname is required</mat-error
+      >
+    </mat-form-field>
+    <mat-form-field>
+      <input
+        matInput
+        type="email"
+        formControlName="email"
+        placeholder="Email"
+      />
+      <mat-error *ngIf="f['email'].invalid && f['email'].touched">
+        <mat-error *ngIf="f['email'].errors?.['required']"
+          >Email is required</mat-error
+        >
+        <mat-error *ngIf="f['email'].errors?.['email']"
+          >Invalid email</mat-error
+        >
+      </mat-error>
+    </mat-form-field>
+  </form>
+</div>
+<br />
+<div mat-dialog-actions>
+    <button mat-raised-button [mat-dialog-close]="clientForm.value" cdkFocusInitial [disabled]="clientForm.invalid" >Save</button>
+  <button mat-raised-button (click)="onNoClick()">Cancel</button>
+</div>
