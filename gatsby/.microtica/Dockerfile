@@ -11,6 +11,4 @@ ENV NODE_ENV production
 
 RUN npm run build
 
-EXPOSE 9000
-
 CMD npm run serve
